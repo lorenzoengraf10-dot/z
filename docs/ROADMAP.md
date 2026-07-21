@@ -7,7 +7,8 @@ Los tiempos son estimaciones para ritmo part-time, no full-time.
 
 ## Fase 0 — Preproducción (2-4 semanas)
 - [ ] Cerrar GDD corto (ver `GDD.md`) y validarlo con el equipo.
-- [ ] Moodboard de arte (paleta de colapso/desaturada, referencias de tiles, personaje y zombies).
+- [ ] Moodboard de arte (paleta de colapso/desaturada, referencias de tiles, personaje y zombies) — armarlo en Figma.
+- [ ] Primeros mockups de UI/HUD (inventario, barra de necesidades, menú principal) en Figma antes de programarlos.
 - [x] Estructura inicial del proyecto Godot lista para abrir (ver `/game`, `game/README.md`).
 - [x] Sistema de mapa mundial (datos + pantalla básica) armado — ver `WORLD_MAP.md` y `game/data/world_map.json`.
 - [ ] Instalar Godot 4 y abrir el proyecto por primera vez (pendiente hasta tener la compu).

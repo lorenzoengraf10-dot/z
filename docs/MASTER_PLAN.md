@@ -55,11 +55,12 @@ Resumen de [`WORLD_MAP.md`](WORLD_MAP.md): un hub central fortificado ("Refugio 
 ## 5. Stack técnico y herramientas
 
 - **Motor:** Godot 4.x (ya en uso en `game/`).
-- **Arte:** Aseprite para pixel art (a confirmar si se suma alguien de arte con otra herramienta).
+- **Arte (pixel art in-game):** Aseprite para tiles, personajes y zombies (a confirmar si se suma alguien de arte con otra herramienta).
+- **Diseño / mockups:** Figma, para maquetar UI/HUD, menús y pantallas antes de programarlas, y como pizarra visual del mapa. No reemplaza a Aseprite (que es para el pixel art final) — Figma es para diseñar cómo se ve y se ordena la interfaz. Tiene plan gratis, así que no rompe el presupuesto.
 - **Control de versiones:** este repo de GitHub.
-- **Gestión de tareas:** Notion, para marcar y seguir el estado de las tareas.
+- **Gestión de tareas:** Notion — herramienta principal para marcar y seguir el estado de las tareas (está conectado a Claude, lo que facilita mantenerlo actualizado).
 - **Sonido:** librerías royalty-free para arrancar; se evalúa audio original si se suma alguien al equipo.
-- **Presupuesto:** tope de USD 20, sin gasto asignado por ahora — todo con herramientas gratuitas. Ver advertencia en la sección 9.
+- **Presupuesto:** tope de USD 20, sin gasto asignado por ahora — todo con herramientas gratuitas (Godot, Aseprite tiene alternativa gratis, Figma free, Notion free). Ver advertencia en la sección 9.
 
 ## 6. Roadmap resumido
 
