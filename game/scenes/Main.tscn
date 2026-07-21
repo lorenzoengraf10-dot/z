@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MapScreen.tscn" id="2"]
+[ext_resource type="Script" path="res://scripts/main.gd" id="3"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("3")
+
+[node name="Ground" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-400, -300, 400, -300, 400, 300, -400, 300)
+color = Color(0.15, 0.25, 0.12, 1)
+
+[node name="Player" parent="." instance=ExtResource("1")]
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+zoom = Vector2(2, 2)
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Instructions" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 560.0
+offset_bottom = 48.0
+text = "Prototipo — Flechas: mover | M: abrir/cerrar mapa"
+
+[node name="MapScreen" parent="." instance=ExtResource("2")]

@@ -8,15 +8,17 @@ Los tiempos son estimaciones para ritmo part-time, no full-time.
 ## Fase 0 — Preproducción (2-4 semanas)
 - [ ] Cerrar GDD corto (ver `GDD.md`) y validarlo con el equipo.
 - [ ] Moodboard de arte (paleta de colapso/desaturada, referencias de tiles, personaje y zombies).
-- [ ] Instalar y aprender lo básico de Godot 4 (2D, TileMap).
-- [ ] Definir estructura del proyecto y convenciones (carpetas, nombres, Git).
+- [x] Estructura inicial del proyecto Godot lista para abrir (ver `/game`, `game/README.md`).
+- [x] Sistema de mapa mundial (datos + pantalla básica) armado — ver `WORLD_MAP.md` y `game/data/world_map.json`.
+- [ ] Instalar Godot 4 y abrir el proyecto por primera vez (pendiente hasta tener la compu).
 - [ ] Confirmar quién de tus amigos se suma y en qué rol (arte / sonido / programación de apoyo).
 - [ ] Setup de gestión de tareas simple (Trello/Notion/GitHub Projects).
 - [ ] Diseñar los datos base (inventario, entidades, guardado) pensando en que en el futuro haya multijugador, aunque todavía no se implemente.
 
 ## Fase 1 — Prototipo jugable / vertical slice (6-8 semanas)
 Objetivo: validar que el loop central es divertido antes de invertir en contenido.
-- [ ] Movimiento del personaje + cámara top-down.
+- [x] Movimiento del personaje + cámara top-down (placeholder, sin arte).
+- [x] Pantalla de mapa mundial básica (tecla M), leyendo ubicaciones desde `world_map.json`.
 - [ ] Mapa chico jugable (una porción de pueblo + bosque + algo de costa, placeholder art está bien).
 - [ ] 1-2 zombies con IA básica: patrulla, detección por visión/ruido, persecución.
 - [ ] Sistema de sigilo/ruido básico (agacharse, correr = más ruido = atrae zombies).
@@ -49,6 +51,7 @@ Objetivo: validar que el loop central es divertido antes de invertir en contenid
 ## Fase 4 — Cooperativo online y preparación de lanzamiento (2-3 meses)
 - [ ] Netcode cliente-servidor funcional para 2-4 jugadores.
 - [ ] Testing de coop (sincronización, latencia, desconexiones).
+- [ ] Arte final de la pantalla de mapa mundial (ilustración estilo la referencia en `WORLD_MAP.md`) — sirve también como key art / capsule de Steam.
 - [ ] Crear página de Steam (Steamworks, fee de USD 100 por juego) con **meses de anticipación** para acumular wishlists — idealmente 3-6 meses antes del lanzamiento.
 - [ ] Trailer y capturas mostrando exploración, caza/pesca y construcción de base.
 - [ ] Demo pública / participación en Steam Next Fest.

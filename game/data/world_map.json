@@ -1,0 +1,47 @@
+{
+  "region_name": "Los Linderos (nombre de ejemplo)",
+  "hub": {
+    "name": "Refugio Central",
+    "type": "hub",
+    "position": [0.5, 0.42],
+    "description": "Asentamiento fortificado principal. Punto de partida sugerido para nuevas partidas."
+  },
+  "points_of_interest": [
+    {
+      "name": "Puesto Norte 7",
+      "type": "outpost",
+      "position": [0.47, 0.08],
+      "description": "Antiguo puesto de control militar al norte del refugio. Buen botín, buena vigilancia."
+    },
+    {
+      "name": "Campamento Los Pinos",
+      "type": "camp",
+      "position": [0.18, 0.22],
+      "description": "Campamento maderero junto al bosque. Fuente confiable de madera."
+    },
+    {
+      "name": "Las Chacras",
+      "type": "resource",
+      "position": [0.1, 0.45],
+      "description": "Cultivos abandonados, ideal para reactivar huertas y conseguir semillas."
+    },
+    {
+      "name": "Chatarrópolis",
+      "type": "camp",
+      "position": [0.85, 0.4],
+      "description": "Asentamiento de chatarreros. Recursos de crafteo mecánico y armas improvisadas."
+    },
+    {
+      "name": "El Osario",
+      "type": "danger",
+      "position": [0.82, 0.68],
+      "description": "Ruinas densamente infestadas. Alto riesgo, alto botín."
+    },
+    {
+      "name": "Campamento Ferroviario",
+      "type": "camp",
+      "position": [0.5, 0.85],
+      "description": "Vías de tren abandonadas. Posible ruta de exploración a otras regiones del mapa."
+    }
+  ]
+}
