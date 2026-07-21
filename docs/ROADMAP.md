@@ -20,12 +20,12 @@ Los tiempos son estimaciones para ritmo part-time, no full-time.
 Objetivo: validar que el loop central es divertido antes de invertir en contenido.
 - [x] Movimiento del personaje + cámara top-down (placeholder, sin arte).
 - [x] Pantalla de mapa mundial básica (tecla M), leyendo ubicaciones desde `world_map.json`.
-- [ ] Mapa chico jugable (una porción de pueblo + bosque + algo de costa, placeholder art está bien).
-- [ ] 1-2 zombies con IA básica: patrulla, detección por visión/ruido, persecución.
-- [ ] Sistema de sigilo/ruido básico (agacharse, correr = más ruido = atrae zombies).
-- [ ] Recolección de 2-3 recursos (looteo en casas, tala básica).
+- [x] 1-2 zombies con IA básica: deambular, detección por visión/ruido, persecución y ataque (`zombie.gd`).
+- [x] Sistema de sigilo/ruido básico (agacharse, correr = más ruido = atrae zombies) (`player.gd`).
+- [x] Necesidades básicas del personaje: hambre y salud (`needs_component.gd` + HUD).
+- [x] Recolección básica de un recurso (comida) + consumo (`pickup.gd`, tecla E). Falta ampliar a looteo/tala.
+- [ ] Mapa chico jugable con arte de tiles (una porción de pueblo + bosque + algo de costa). Hoy es un piso liso de placeholder.
 - [ ] Caza o pesca básica (al menos una de las dos, para validar la mecánica).
-- [ ] Necesidades básicas del personaje: hambre y salud.
 - [ ] Construcción de una estructura simple (ej. barricada) en cualquier punto del mapa.
 - [ ] Guardado/carga simple.
 - [ ] Playtesting interno (vos + amigos) y ajuste de sensación de juego.

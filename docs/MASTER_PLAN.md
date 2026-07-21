@@ -11,7 +11,7 @@ Este documento junta todo el proyecto en una sola lectura: qué es el juego, qu�
 - **Modo:** un jugador desde el MVP, con arquitectura pensada desde el inicio para sumar cooperativo (2-4 jugadores) más adelante.
 - **Referencias:** Project Zomboid (viabilidad de alcance/vista), DayZ (tensión, permadeath), The Forest (supervivencia y base building en entorno hostil).
 - **Equipo:** el usuario como lead diseño/programación part-time, más amigos por confirmar en arte y sonido/programación de apoyo.
-- **Estado actual:** concepto y alcance cerrados (`GDD.md` v0.2), roadmap por fases definido (`ROADMAP.md`), diseño del mapa mundial definido (`WORLD_MAP.md`), y ya existe un proyecto Godot que abre y corre con un jugador moviéndose, cámara, y una pantalla de mapa funcional leyendo datos desde JSON (`game/`) — todo con arte placeholder a propósito.
+- **Estado actual:** concepto y alcance cerrados (`GDD.md` v0.2), roadmap por fases definido (`ROADMAP.md`), diseño del mapa mundial definido (`WORLD_MAP.md`), y ya existe un proyecto Godot jugable (`game/`) con un primer corte del loop de supervivencia: movimiento con sigilo (caminar/correr/agacharse con ruido), un zombie con IA (deambula, te detecta por visión o por ruido, persigue y ataca), necesidades de salud y hambre, recolección y consumo de comida, un HUD, y la pantalla de mapa — todo con arte placeholder a propósito.
 
 Ver el detalle completo de diseño en [`GDD.md`](GDD.md).
 
@@ -23,20 +23,21 @@ Vista plana de todo lo que el juego necesita, más allá del orden por fases (es
 |---|---|---|
 | Movimiento y cámara | ✅ hecho (placeholder) | Fase 1 |
 | Pantalla de mapa mundial | ✅ base hecha (placeholder) | Fase 1 (arte final en Fase 4) |
-| Mapa jugable chico | ⏳ pendiente | Fase 1 |
-| IA de zombies (patrulla, visión/ruido, persecución) | ⏳ pendiente | Fase 1 (variedad y hordas en Fase 2) |
-| Sigilo / ruido | ⏳ pendiente | Fase 1 |
+| Mapa jugable chico | ⏳ pendiente (hoy piso liso placeholder) | Fase 1 |
+| IA de zombies (deambular, visión/ruido, persecución, ataque) | ✅ base hecha | Fase 1 (variedad y hordas en Fase 2) |
+| Sigilo / ruido (caminar/correr/agacharse) | ✅ base hecha | Fase 1 |
+| Recolección + consumo de comida | ✅ base hecha | Fase 1 |
 | Looteo de estructuras | ⏳ pendiente | Fase 1 |
 | Caza | ⏳ pendiente | Fase 1 (completa en Fase 2) |
 | Pesca | ⏳ pendiente | Fase 1 (completa en Fase 2) |
-| Tala / minería / recolección | ⏳ pendiente | Fase 1 |
+| Tala / minería | ⏳ pendiente | Fase 1 |
 | Crafteo | ⏳ pendiente | Fase 2 |
 | Construcción de base en cualquier lugar | ⏳ pendiente (estructura simple en Fase 1) | Fase 2 |
-| Necesidades (hambre, sed, salud, cansancio, temperatura, infección) | ⏳ pendiente (hambre/salud en Fase 1) | Fase 2 |
+| Necesidades (hambre, sed, salud, cansancio, temperatura, infección) | 🟡 hambre/salud hechas | Fase 2 |
 | Progresión por uso de habilidades | ⏳ pendiente | Fase 3 |
 | Permadeath configurable | ⏳ pendiente | Fase 3 |
 | Guardado/carga | ⏳ pendiente (simple en Fase 1) | Fase 1-2 |
-| UI/HUD completa | ⏳ pendiente | Fase 3 |
+| HUD (salud, hambre, comida) | 🟡 base hecha | Fase 3 (completa) |
 | Audio (ambiente + ruido como mecánica) | ⏳ pendiente | Fase 2 |
 | Arquitectura preparada para multijugador | ⏳ pendiente | Fase 0-3 |
 | Netcode cooperativo real | ⏳ pendiente | Fase 3-4 |
