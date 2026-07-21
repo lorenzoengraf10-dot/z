@@ -1,0 +1,108 @@
+# Plan maestro — Cuarentena (título de trabajo)
+
+Este documento junta todo el proyecto en una sola lectura: qué es el juego, qué falta construir, con qué equipo/herramientas/plata, y qué decisiones siguen abiertas. Los documentos detallados (`GDD.md`, `ROADMAP.md`, `WORLD_MAP.md`) siguen siendo la fuente de verdad de cada tema — este archivo es el resumen ejecutivo y el punto de entrada.
+
+## 1. Resumen ejecutivo
+
+- **Título de trabajo:** Cuarentena (todavía sin cerrar — ver sección 9).
+- **Género:** Supervivencia de mundo abierto con zombies: exploración, caza, pesca, crafteo, construcción de base en cualquier lugar del mapa.
+- **Vista/arte:** 2D top-down/isométrico, pixel art.
+- **Plataforma:** PC, publicación en Steam.
+- **Modo:** un jugador desde el MVP, con arquitectura pensada desde el inicio para sumar cooperativo (2-4 jugadores) más adelante.
+- **Referencias:** Project Zomboid (viabilidad de alcance/vista), DayZ (tensión, permadeath), The Forest (supervivencia y base building en entorno hostil).
+- **Equipo:** el usuario como lead diseño/programación part-time, más amigos por confirmar en arte y sonido/programación de apoyo.
+- **Estado actual:** concepto y alcance cerrados (`GDD.md` v0.2), roadmap por fases definido (`ROADMAP.md`), diseño del mapa mundial definido (`WORLD_MAP.md`), y ya existe un proyecto Godot que abre y corre con un jugador moviéndose, cámara, y una pantalla de mapa funcional leyendo datos desde JSON (`game/`) — todo con arte placeholder a propósito.
+
+Ver el detalle completo de diseño en [`GDD.md`](GDD.md).
+
+## 2. Checklist de sistemas de gameplay
+
+Vista plana de todo lo que el juego necesita, más allá del orden por fases (eso vive en `ROADMAP.md`).
+
+| Sistema | Estado | Fase donde se completa |
+|---|---|---|
+| Movimiento y cámara | ✅ hecho (placeholder) | Fase 1 |
+| Pantalla de mapa mundial | ✅ base hecha (placeholder) | Fase 1 (arte final en Fase 4) |
+| Mapa jugable chico | ⏳ pendiente | Fase 1 |
+| IA de zombies (patrulla, visión/ruido, persecución) | ⏳ pendiente | Fase 1 (variedad y hordas en Fase 2) |
+| Sigilo / ruido | ⏳ pendiente | Fase 1 |
+| Looteo de estructuras | ⏳ pendiente | Fase 1 |
+| Caza | ⏳ pendiente | Fase 1 (completa en Fase 2) |
+| Pesca | ⏳ pendiente | Fase 1 (completa en Fase 2) |
+| Tala / minería / recolección | ⏳ pendiente | Fase 1 |
+| Crafteo | ⏳ pendiente | Fase 2 |
+| Construcción de base en cualquier lugar | ⏳ pendiente (estructura simple en Fase 1) | Fase 2 |
+| Necesidades (hambre, sed, salud, cansancio, temperatura, infección) | ⏳ pendiente (hambre/salud en Fase 1) | Fase 2 |
+| Progresión por uso de habilidades | ⏳ pendiente | Fase 3 |
+| Permadeath configurable | ⏳ pendiente | Fase 3 |
+| Guardado/carga | ⏳ pendiente (simple en Fase 1) | Fase 1-2 |
+| UI/HUD completa | ⏳ pendiente | Fase 3 |
+| Audio (ambiente + ruido como mecánica) | ⏳ pendiente | Fase 2 |
+| Arquitectura preparada para multijugador | ⏳ pendiente | Fase 0-3 |
+| Netcode cooperativo real | ⏳ pendiente | Fase 3-4 |
+
+## 3. Mundo y contenido
+
+Resumen de [`WORLD_MAP.md`](WORLD_MAP.md): un hub central fortificado ("Refugio Central", nombre de ejemplo) rodeado de puntos de interés conectados por caminos (puesto militar, campamento maderero, zona de cultivo, asentamiento de chatarreros, ruinas de alto riesgo, campamento ferroviario), sobre terreno de bosque, montaña, río y costa.
+
+**Decisión ya tomada:** el mapa es **fijo** (no procedural ni infinito), con la posibilidad de sumar zonas nuevas en updates después del lanzamiento.
+
+## 4. Equipo y roles
+
+- **Vos:** diseño y programación, lead del proyecto, en tiempo libre.
+- **Amigos:** posible incorporación en arte y sonido/programación de apoyo. **Pendiente de confirmar** — se define en las próximas semanas, sin bloquear el trabajo de la Fase 0-1 en curso.
+
+## 5. Stack técnico y herramientas
+
+- **Motor:** Godot 4.x (ya en uso en `game/`).
+- **Arte:** Aseprite para pixel art (a confirmar si se suma alguien de arte con otra herramienta).
+- **Control de versiones:** este repo de GitHub.
+- **Gestión de tareas:** grupo de WhatsApp con todo anotado — nada de Trello/Notion, así de simple.
+- **Sonido:** librerías royalty-free para arrancar; se evalúa audio original si se suma alguien al equipo.
+- **Presupuesto:** tope de USD 20, sin gasto asignado por ahora — todo con herramientas gratuitas. Ver advertencia en la sección 9.
+
+## 6. Roadmap resumido
+
+Detalle completo con checklist en [`ROADMAP.md`](ROADMAP.md).
+
+| Fase | Objetivo | Duración estimada | Estado |
+|---|---|---|---|
+| 0 — Preproducción | GDD, moodboard, setup técnico | 2-4 semanas | 🔵 en curso |
+| 1 — Prototipo / vertical slice | Validar que el loop central es divertido | 6-8 semanas | 🔵 en curso (2 ítems adelantados) |
+| 2 — Producción core | Sistemas completos + arte/sonido base | 2-3 meses | ⏳ |
+| 3 — Contenido, pulido y arquitectura multijugador | Progresión, balance, prep. para netcode | 2-3 meses | ⏳ |
+| 4 — Cooperativo online y pre-lanzamiento | Netcode, página de Steam, wishlists, demo | 2-3 meses | ⏳ |
+| 5 — Lanzamiento y soporte | Early Access / 1.0, updates | — | ⏳ |
+
+## 7. Plan de publicación / negocio
+
+- **Steam:** fee de Steamworks de USD 100 por juego (pagar único, reembolsable). Crear la página con 3-6 meses de anticipación para acumular wishlists antes de lanzar.
+- **Precio de referencia:** USD 15-20, en línea con survival 2D exitosos.
+- **Formato de lanzamiento recomendado:** Early Access — permite salir con el contenido de las Fases 2-3 y crecer con la comunidad en vez de esperar a tener "todo listo".
+- **Marketing de bajo costo:** devlogs periódicos desde la Fase 1, participación en Steam Next Fest con una demo.
+- **Localización mínima:** inglés + español.
+
+## 8. Riesgos y mitigaciones
+
+- **Netcode de multijugador** es la parte más difícil del proyecto → se deja para la Fase 3-4, después de validar que el juego en solitario ya es divertido.
+- **Scope creep** → MVP estricto en la Fase 1 (mapa chico, pocas mecánicas) antes de sumar features nuevas.
+- **Dependencia de un solo artista** → tener un plan B con asset packs de placeholder si el ritmo baja.
+- **Motivación en proyecto part-time** → hitos cortos, jugables y visibles en cada fase.
+
+## 9. Decisiones — resueltas y pendientes
+
+- **Título:** sin cerrar todavía. Ideas para elegir/discutir con los amigos: **Cuarentena** (actual), **Zona Cero**, **Foco Cero**, **Últimos Días**, **Refugio** / *The Last Shelter* (si se prioriza un título en inglés para Steam internacional), **Tierra Muerta**. Ninguna es definitiva.
+- **Mapa:** fijo por ahora, con updates de contenido más adelante — resuelto.
+- **Equipo/amigos:** pendiente, se define en unas semanas.
+- **Gestión de tareas:** grupo de WhatsApp — resuelto.
+- **Presupuesto:** tope USD 20, sin gasto asignado por ahora — resuelto, pero ver advertencia abajo.
+- **Permadeath y dificultad:** totalmente configurable por el jugador, sin modo fijo separado — resuelto.
+
+> **⚠️ Algo que no cierra:** el presupuesto definido (tope USD 20) es menor al fee de Steamworks (USD 100) que este mismo plan prevé para publicar en Steam. No se resuelve acá — queda anotado para decidir más adelante: ahorrar para ese momento, publicar primero en itch.io (gratis) y evaluar Steam después, o revisar el tope de presupuesto cuando se acerque la Fase 4.
+
+## 10. Próximos pasos inmediatos
+
+1. Instalar Godot 4 y abrir el proyecto en `game/` (ver `game/README.md`) cuando tengas la compu.
+2. Prototipo de movimiento + 1 zombie con IA básica (1-2 semanas).
+3. Cerrar con tus amigos quién se suma y en qué rol.
+4. Elegir título definitivo de la lista de la sección 9 (o proponer otro).
