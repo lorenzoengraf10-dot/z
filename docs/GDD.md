@@ -1,59 +1,69 @@
-# Último Brote — Game Design Document (borrador v0.1)
+# Cuarentena — Game Design Document (borrador v0.2)
+
+> v0.2: pivot de concepto. La v0.1 (sim de restauración ecológica "Último Brote") se reemplaza por un survival de zombies inspirado en Project Zomboid, DayZ y The Forest. Ver decisiones de alcance en la sección 7.
 
 ## 1. Resumen
 
-- **Título de trabajo:** Último Brote
-- **Género:** Supervivencia + sim de reconstrucción / gestión, con toques cozy
-- **Vista:** 2D top-down, pixel art
-- **Plataforma objetivo:** PC (Steam) primero. Posible port a mobile más adelante si el juego valida bien.
-- **Modo:** Un jugador en el MVP. Co-op (2-4 jugadores) como posible expansión futura, no en el alcance inicial.
+- **Título de trabajo:** Cuarentena
+- **Género:** Supervivencia de mundo abierto (zombies): exploración, caza, pesca, crafteo, construcción de base en cualquier lugar del mapa.
+- **Vista:** 2D top-down/isométrico, pixel art (no 3D — ver sección 7).
+- **Plataforma objetivo:** PC (Steam).
+- **Modo:** Un jugador en el MVP, diseñado desde el inicio para soportar cooperativo (2-4 jugadores) en una fase posterior.
 - **Equipo:** 1 persona (diseño/programación) part-time + 1-2 amigos (arte, sonido/programación de apoyo), en tiempo libre.
 - **Motor:** Godot 4.x
-- **Referencias:** Core Keeper, Stardew Valley, Terraria, RimWorld (para el sistema de "curar" territorio).
+- **Referencias:** Project Zomboid (loop y vista), DayZ (tensión, mundo abierto, permadeath), The Forest (supervivencia/caza/base building en un entorno hostil).
 
 ## 2. Premisa
 
-Un cataclismo llamado la **Marea Gris** corrompió la vegetación y fauna de una región entera. El/la jugador/a se instala en los restos de un pueblo o estación de investigación abandonada, con el objetivo de **sanar la tierra**.
-
-Cada zona sanada se transforma visualmente: de paleta gris/muerta a paleta verde/viva. Sanar zonas desbloquea nuevos recursos, NPCs, misiones y biomas.
+Un brote zombie colapsó la sociedad. No hay una historia lineal con misión principal: el jugador es un/a superviviente en un mapa abierto (pueblos, bosques, costa, campos) y decide **dónde asentarse y cómo sobrevivir**. No hay ubicación de base fija ni obligatoria — se puede fortificar una casa, levantar un campamento en el bosque, o algo en la costa para pescar.
 
 ## 3. Loop de juego
 
-### Ciclo de día
-- Explorar el mapa (zonas corrompidas y zonas ya sanadas).
-- Recolectar recursos (madera, minerales, restos de la corrupción, flora).
-- Plantar y cuidar **semillas madre**: plantas especiales que limpian la corrupción de una zona a lo largo de varios días.
-- Craftear herramientas, mejoras de base y objetos de defensa.
-- Interactuar con NPCs: misiones, comercio, historia del cataclismo.
-- Mejorar el refugio/base (almacenamiento, estaciones de crafteo, defensas).
+### Exploración y recolección
+- Recorrer el mapa: pueblos, casas, bosques, costa, campos.
+- Looteo de estructuras (comida, herramientas, medicinas, armas improvisadas).
+- Caza de fauna salvaje (carne, pieles, huesos).
+- Pesca en ríos, lagos y costa (comida confiable sin depender de looteo).
+- Tala, minería/recolección de materiales de crafteo.
 
-### Ciclo de noche
-- La corrupción "contraataca": aparecen criaturas corrompidas y tormentas tóxicas.
-- El jugador defiende su base y las zonas ya sanadas (combate simple + defensas tipo tower-defense liviano).
-- Perder una zona sanada ante un ataque nocturno es un riesgo real (tensión), pero recuperable.
+### Supervivencia
+- Necesidades del personaje: hambre, sed, salud, cansancio, temperatura, infección/enfermedad.
+- Zombies como amenaza constante: patrullan, reaccionan a ruido y visión; el sigilo es tan válido como el combate directo.
+- Muerte permanente (permadeath) configurable como modo de dificultad (apela al público de DayZ).
 
-### Progresión
-- Árbol tecnológico de herramientas y mejoras.
-- Mapa dividido en biomas que se van abriendo a medida que se sanan zonas (bosque → pantano → costa → montaña).
-- Sistema de estaciones del año, que afecta recursos disponibles y dificultad nocturna.
+### Base y crafteo
+- Construcción de base **en cualquier punto del mapa**: fortificación, almacenamiento, trampas, defensas contra hordas u oleadas nocturnas.
+- Árbol de crafteo: herramientas, armas improvisadas/de fuego, curativos, mejoras de base.
+- Progresión por uso de habilidades (mejorás cazando/pescando/combatiendo, no por XP de nivel — estilo Zomboid), no por historia.
+
+### Multijugador (fase posterior, no en el MVP)
+- El mismo mundo debe poder jugarse solo o en cooperativo.
+- Se diseñan los sistemas (inventario, guardado, IA) pensando en que más adelante haya un servidor con varios jugadores, pero el netcode real se implementa recién cuando el loop en solitario ya sea divertido (ver `ROADMAP.md`).
 
 ## 4. Pilares de diseño
 
-1. **La sanación es el reward loop principal** — el progreso se *ve* (transformación de arte/paleta), no solo se lee en un menú.
-2. **Tensión día/noche sin ser agotador** — la defensa nocturna debe sentirse manejable en sesiones cortas (ideal para desarrollo part-time y para el jugador).
-3. **Alcance controlado** — MVP con 1 bioma completo y loop cerrado, antes de prometer el mapa completo.
+1. **Libertad de asentamiento** — nada de ubicación de base obligatoria; el mapa abierto es el punto de partida, no una serie de niveles.
+2. **Tensión sostenida, no jump-scares** — el peligro viene de gestionar recursos + ruido/visibilidad de los zombies, no de sustos scriptados.
+3. **Alcance controlado** — MVP en 2D top-down con un mapa chico, antes de prometer un mundo grande o multijugador.
 
 ## 5. Arte y sonido
 
-- Pixel art, resolución de referencia a definir (ej. 16x16 o 32x32 tiles).
-- Paleta doble por zona: "corrompida" (grises/violetas apagados) vs "sanada" (verdes/colores vivos) — clave para el pipeline de arte.
-- Música ambiental adaptativa (tema día calmo / tema noche tenso) — puede empezar con librerías royalty-free y evolucionar a original.
+- Pixel art top-down/isométrico (a definir resolución de tile, ej. 16x16 o 32x32).
+- Paleta apagada/desaturada para reforzar el tono de colapso, con contraste claro para zombies y peligros.
+- Sonido como mecánica: el ruido del jugador (correr, disparar, motor) debe tener representación audible y visual (radio de ruido) porque atrae zombies.
 
 ## 6. Fuera de alcance para el MVP
 
-- Multijugador / co-op.
-- Más de 1-2 biomas.
-- Narrativa extensa con muchos NPCs.
+- Multijugador / netcode real (se diseña para soportarlo, no se implementa aún).
+- Mundo grande / múltiples biomas — arrancar con un mapa chico y denso.
+- Vehículos.
+- Sistema de clima/estaciones complejo.
 - Port a mobile.
 
-Estos ítems quedan como backlog para después de validar el prototipo (ver `ROADMAP.md`).
+## 7. Decisiones de alcance (por qué 2D y no 3D)
+
+DayZ y The Forest son juegos 3D en primera/tercera persona con presupuestos y equipos mucho más grandes que el nuestro. Para un equipo de 1-3 personas part-time, replicar esa fidelidad visual no es realista como meta inicial.
+
+Se optó por **2D top-down/isométrico**, tomando como referencia de viabilidad a **Project Zomboid** (mismo espíritu — zombies, caza, pesca, base en cualquier lugar, cooperativo — hecho originalmente por un equipo muy chico y con gran éxito en Steam). Esto reduce drásticamente el costo de arte (sin modelado 3D ni animación esquelética compleja) y de programación (sin cámara 3D, colisiones 3D, optimización de renderizado 3D).
+
+Si el prototipo valida bien y el equipo crece, un salto a 3D low-poly queda como posibilidad a futuro, no como parte del plan inicial.

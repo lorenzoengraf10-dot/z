@@ -1,6 +1,6 @@
-# Último Brote
+# Cuarentena
 
-Juego de supervivencia + sim de reconstrucción ecológica en pixel art, para PC/Steam.
+Juego de supervivencia de mundo abierto con zombies (exploración, caza, pesca, base en cualquier lugar, solo o cooperativo), en pixel art 2D top-down, para PC/Steam. Inspirado en Project Zomboid, DayZ y The Forest.
 
 Ver el plan completo en:
 - [`docs/GDD.md`](docs/GDD.md) — documento de diseño (concepto, loop de juego, pilares)
