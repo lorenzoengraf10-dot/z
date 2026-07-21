@@ -57,7 +57,7 @@ Resumen de [`WORLD_MAP.md`](WORLD_MAP.md): un hub central fortificado ("Refugio 
 - **Motor:** Godot 4.x (ya en uso en `game/`).
 - **Arte:** Aseprite para pixel art (a confirmar si se suma alguien de arte con otra herramienta).
 - **Control de versiones:** este repo de GitHub.
-- **Gestión de tareas:** grupo de WhatsApp con todo anotado — nada de Trello/Notion, así de simple.
+- **Gestión de tareas:** Notion, para marcar y seguir el estado de las tareas.
 - **Sonido:** librerías royalty-free para arrancar; se evalúa audio original si se suma alguien al equipo.
 - **Presupuesto:** tope de USD 20, sin gasto asignado por ahora — todo con herramientas gratuitas. Ver advertencia en la sección 9.
 
@@ -94,7 +94,7 @@ Detalle completo con checklist en [`ROADMAP.md`](ROADMAP.md).
 - **Título:** sin cerrar todavía. Ideas para elegir/discutir con los amigos: **Cuarentena** (actual), **Zona Cero**, **Foco Cero**, **Últimos Días**, **Refugio** / *The Last Shelter* (si se prioriza un título en inglés para Steam internacional), **Tierra Muerta**. Ninguna es definitiva.
 - **Mapa:** fijo por ahora, con updates de contenido más adelante — resuelto.
 - **Equipo/amigos:** pendiente, se define en unas semanas.
-- **Gestión de tareas:** grupo de WhatsApp — resuelto.
+- **Gestión de tareas:** Notion — resuelto.
 - **Presupuesto:** tope USD 20, sin gasto asignado por ahora — resuelto, pero ver advertencia abajo.
 - **Permadeath y dificultad:** totalmente configurable por el jugador, sin modo fijo separado — resuelto.
 

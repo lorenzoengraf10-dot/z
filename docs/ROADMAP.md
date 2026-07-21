@@ -12,7 +12,7 @@ Los tiempos son estimaciones para ritmo part-time, no full-time.
 - [x] Sistema de mapa mundial (datos + pantalla básica) armado — ver `WORLD_MAP.md` y `game/data/world_map.json`.
 - [ ] Instalar Godot 4 y abrir el proyecto por primera vez (pendiente hasta tener la compu).
 - [ ] Confirmar quién de tus amigos se suma y en qué rol (arte / sonido / programación de apoyo).
-- [ ] Setup de gestión de tareas simple (Trello/Notion/GitHub Projects).
+- [ ] Armar el espacio de Notion para marcar y seguir las tareas.
 - [ ] Diseñar los datos base (inventario, entidades, guardado) pensando en que en el futuro haya multijugador, aunque todavía no se implemente.
 
 ## Fase 1 — Prototipo jugable / vertical slice (6-8 semanas)
