@@ -7,7 +7,7 @@ Este documento junta todo el proyecto en una sola lectura: qué es el juego, qu�
 - **Título de trabajo:** Cuarentena (todavía sin cerrar — ver sección 9).
 - **Género:** Supervivencia de mundo abierto con zombies: exploración, caza, pesca, crafteo, construcción de base en cualquier lugar del mapa.
 - **Vista/arte:** 2D top-down/isométrico, pixel art.
-- **Plataforma:** PC, publicación en Steam.
+- **Plataforma:** PC. Publicación **sin fines de lucro** — gratis en itch.io; Steam queda como opción a futuro (ver sección 7).
 - **Modo:** un jugador desde el MVP, con arquitectura pensada desde el inicio para sumar cooperativo (2-4 jugadores) más adelante.
 - **Referencias:** Project Zomboid (viabilidad de alcance/vista), DayZ (tensión, permadeath), The Forest (supervivencia y base building en entorno hostil).
 - **Equipo:** el usuario como lead diseño/programación part-time, más amigos por confirmar en arte y sonido/programación de apoyo.
@@ -61,7 +61,8 @@ Resumen de [`WORLD_MAP.md`](WORLD_MAP.md): un hub central fortificado ("Refugio 
 - **Control de versiones:** este repo de GitHub.
 - **Gestión de tareas:** Notion — herramienta principal para marcar y seguir el estado de las tareas (está conectado a Claude, lo que facilita mantenerlo actualizado).
 - **Sonido:** librerías royalty-free para arrancar; se evalúa audio original si se suma alguien al equipo.
-- **Presupuesto:** tope de USD 20, sin gasto asignado por ahora — todo con herramientas gratuitas (Godot, Aseprite tiene alternativa gratis, Figma free, Notion free). Ver advertencia en la sección 9.
+- **Gestión de tareas (alternativas):** Notion es la opción principal, pero cualquier herramienta similar (Trello, GitHub Projects) sirve — lo importante es tener un solo lugar donde el equipo marque y siga las tareas.
+- **Presupuesto:** proyecto **sin fines de lucro** — se hace por gusto/portfolio, no para ganar plata. Todo con herramientas gratuitas (Godot, Aseprite tiene alternativa gratis, Figma free, Notion free). El tema plata se ve más adelante y no bloquea nada ahora (ver secciones 7 y 9).
 
 ## 6. Roadmap resumido
 
@@ -76,13 +77,14 @@ Detalle completo con checklist en [`ROADMAP.md`](ROADMAP.md).
 | 4 — Cooperativo online y pre-lanzamiento | Netcode, página de Steam, wishlists, demo | 2-3 meses | ⏳ |
 | 5 — Lanzamiento y soporte | Early Access / 1.0, updates | — | ⏳ |
 
-## 7. Plan de publicación / negocio
+## 7. Publicación (sin fines de lucro)
 
-- **Steam:** fee de Steamworks de USD 100 por juego (pagar único, reembolsable). Crear la página con 3-6 meses de anticipación para acumular wishlists antes de lanzar.
-- **Precio de referencia:** USD 15-20, en línea con survival 2D exitosos.
-- **Formato de lanzamiento recomendado:** Early Access — permite salir con el contenido de las Fases 2-3 y crecer con la comunidad en vez de esperar a tener "todo listo".
-- **Marketing de bajo costo:** devlogs periódicos desde la Fase 1, participación en Steam Next Fest con una demo.
-- **Localización mínima:** inglés + español.
+El objetivo del proyecto es **hacerlo y compartirlo**, no venderlo. La plata se ve más adelante y no condiciona las decisiones de ahora.
+
+- **Dónde publicarlo:** [itch.io](https://itch.io) es la opción natural — es **gratis** de publicar y permite subir el juego (gratis o "pagá lo que quieras"). Encaja perfecto con el enfoque sin fines de lucro.
+- **Steam (opcional, a futuro):** solo si en algún momento el equipo quiere. Tiene un fee único de USD 100 por juego, así que queda como decisión para más adelante, no como meta obligatoria. Las tareas de Steam que aparecen en el `ROADMAP.md` (Fases 4-5) quedan como **opcionales**.
+- **Difusión:** devlogs/capturas de los avances (en redes o donde el equipo prefiera) para mostrar el progreso y, si se quiere, juntar gente que lo pruebe. De bajo costo y buenos para mantener la motivación.
+- **Localización:** al menos español; inglés si se quiere llegar a más gente.
 
 ## 8. Riesgos y mitigaciones
 
@@ -96,11 +98,10 @@ Detalle completo con checklist en [`ROADMAP.md`](ROADMAP.md).
 - **Título:** sin cerrar todavía. Ideas para elegir/discutir con los amigos: **Cuarentena** (actual), **Zona Cero**, **Foco Cero**, **Últimos Días**, **Refugio** / *The Last Shelter* (si se prioriza un título en inglés para Steam internacional), **Tierra Muerta**. Ninguna es definitiva.
 - **Mapa:** fijo por ahora, con updates de contenido más adelante — resuelto.
 - **Equipo/amigos:** pendiente, se define en unas semanas.
-- **Gestión de tareas:** Notion — resuelto.
-- **Presupuesto:** tope USD 20, sin gasto asignado por ahora — resuelto, pero ver advertencia abajo.
+- **Gestión de tareas:** Notion (o alguna similar) — resuelto.
+- **Fines de lucro:** **no** — proyecto por gusto/portfolio. Se publica gratis (itch.io); vender queda descartado como meta por ahora — resuelto.
+- **Presupuesto / plata:** se ve más adelante y no bloquea nada ahora — todo con herramientas gratuitas. Al ser sin fines de lucro y publicar en itch.io (gratis), no hay ningún gasto obligatorio en el camino — resuelto.
 - **Permadeath y dificultad:** totalmente configurable por el jugador, sin modo fijo separado — resuelto.
-
-> **⚠️ Algo que no cierra:** el presupuesto definido (tope USD 20) es menor al fee de Steamworks (USD 100) que este mismo plan prevé para publicar en Steam. No se resuelve acá — queda anotado para decidir más adelante: ahorrar para ese momento, publicar primero en itch.io (gratis) y evaluar Steam después, o revisar el tope de presupuesto cuando se acerque la Fase 4.
 
 ## 10. Próximos pasos inmediatos
 
