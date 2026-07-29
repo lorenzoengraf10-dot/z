@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cuarentena — Manual de Estudio del Equipo</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: #1f2328; font-size: 11.2pt; line-height: 1.55;
+  }
+  h1, h2, h3, h4 { color: #14322a; line-height: 1.25; }
+  p { margin: 0 0 9px; }
+  a { color: #2e6b4f; }
+  code {
+    font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    background: #eef2ef; border: 1px solid #dbe4dd; border-radius: 3px;
+    padding: 0 4px; font-size: 0.9em; color: #24422f;
+  }
+  pre {
+    background: #14211b; color: #d7e6dc; border-radius: 6px;
+    padding: 12px 14px; overflow-x: auto; font-size: 9.3pt; line-height: 1.45;
+    border: 1px solid #0d1712;
+  }
+  pre code { background: none; border: none; color: inherit; padding: 0; font-size: inherit; }
+  .k { color: #7fd6a3; } /* keyword */
+  .c { color: #7d8f85; font-style: italic; } /* comment */
+  .s { color: #e0b877; } /* string */
+
+  /* Portada */
+  .cover {
+    height: 251mm; display: flex; flex-direction: column; justify-content: center;
+    text-align: center; page-break-after: always;
+    background: linear-gradient(160deg, #14322a 0%, #1f5140 55%, #2e6b4f 100%);
+    color: #eaf5ee; margin: -20mm -18mm 0; padding: 0 24mm;
+  }
+  .cover .tag { letter-spacing: 3px; font-size: 12pt; color: #9fe0b8; text-transform: uppercase; }
+  .cover h1 { color: #ffffff; font-size: 40pt; margin: 6px 0 2px; letter-spacing: -1px; }
+  .cover .sub { font-size: 15pt; color: #cfeeda; margin-bottom: 30px; }
+  .cover .meta { font-size: 10.5pt; color: #bfe4cd; }
+  .cover .zombie { font-size: 46pt; margin-bottom: 10px; }
+
+  /* Encabezados de parte y capítulo */
+  h1.part {
+    page-break-before: always; font-size: 22pt; margin: 0 0 4px;
+    padding-bottom: 8px; border-bottom: 3px solid #2e6b4f; color: #14322a;
+  }
+  h1.part .pn { color: #2e6b4f; font-size: 13pt; display: block; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
+  h2.ch {
+    page-break-before: always; font-size: 16.5pt; margin: 0 0 10px;
+    padding-left: 12px; border-left: 5px solid #2e6b4f;
+  }
+  h2.ch .cn { color: #2e6b4f; font-size: 10.5pt; display: block; letter-spacing: 1px; }
+  h2.ch.nobreak { page-break-before: auto; }
+  h3 { font-size: 12.5pt; margin: 16px 0 6px; color: #1c4638; }
+  h4 { font-size: 11pt; margin: 12px 0 4px; color: #2e6b4f; }
+
+  ul, ol { margin: 4px 0 10px; padding-left: 22px; }
+  li { margin: 2px 0; }
+
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 10pt; }
+  th, td { border: 1px solid #cdd8d1; padding: 5px 8px; text-align: left; vertical-align: top; }
+  th { background: #e7efe9; color: #14322a; }
+
+  .box { border-radius: 6px; padding: 10px 14px; margin: 12px 0; font-size: 10.3pt; page-break-inside: avoid; }
+  .tip { background: #eaf6ee; border-left: 4px solid #2e9c63; }
+  .warn { background: #fdf1e7; border-left: 4px solid #d98a3d; }
+  .game { background: #eef1fb; border-left: 4px solid #5a6ec0; }
+  .ex { background: #f4f0fb; border-left: 4px solid #8a63c0; }
+  .box .t { font-weight: 700; display: block; margin-bottom: 3px; }
+  .tip .t { color: #1f7d4c; } .warn .t { color: #b46a22; }
+  .game .t { color: #3d4c9c; } .ex .t { color: #6a3f9c; }
+
+  .toc { page-break-after: always; }
+  .toc h1 { font-size: 22pt; border-bottom: 3px solid #2e6b4f; padding-bottom: 8px; }
+  .toc .part { font-weight: 700; color: #14322a; margin: 12px 0 2px; font-size: 11.5pt; }
+  .toc .item { margin: 1px 0 1px 14px; font-size: 10.3pt; color: #33413a; }
+  .lead { font-size: 12pt; color: #33413a; }
+  .role { display: inline-block; font-size: 9pt; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 4px; }
+  .r-prog { background: #e0ede6; color: #1f6b4a; }
+  .r-art { background: #f6e9e0; color: #b46a22; }
+  .r-des { background: #ece4f6; color: #6a3f9c; }
+  .r-all { background: #e7efe9; color: #2e6b4f; }
+</style>
+</head>
+<body>
+
+<!-- ===================== PORTADA ===================== -->
+<div class="cover">
+  <div class="zombie">🧟‍♂️🎮</div>
+  <div class="tag">Manual de Estudio del Equipo</div>
+  <h1>CUARENTENA</h1>
+  <div class="sub">Todo lo que necesitamos saber para hacer nuestro videojuego de supervivencia</div>
+  <div class="meta">
+    Juego de supervivencia con zombies · pixel art 2D · Godot 4<br>
+    Plan de estudio de 1 semana · Núcleo común + rutas por rol<br>
+    Equipo de 3 · Proyecto sin fines de lucro
+  </div>
+</div>
+
+<!-- ===================== CÓMO USAR ===================== -->
+<h1 class="part"><span class="pn">Antes de empezar</span>Cómo usar este libro</h1>
+<p class="lead">Este manual está hecho a la medida de <strong>nuestro</strong> juego. No es un curso genérico de internet: cada tema se explica y después se muestra <strong>cómo aparece en el código que ya tenemos</strong> (en la carpeta <code>game/</code> del repo). La idea es que en una semana lleguemos con el conocimiento fresco para empezar a trabajar sin estar perdidos.</p>
+
+<h3>Los 3 roles</h3>
+<p>Somos 3 y nos repartimos el trabajo. Cada uno tiene una <strong>ruta</strong> propia, pero <strong>todos</strong> arrancamos por el mismo núcleo común:</p>
+<ul>
+  <li><span class="role r-prog">PROGRAMACIÓN</span> — hace que el juego funcione: movimiento, zombies, crafteo, guardado. (GDScript en Godot.)</li>
+  <li><span class="role r-art">ARTE</span> — dibuja el mundo: tiles del mapa, personaje, zombies, objetos, animaciones y la interfaz.</li>
+  <li><span class="role r-des">DISEÑO + AUDIO</span> — piensa que el juego sea divertido y justo (balance, niveles) y arma el sonido y la música.</li>
+</ul>
+<p>No es rígido: si a alguien le interesa otra ruta, la lee igual. Y los tres deberían entender lo básico de todo para poder hablar el mismo idioma.</p>
+
+<div class="box tip"><span class="t">Cómo estudiar cada capítulo</span>
+Cada capítulo tiene tres partes: <strong>1)</strong> la explicación del concepto, <strong>2)</strong> un recuadro <em>"En nuestro juego"</em> que lo conecta con un archivo real del proyecto, y <strong>3)</strong> un <em>mini-ejercicio</em> para fijar lo aprendido. Hagan los ejercicios: se aprende programando/dibujando, no solo leyendo.</p></div>
+
+<div class="box game"><span class="t">🎮 Recordá el objetivo</span>
+No hace falta memorizar todo. Con entender <em>de qué se trata cada cosa</em> y saber <em>dónde buscarla</em> ya alcanza para arrancar. El conocimiento profundo se gana trabajando en el juego, no antes.</p></div>
+
+<!-- ===================== ÍNDICE ===================== -->
+<div class="toc">
+<h1>Índice</h1>
+
+<div class="part">Parte 0 · Núcleo común <span class="role r-all">TODOS</span></div>
+<div class="item">1. Qué es un videojuego por dentro</div>
+<div class="item">2. Nuestro juego en una página</div>
+<div class="item">3. Git y GitHub para trabajar en equipo</div>
+<div class="item">4. Godot 4: el editor y cómo está armado nuestro proyecto</div>
+<div class="item">5. Notion y cómo nos organizamos</div>
+
+<div class="part">Parte 1 · Ruta Programación <span class="role r-prog">PROGRAMACIÓN</span></div>
+<div class="item">6. GDScript desde cero</div>
+<div class="item">7. Nodos, escenas y señales</div>
+<div class="item">8. Input, movimiento y cámara</div>
+<div class="item">9. Colisiones, capas y máscaras</div>
+<div class="item">10. Componentes y arquitectura</div>
+<div class="item">11. Inteligencia artificial y máquinas de estado</div>
+<div class="item">12. Datos, JSON y guardado de partida</div>
+<div class="item">13. TileMaps: construir el mundo</div>
+
+<div class="part">Parte 2 · Ruta Arte <span class="role r-art">ARTE</span></div>
+<div class="item">14. Fundamentos de pixel art</div>
+<div class="item">15. Aseprite en la práctica</div>
+<div class="item">16. Tilesets y autotiling</div>
+<div class="item">17. Personajes y animación</div>
+<div class="item">18. Interfaz (UI/HUD) con Figma</div>
+
+<div class="part">Parte 3 · Ruta Diseño + Audio <span class="role r-des">DISEÑO + AUDIO</span></div>
+<div class="item">19. Game design: que sea divertido y justo</div>
+<div class="item">20. Diseño de niveles y del mapa</div>
+<div class="item">21. Audio: sonido y música (y el ruido como mecánica)</div>
+
+<div class="part">Parte 4 · Avanzado <span class="role r-all">TODOS (un vistazo)</span></div>
+<div class="item">22. Buenas prácticas y organización del código</div>
+<div class="item">23. Multijugador: lo más difícil</div>
+<div class="item">24. Seguridad aplicada</div>
+<div class="item">25. Exportar y publicar en itch.io</div>
+
+<div class="part">Apéndices</div>
+<div class="item">A. Cronograma de estudio de 1 semana</div>
+<div class="item">B. Glosario de términos</div>
+<div class="item">C. Recursos gratis para seguir aprendiendo</div>
+</div>
+
+<!-- ==================================================== -->
+<!-- PARTE 0 — NÚCLEO COMÚN                                -->
+<!-- ==================================================== -->
+<h1 class="part"><span class="pn">Parte 0 · Todos</span>Núcleo común</h1>
+<p class="lead">Estos 5 capítulos los estudian los tres, sin importar el rol. Son la base para entender de qué hablamos cuando hablamos de "hacer un juego" y para poder trabajar juntos sin pisarnos.</p>
+
+<!-- CAP 1 -->
+<h2 class="ch"><span class="cn">Capítulo 1 · Nivel: muy fácil</span>Qué es un videojuego por dentro</h2>
+<p>Un videojuego parece magia, pero por dentro es sorprendentemente simple: es un programa que <strong>repite lo mismo muchísimas veces por segundo</strong>. A esa repetición se le llama <strong>game loop</strong> (bucle de juego).</p>
+
+<h3>El game loop y los frames</h3>
+<p>Cada vuelta del bucle es un <strong>frame</strong> (cuadro). En cada frame el juego hace tres cosas, en orden:</p>
+<ol>
+  <li><strong>Leer la entrada:</strong> ¿qué teclas apretó el jugador?</li>
+  <li><strong>Actualizar el estado:</strong> mover al personaje, mover a los zombies, restar hambre, chequear colisiones…</li>
+  <li><strong>Dibujar:</strong> pintar en la pantalla cómo quedó todo.</li>
+</ol>
+<p>Esto pasa unas <strong>60 veces por segundo</strong> (60 FPS = <em>frames per second</em>). Como es tan rápido, nuestro ojo ve movimiento fluido, igual que en el cine. Un motor de juego (como Godot) se encarga de correr ese bucle por vos: vos solo escribís <em>qué pasa en cada frame</em>.</p>
+
+<h3>El vocabulario básico</h3>
+<table>
+  <tr><th>Término</th><th>Qué es</th><th>Ejemplo en nuestro juego</th></tr>
+  <tr><td><strong>Sprite</strong></td><td>Una imagen 2D que se dibuja en pantalla</td><td>El personaje, un zombie, una fruta</td></tr>
+  <tr><td><strong>Tile</strong></td><td>Un "azulejo" cuadrado que se repite para armar el mapa</td><td>Pasto, camino, pared</td></tr>
+  <tr><td><strong>Entidad</strong></td><td>Un "objeto" del juego con comportamiento</td><td>El jugador, un zombie, un ítem</td></tr>
+  <tr><td><strong>Colisión</strong></td><td>Detectar cuándo dos cosas se tocan</td><td>El zombie te alcanza; agarrás comida</td></tr>
+  <tr><td><strong>Escena</strong></td><td>Un conjunto de piezas armadas que forman algo (un nivel, un personaje)</td><td>La escena del jugador, la del mundo</td></tr>
+  <tr><td><strong>Física</strong></td><td>Cálculo de movimiento y choques</td><td>Que no atravieses paredes</td></tr>
+</table>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+Todo lo que ves en las capturas —vos, el zombie, la comida, el mapa— son <em>entidades</em> hechas de <em>sprites</em>, moviéndose y chocando dentro de un <em>game loop</em> que corre 60 veces por segundo. Ahora mismo el arte son cuadrados de colores (placeholder), pero el motor por debajo ya hace todo esto.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Agarrá cualquier juego que tengas y tratá de identificar, mirándolo: ¿cuáles son los sprites? ¿cuáles son los tiles del fondo? ¿cuándo hay una colisión? Escribí 3 ejemplos de cada uno. Es entrenar el ojo para "ver" un juego como lo ve quien lo hace.</p></div>
+
+<!-- CAP 2 -->
+<h2 class="ch"><span class="cn">Capítulo 2 · Nivel: muy fácil</span>Nuestro juego en una página</h2>
+<p>Antes de aprender a construirlo, hay que tener clarísimo <strong>qué</strong> estamos construyendo. Este es el resumen. (El detalle completo está en <code>docs/GDD.md</code> y <code>docs/MASTER_PLAN.md</code> del repo.)</p>
+
+<h3>La idea</h3>
+<p><strong>Cuarentena</strong> es un juego de <strong>supervivencia con zombies</strong>, en <strong>pixel art 2D</strong> con vista desde arriba (top-down), para PC. Inspirado en <em>Project Zomboid</em>, <em>DayZ</em> y <em>The Forest</em>. Se juega solo, y más adelante en cooperativo.</p>
+
+<h3>El loop de juego (lo que el jugador hace todo el tiempo)</h3>
+<ul>
+  <li><strong>Explorás</strong> un mundo abierto: pueblo, bosque, costa.</li>
+  <li><strong>Juntás recursos:</strong> looteás casas, cazás, pescás, talás.</li>
+  <li><strong>Sobrevivís:</strong> manejás hambre, sed y salud.</li>
+  <li><strong>Construís tu base</strong> donde quieras en el mapa.</li>
+  <li><strong>Evitás o enfrentás zombies</strong>, que te detectan por lo que <strong>ven</strong> y por el <strong>ruido</strong> que hacés.</li>
+</ul>
+
+<h3>Los 3 pilares de diseño</h3>
+<ol>
+  <li><strong>Libertad de asentamiento:</strong> no hay una base obligatoria; el mapa abierto es el punto de partida.</li>
+  <li><strong>Tensión sostenida, no sustos baratos:</strong> el peligro viene de administrar recursos y de manejar el ruido/visibilidad, no de sustos scriptados.</li>
+  <li><strong>Alcance controlado:</strong> primero un mapa chico que funcione bien, antes de prometer un mundo gigante.</li>
+</ol>
+
+<div class="box game"><span class="t">🎮 En nuestro juego (lo que ya está hecho)</span>
+El prototipo ya tiene andando: movimiento con sigilo (caminar/correr/agacharse, cada uno hace distinto ruido), un zombie con inteligencia que te detecta por visión y por ruido y te persigue, hambre y salud, juntar y comer comida, y una pantalla de mapa. Todo con arte placeholder. <strong>Sobre esta base vamos a construir el resto.</strong></p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Con tus palabras, explicále el juego a alguien que no sabe nada, en 3 oraciones. Si podés hacerlo, entendiste el norte. Guardá esas 3 oraciones: son la base del "pitch" del juego.</p></div>
+
+<!-- CAP 3 -->
+<h2 class="ch"><span class="cn">Capítulo 3 · Nivel: fácil pero fundamental</span>Git y GitHub para trabajar en equipo</h2>
+<p>Somos 3 tocando los mismos archivos. Sin una herramienta que ordene eso, es un caos garantizado (se pisan cambios, se pierde trabajo). Esa herramienta es <strong>Git</strong>, y <strong>GitHub</strong> es la web donde guardamos el proyecto compartido. <strong>Esto lo tienen que saber los tres, sí o sí.</strong></p>
+
+<h3>Las ideas clave</h3>
+<ul>
+  <li><strong>Repositorio (repo):</strong> la carpeta del proyecto con todo su historial. El nuestro: <code>github.com/lorenzoengraf10-dot/z</code>.</li>
+  <li><strong>Commit:</strong> una "foto" guardada de tus cambios, con un mensajito que explica qué hiciste.</li>
+  <li><strong>Push:</strong> subir tus commits a GitHub para que los demás los vean.</li>
+  <li><strong>Pull:</strong> bajar los cambios que subieron los demás.</li>
+  <li><strong>Rama (branch):</strong> una línea de trabajo paralela. Nosotros por ahora trabajamos todos sobre <code>main</code>.</li>
+</ul>
+
+<h3>El flujo de trabajo diario (memorizá esto)</h3>
+<pre><code><span class="c"># 1. Antes de empezar a trabajar, bajá lo último:</span>
+git pull origin main
+
+<span class="c"># 2. Trabajás, hacés cambios en Godot/Aseprite...</span>
+
+<span class="c"># 3. Guardás tus cambios en un commit:</span>
+git add .
+git commit -m <span class="s">"Agrego animación de caminar del personaje"</span>
+
+<span class="c"># 4. Subís tus cambios:</span>
+git push origin main</code></pre>
+
+<div class="box warn"><span class="t">⚠️ La regla de oro para no pisarse</span>
+Siempre hacé <code>git pull</code> <strong>antes</strong> de empezar y <code>git push</code> <strong>apenas terminás</strong> algo. Si dos personas editan el mismo archivo a la vez, Git avisa de un "conflicto": no es grave, pero es más fácil evitarlo trabajando cada uno en cosas distintas y sincronizando seguido. <strong>Coordinen en Notion quién toca qué.</strong></p></div>
+
+<div class="box tip"><span class="t">💡 Consejo</span>
+Instalen <strong>GitHub Desktop</strong> (app gratis con botones, sin comandos) si la terminal les intimida. Hace lo mismo: pull, commit, push, con clicks. Para arrancar es perfecto.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Creen su cuenta de GitHub, pidan acceso al repo, y practiquen el ciclo completo: cloná el repo, editá el <code>README.md</code> agregando tu nombre, y hacé commit + push. Cuando los tres aparezcan en el historial, ya saben lo esencial de Git.</p></div>
+
+<!-- CAP 4 -->
+<h2 class="ch"><span class="cn">Capítulo 4 · Nivel: fácil-medio</span>Godot 4: el editor y cómo está armado nuestro proyecto</h2>
+<p><strong>Godot</strong> es el motor con el que hacemos el juego. Es gratis, libre, y perfecto para 2D. Lo bajás de <code>godotengine.org</code>, es un solo archivo que se ejecuta directo (no se instala).</p>
+
+<h3>Las 2 ideas más importantes de Godot: nodos y escenas</h3>
+<p>Godot arma <strong>todo</strong> con dos conceptos:</p>
+<ul>
+  <li><strong>Nodo:</strong> una pieza que hace <em>una</em> cosa. Hay nodos para mostrar una imagen, para detectar colisiones, para reproducir un sonido, para moverse con física, etc.</li>
+  <li><strong>Escena:</strong> varios nodos armados juntos como un árbol (uno principal y otros que "cuelgan" de él). Una escena puede ser un personaje, un enemigo, un menú o un nivel entero. Y las escenas se pueden meter dentro de otras (el jugador vive dentro de la escena del mundo).</li>
+</ul>
+
+<h3>Cómo está armado NUESTRO proyecto</h3>
+<p>Todo vive en la carpeta <code>game/</code>. Así se organiza:</p>
+<table>
+  <tr><th>Carpeta / archivo</th><th>Qué es</th></tr>
+  <tr><td><code>project.godot</code></td><td>El archivo que abrís en Godot para cargar todo el proyecto</td></tr>
+  <tr><td><code>scenes/</code></td><td>Las escenas: <code>Main</code> (el mundo), <code>Player</code>, <code>Zombie</code>, <code>Pickup</code> y la UI</td></tr>
+  <tr><td><code>scripts/</code></td><td>El código (GDScript): <code>player.gd</code>, <code>zombie.gd</code>, etc.</td></tr>
+  <tr><td><code>data/</code></td><td>Datos del juego, como <code>world_map.json</code> (las ubicaciones del mapa)</td></tr>
+  <tr><td><code>assets/</code></td><td>El arte y el sonido (por ahora vacío, con placeholders)</td></tr>
+</table>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+La escena <code>Main.tscn</code> es el mundo. Adentro tiene una instancia de <code>Player.tscn</code> (con una cámara que lo sigue), un <code>Zombie.tscn</code>, varios <code>Pickup.tscn</code> (la comida), el <code>HUD</code> (las barras) y el <code>MapScreen</code> (el mapa). Cada una de esas escenas tiene su propio script que le da comportamiento. Abrí <code>Main.tscn</code> en Godot y mirá el árbol de nodos del panel izquierdo: vas a ver exactamente esto.</p></div>
+
+<div class="box tip"><span class="t">💡 Cómo probarlo</span>
+Abrí <code>game/project.godot</code> en Godot y apretá <strong>F5</strong>. Vas a poder jugar el prototipo: moverte, esquivar al zombie, juntar comida y abrir el mapa con M. Los controles están en <code>game/README.md</code>.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Abrí el proyecto en Godot, corré el juego con F5, y después abrí <code>Main.tscn</code>. Identificá en el árbol de nodos: ¿dónde está el jugador? ¿dónde el zombie? Hacé click en el nodo <code>Player</code> y mirá sus propiedades en el panel derecho.</p></div>
+
+<!-- CAP 5 -->
+<h2 class="ch"><span class="cn">Capítulo 5 · Nivel: muy fácil</span>Notion y cómo nos organizamos</h2>
+<p>Un proyecto de 3 personas necesita un solo lugar donde estén <strong>todas las tareas</strong>: qué hay que hacer, quién lo hace y en qué estado está. Usamos <strong>Notion</strong> (gratis).</p>
+
+<h3>Un tablero simple alcanza</h3>
+<p>Con un tablero tipo "kanban" de 4 columnas ya funciona muy bien:</p>
+<table>
+  <tr><th>Por hacer</th><th>En progreso</th><th>En revisión</th><th>Hecho</th></tr>
+  <tr><td>Tareas que nadie empezó</td><td>Lo que alguien está haciendo <em>ahora</em></td><td>Terminado, falta que otro lo pruebe</td><td>Listo y probado</td></tr>
+</table>
+<p>Cada tarjeta debería tener: un título claro ("Dibujar tileset de bosque"), un responsable, y a qué rol/parte pertenece.</p>
+
+<div class="box tip"><span class="t">💡 Por qué importa tanto</span>
+Además de no olvidarse cosas, el tablero <strong>evita que dos toquen lo mismo</strong> (que en Git generaría conflictos). Si ves que una tarea está "en progreso" y tiene dueño, no la agarres: agarrá otra. Regla simple: cada uno mueve sus propias tarjetas y avisa cuando algo pasa a "En revisión".</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Entre los tres, creen el Notion y carguen las primeras 10 tareas que se les ocurran del juego (da igual si están bien priorizadas). Repártanse 2-3 cada uno moviéndolas a "En progreso". Ya están organizados.</p></div>
+
+<!-- ==================================================== -->
+<!-- PARTE 1 — RUTA PROGRAMACIÓN                           -->
+<!-- ==================================================== -->
+<h1 class="part"><span class="pn">Parte 1 · Programación</span>Ruta Programación</h1>
+<p class="lead">Esta ruta es para quien haga que el juego <em>funcione</em>. Vamos de lo más básico (escribir código) a lo más complejo (inteligencia artificial y guardado), siempre mostrando el código real que ya tenemos. Lenguaje: <strong>GDScript</strong>, el lenguaje propio de Godot, muy parecido a Python.</p>
+
+<!-- CAP 6 -->
+<h2 class="ch"><span class="cn">Capítulo 6 · Nivel: fácil</span>GDScript desde cero</h2>
+<p>GDScript es amigable: sin punto y coma, con indentación (sangría) para marcar bloques. Si sabés algo de Python, ya lo conocés medio.</p>
+
+<h3>Variables y tipos</h3>
+<p>Una <strong>variable</strong> es una cajita con un nombre que guarda un valor.</p>
+<pre><code><span class="k">var</span> vida = 100            <span class="c"># un número entero</span>
+<span class="k">var</span> velocidad = 90.0       <span class="c"># un número con decimales</span>
+<span class="k">var</span> nombre = <span class="s">"Superviviente"</span>  <span class="c"># texto (string)</span>
+<span class="k">var</span> esta_vivo = <span class="k">true</span>       <span class="c"># verdadero/falso (booleano)</span></code></pre>
+<p>Podés (y conviene) decir de qué tipo es cada una con <code>:</code> — ayuda a evitar errores:</p>
+<pre><code><span class="k">var</span> vida: <span class="k">int</span> = 100
+<span class="k">var</span> velocidad: <span class="k">float</span> = 90.0</code></pre>
+
+<h3>Funciones</h3>
+<p>Una <strong>función</strong> es un bloque de código con nombre que hace una tarea. Se define con <code>func</code>:</p>
+<pre><code><span class="k">func</span> saludar(nombre):
+    print(<span class="s">"Hola "</span> + nombre)
+
+saludar(<span class="s">"Lorenzo"</span>)   <span class="c"># imprime: Hola Lorenzo</span></code></pre>
+
+<h3>Decisiones (if) y repeticiones (for)</h3>
+<pre><code><span class="k">if</span> vida &lt;= 0:
+    print(<span class="s">"Moriste"</span>)
+<span class="k">elif</span> vida &lt; 30:
+    print(<span class="s">"Cuidado, poca vida"</span>)
+<span class="k">else</span>:
+    print(<span class="s">"Todo bien"</span>)
+
+<span class="k">for</span> i <span class="k">in</span> range(3):
+    print(<span class="s">"Zombie número "</span> + str(i))</code></pre>
+
+<h3>Listas y diccionarios</h3>
+<pre><code><span class="k">var</span> inventario = [<span class="s">"madera"</span>, <span class="s">"piedra"</span>, <span class="s">"comida"</span>]   <span class="c"># lista (array)</span>
+<span class="k">var</span> stats = { <span class="s">"vida"</span>: 100, <span class="s">"hambre"</span>: 80 }         <span class="c"># diccionario</span>
+print(stats[<span class="s">"vida"</span>])   <span class="c"># imprime 100</span></code></pre>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+En <code>player.gd</code>, el inventario es justamente un diccionario: <code>var inventory := {}</code>. Cuando juntás comida, se hace <code>inventory["comida"] = inventory.get("comida", 0) + 1</code>. Eso es exactamente lo que acabás de aprender.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+En Godot, creá un script nuevo y escribí una función <code>calcular_daño(vida, golpe)</code> que reste el golpe a la vida, imprima la vida restante, y si queda en 0 o menos imprima "Muerto". Probala con varios valores.</p></div>
+
+<!-- CAP 7 -->
+<h2 class="ch"><span class="cn">Capítulo 7 · Nivel: medio</span>Nodos, escenas y señales</h2>
+<p>Ya vimos que Godot arma todo con nodos. Cada script se "engancha" a un nodo y le da comportamiento. Lo primero de cada script dice de qué tipo de nodo hereda:</p>
+<pre><code><span class="k">extends</span> CharacterBody2D   <span class="c"># este script controla un cuerpo con física 2D</span></code></pre>
+
+<h3>Las funciones especiales que Godot llama solo</h3>
+<table>
+  <tr><th>Función</th><th>Cuándo se ejecuta</th></tr>
+  <tr><td><code>_ready()</code></td><td>Una vez, al aparecer el nodo. Para inicializar cosas.</td></tr>
+  <tr><td><code>_process(delta)</code></td><td>Cada frame. Para lógica general.</td></tr>
+  <tr><td><code>_physics_process(delta)</code></td><td>Cada frame de física (ritmo fijo). Para mover cuerpos.</td></tr>
+  <tr><td><code>_unhandled_input(event)</code></td><td>Cuando hay una entrada (tecla, click).</td></tr>
+</table>
+<p><code>delta</code> es cuánto tiempo pasó desde el frame anterior (en segundos). Sirve para que el movimiento sea igual de rápido en cualquier compu, más allá de los FPS.</p>
+
+<h3>Señales: cómo se avisan las cosas entre sí</h3>
+<p>Una <strong>señal</strong> es un aviso que un nodo emite cuando pasa algo, y otros nodos pueden "escuchar". Es la forma de que las piezas se comuniquen sin estar pegadas entre sí.</p>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+El componente de necesidades (<code>needs_component.gd</code>) emite señales cuando cambian la salud o el hambre:
+<pre><code><span class="k">signal</span> health_changed(current, maximum)
+<span class="k">signal</span> hunger_changed(current, maximum)</code></pre>
+Y el HUD (<code>hud.gd</code>) las "escucha" para actualizar las barras:
+<pre><code>needs.health_changed.connect(_on_health_changed)</code></pre>
+Así el HUD se entera de los cambios <em>sin</em> que el jugador tenga que conocer al HUD. Están desacoplados: es una de las mejores prácticas del oficio.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Abrí <code>hud.gd</code> y seguí el recorrido: ¿de dónde saca el jugador? ¿a qué señales se conecta? ¿qué función corre cuando cambia el hambre? No hace falta que lo escribas: entenderlo leyéndolo ya es un montón.</p></div>
+
+<!-- CAP 8 -->
+<h2 class="ch"><span class="cn">Capítulo 8 · Nivel: medio</span>Input, movimiento y cámara</h2>
+<p>Mover al personaje es "leer las teclas y cambiar su posición cada frame".</p>
+
+<h3>Acciones de input</h3>
+<p>En vez de preguntar por la tecla "W" directamente, se definen <strong>acciones</strong> ("move_up") y se les asignan teclas. Así, cambiar los controles no obliga a tocar el código del jugador.</p>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+El archivo <code>input_setup.gd</code> registra las acciones al arrancar (moverse con WASD y flechas, correr con Shift, agacharse con C, interactuar con E). Y <code>player.gd</code> las usa así:
+<pre><code><span class="k">func</span> _physics_process(_delta):
+    <span class="k">var</span> input_dir = Input.get_vector(<span class="s">"move_left"</span>, <span class="s">"move_right"</span>, <span class="s">"move_up"</span>, <span class="s">"move_down"</span>)
+    <span class="k">var</span> velocidad = walk_speed
+    <span class="k">if</span> Input.is_action_pressed(<span class="s">"crouch"</span>):
+        velocidad = crouch_speed   <span class="c"># agachado: más lento</span>
+    <span class="k">elif</span> Input.is_action_pressed(<span class="s">"run"</span>):
+        velocidad = run_speed       <span class="c"># corriendo: más rápido</span>
+    velocity = input_dir * velocidad
+    move_and_slide()                <span class="c"># Godot mueve y resuelve choques</span></code></pre>
+<code>get_vector</code> devuelve una dirección (ej. "arriba-derecha"), <code>velocity</code> es la velocidad del cuerpo, y <code>move_and_slide()</code> lo mueve deslizándose contra las paredes.</p></div>
+
+<h3>La cámara</h3>
+<p>Un nodo <code>Camera2D</code> puesto <em>dentro</em> del jugador hace que la cámara lo siga automáticamente. En nuestra <code>Main.tscn</code>, la cámara cuelga del <code>Player</code> con un zoom 2x (para que el pixel art se vea grande).</p>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Corré el juego y probá los tres modos: caminar, correr (Shift) y agacharse (C). Después, en <code>player.gd</code>, cambiá <code>run_speed</code> a un número más grande, guardá, y volvé a correr el juego. Acabás de modificar el comportamiento del juego.</p></div>
+
+<!-- CAP 9 -->
+<h2 class="ch"><span class="cn">Capítulo 9 · Nivel: medio</span>Colisiones, capas y máscaras</h2>
+<p>Las colisiones deciden qué choca con qué. En 2D, cada cuerpo tiene una forma de colisión (un rectángulo, un círculo) y pertenece a <strong>capas</strong>.</p>
+
+<h3>Capas y máscaras (la parte que confunde a todos al principio)</h3>
+<ul>
+  <li><strong>Capa (layer):</strong> "en qué grupo estoy". Ej: el jugador está en la capa 2.</li>
+  <li><strong>Máscara (mask):</strong> "con qué grupos choco / a qué grupos detecto".</li>
+</ul>
+<p>Ejemplo: si el jugador está en la capa 2 y las paredes en la capa 1, el jugador pone su <em>máscara</em> en 1 para chocar con paredes.</p>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+Usamos: <strong>capa 1</strong> = paredes, <strong>capa 2</strong> = jugador, <strong>capa 4</strong> = zombies. Así el "rayo de visión" del zombie (<code>VisionRay</code>) tiene su máscara solo en la capa 1: si el rayo choca con algo, es una pared que le tapa la vista. Y la comida (<code>Pickup</code>, un <code>Area2D</code>) tiene la máscara en la capa 2 para detectar solo al jugador cuando le pasás por encima.</p></div>
+
+<div class="box tip"><span class="t">💡 Area2D vs CharacterBody2D</span>
+<strong>CharacterBody2D</strong> es un cuerpo sólido que se mueve y choca (el jugador, el zombie). <strong>Area2D</strong> es una zona que solo <em>detecta</em> cuando algo entra, sin frenarlo (la comida, un gatillo, una trampa). Elegir bien entre estos dos resuelve el 90% de los casos.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Abrí <code>Pickup.tscn</code> y mirá sus propiedades de colisión (collision_layer y collision_mask). Después leé <code>pickup.gd</code>: ¿qué pasa exactamente cuando el jugador la toca? Seguí la función <code>_on_body_entered</code>.</p></div>
+
+<!-- CAP 10 -->
+<h2 class="ch"><span class="cn">Capítulo 10 · Nivel: medio-difícil</span>Componentes y arquitectura</h2>
+<p>A medida que el juego crece, meter TODO en un solo script se vuelve inmanejable. La solución: dividir en <strong>componentes</strong>, piezas reutilizables que hacen una cosa.</p>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+<code>needs_component.gd</code> maneja salud y hambre, y es un componente aparte, no está metido dentro del jugador. ¿Por qué? Porque mañana un NPC amigo también puede tener hambre y salud: le colgamos el <em>mismo</em> componente y listo. El jugador solo le "pide" cosas:
+<pre><code>needs.damage(8.0)   <span class="c"># cuando un zombie te pega</span>
+needs.eat(30.0)     <span class="c"># cuando comés</span></code></pre>
+El componente se encarga de bajar el hambre con el tiempo y, si llega a 0, empezar a restar salud. Todo eso encapsulado en un solo lugar.</p></div>
+
+<h3>La idea grande: bajar de nivel de a poco</h3>
+<p>Un buen código se lee como capas: el jugador no sabe <em>cómo</em> funciona la salud por dentro, solo pide <code>damage()</code>. El HUD no sabe cómo se calcula el hambre, solo escucha la señal. Cada pieza esconde su complejidad. Eso hace que 3 personas puedan trabajar sin romper lo del otro.</p>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Leé <code>needs_component.gd</code> entero (es corto). Identificá: ¿dónde baja el hambre sola? ¿dónde empieza el daño por inanición? ¿qué señal se emite al morir? Es el ejemplo perfecto de un componente bien hecho.</p></div>
+
+<!-- CAP 11 -->
+<h2 class="ch"><span class="cn">Capítulo 11 · Nivel: difícil</span>Inteligencia artificial y máquinas de estado</h2>
+<p>La "IA" de un enemigo no es magia: es un conjunto de reglas y <strong>estados</strong>. Una <strong>máquina de estados</strong> dice: "el enemigo puede estar en uno de varios estados, y cambia según lo que pasa".</p>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+El zombie (<code>zombie.gd</code>) tiene tres estados:
+<pre><code><span class="k">enum</span> State { WANDER, CHASE, ATTACK }
+<span class="c"># WANDER = deambula   CHASE = te persigue   ATTACK = te pega</span></code></pre>
+Cada frame, el zombie ejecuta la lógica del estado en el que está, y decide si cambiar:
+<pre><code><span class="k">match</span> state:
+    State.WANDER:
+        _do_wander(delta)
+        <span class="k">if</span> player != null:      <span class="c"># si te detectó...</span>
+            state = State.CHASE  <span class="c"># pasa a perseguirte</span>
+    State.CHASE:
+        _do_chase(delta, player)
+    State.ATTACK:
+        _do_attack(delta, player)</code></pre></p></div>
+
+<h3>Cómo te detecta: visión y oído</h3>
+<p>El zombie te encuentra de dos maneras (función <code>_detect_player</code>):</p>
+<ul>
+  <li><strong>Oído:</strong> si estás dentro de tu propio "radio de ruido" (que depende de si caminás, corrés o te agachás), te escucha aunque no te vea.</li>
+  <li><strong>Visión:</strong> si estás dentro de un cono al frente suyo <em>y</em> no hay una pared tapando (eso lo chequea el <code>VisionRay</code>).</li>
+</ul>
+<p>Esto es exactamente lo que se ve en la captura del gameplay: el círculo punteado (ruido) y el triángulo (visión).</p>
+
+<div class="box tip"><span class="t">💡 Por qué esto es tan poderoso</span>
+Con solo tres estados y dos formas de detección ya tenés un enemigo que se siente "inteligente". La mayoría de las IA de juegos son máquinas de estado como esta, solo que con más estados. Dominar este patrón te sirve para enemigos, NPCs, puertas, trampas... casi todo.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Abrí <code>zombie.gd</code> y encontrá <code>lose_interest_time</code>. Es cuántos segundos persigue el zombie después de perderte de vista. Cambialo a 10 segundos, corré el juego, y sentí la diferencia (¡ahora es mucho más insistente!). Después dibujá en papel el diagrama de los 3 estados con flechas de qué lo hace cambiar de uno a otro.</p></div>
+
+<!-- CAP 12 -->
+<h2 class="ch"><span class="cn">Capítulo 12 · Nivel: medio-difícil</span>Datos, JSON y guardado de partida</h2>
+<p>No todo el juego es código: mucho es <strong>datos</strong>. Las ubicaciones del mapa, las recetas de crafteo, las estadísticas de cada objeto... conviene guardarlas en archivos aparte, no "hardcodeadas" en el código. El formato más común es <strong>JSON</strong>: texto ordenado en pares "nombre: valor".</p>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+El mapa lee sus lugares desde <code>data/world_map.json</code>. Cada lugar es así:
+<pre><code>{
+  <span class="s">"name"</span>: <span class="s">"Refugio Central"</span>,
+  <span class="s">"type"</span>: <span class="s">"hub"</span>,
+  <span class="s">"position"</span>: [0.5, 0.42],
+  <span class="s">"description"</span>: <span class="s">"Asentamiento fortificado principal."</span>
+}</code></pre>
+Y <code>map_screen.gd</code> lo lee y dibuja los puntos. Ventaja enorme: para <strong>agregar o mover un lugar del mapa no hay que tocar código</strong>, solo editar el JSON. El artista o el diseñador pueden hacerlo sin saber programar.</p></div>
+
+<h3>Guardar la partida</h3>
+<p>Guardar es lo mismo al revés: tomás el estado del juego (posición del jugador, vida, inventario), lo convertís a JSON y lo escribís en un archivo. Al cargar, lo leés y reconstruís todo. Godot trae funciones para escribir y leer archivos (<code>FileAccess</code>) y para convertir a/desde JSON (<code>JSON.stringify</code> / <code>JSON.parse_string</code>).</p>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Abrí <code>world_map.json</code> y agregá un lugar nuevo (inventá nombre, tipo y una posición entre 0 y 1). Guardá, corré el juego y abrí el mapa con M: tu lugar debería aparecer. Cambiaste el contenido del juego sin escribir una línea de código.</p></div>
+
+<!-- CAP 13 -->
+<h2 class="ch"><span class="cn">Capítulo 13 · Nivel: medio-difícil</span>TileMaps: construir el mundo</h2>
+<p>El mundo no se dibuja poniendo miles de imágenes a mano: se "pinta" con un <strong>TileMap</strong>. Un TileMap usa un <strong>TileSet</strong> (una grilla de tiles: pasto, camino, agua, pared) y te deja pintar el mapa como en el Paint, colocando tiles en una cuadrícula.</p>
+
+<h3>Por qué es tan eficiente</h3>
+<ul>
+  <li>Un mapa gigante pesa poquísimo (solo guarda "en la celda X va el tile número Y").</li>
+  <li>Las colisiones se definen una vez por tile (la pared choca; el pasto no) y valen para todo el mapa.</li>
+  <li><strong>Autotiling:</strong> Godot puede elegir solo el borde correcto (esquinas, orillas) según los tiles vecinos. Magia para hacer costas y caminos.</li>
+</ul>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+Ahora el piso es un rectángulo verde liso (placeholder). El próximo gran paso de programación + arte juntos es reemplazarlo por un <strong>TileMap</strong> real: el artista dibuja el TileSet (pasto, camino, árboles, paredes de casas) y el programador arma el mapa y le pone colisiones. Ahí el juego empieza a tener cara de juego.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+En Godot, agregá un nodo <code>TileMap</code> a una escena de prueba, creá un TileSet con 2 tiles improvisados (aunque sean dos cuadrados de distinto color) y pintá un pequeño mapa. No hace falta que quede lindo: es para entender el flujo de pintar con tiles.</p></div>
+
+<!-- ==================================================== -->
+<!-- PARTE 2 — RUTA ARTE                                   -->
+<!-- ==================================================== -->
+<h1 class="part"><span class="pn">Parte 2 · Arte</span>Ruta Arte</h1>
+<p class="lead">Esta ruta es para quien le dé la cara al juego. Buena noticia: el pixel art es de los estilos más accesibles para empezar, porque trabajás con pocos píxeles y no necesitás saber dibujar "realista". Mala noticia: es engañoso, la simpleza tiene sus reglas. Vamos de menor a mayor dificultad.</p>
+
+<!-- CAP 14 -->
+<h2 class="ch"><span class="cn">Capítulo 14 · Nivel: fácil-medio</span>Fundamentos de pixel art</h2>
+<p>El pixel art es dibujar colocando píxeles de a uno, en una resolución baja. La gracia y la dificultad están en lograr mucho con poco.</p>
+
+<h3>Los conceptos clave</h3>
+<ul>
+  <li><strong>Resolución del tile:</strong> el tamaño base de la grilla. Para nuestro juego conviene algo chico y estándar: <strong>16×16</strong> o <strong>32×32</strong> píxeles por tile. Hay que elegir uno y respetarlo en todo el juego.</li>
+  <li><strong>Paleta:</strong> el conjunto limitado de colores. Menos colores = más coherencia y más "estilo". Para el tono de mundo colapsado nos sirven verdes/grises apagados con algún acento fuerte (rojo del peligro).</li>
+  <li><strong>Legibilidad:</strong> a tamaño chico, cada cosa tiene que <em>leerse</em> de un vistazo. El personaje se tiene que distinguir del fondo al instante; un zombie, distinguirse del personaje.</li>
+  <li><strong>Contraste y silueta:</strong> si tapás el dibujo y solo ves su silueta negra, ¿se entiende qué es? Esa es la prueba de un buen sprite.</li>
+</ul>
+
+<div class="box tip"><span class="t">💡 Regla de oro para empezar</span>
+Elegí <strong>una</strong> resolución (ej. 32×32) y <strong>una</strong> paleta (16-32 colores) y no las cambies. La coherencia importa más que la perfección de cada dibujo. Un juego con arte "simple pero coherente" se ve profesional; uno con arte "hermoso pero disparejo" se ve amateur.</p></div>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+Hoy todo son cuadrados de colores: vos sos azul, el zombie rojo oscuro, la comida un rombo. Ese es el "placeholder" que hay que reemplazar. La primera misión de arte es definir la paleta y la resolución, y dibujar el primer tile de pasto y el primer sprite del personaje.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Armá un moodboard (en Figma o un tablero de imágenes) con 10 capturas de juegos pixel art que te gusten para este estilo (mirá Project Zomboid, Core Keeper, Zelda clásicos). Anotá qué resolución y paleta parecen usar. Es la base para decidir la nuestra.</p></div>
+
+<!-- CAP 15 -->
+<h2 class="ch"><span class="cn">Capítulo 15 · Nivel: fácil-medio</span>Aseprite en la práctica</h2>
+<p><strong>Aseprite</strong> es el programa estándar para pixel art (es pago pero barato; hay alternativas gratis como <strong>LibreSprite</strong> o <strong>Piskel</strong>). Está hecho específicamente para esto, así que hace fácil lo que en Photoshop sería un dolor.</p>
+
+<h3>Lo mínimo que hay que dominar</h3>
+<ul>
+  <li><strong>Lápiz y borrador</strong> a nivel de píxel, y el <strong>balde</strong> para rellenar.</li>
+  <li><strong>Paleta:</strong> definir tus colores y trabajar solo con esos.</li>
+  <li><strong>Capas (layers):</strong> dibujar el personaje en una capa y la sombra en otra, para editarlas por separado.</li>
+  <li><strong>Frames y animación:</strong> Aseprite tiene una línea de tiempo abajo; cada frame es un dibujo, y al reproducirlos se ve la animación.</li>
+  <li><strong>Exportar:</strong> sacar el dibujo como PNG, o como "sprite sheet" (todas las poses en una imagen) para importar en Godot.</li>
+</ul>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Dibujá en 32×32 un sprite simple del personaje visto desde arriba (cabeza, hombros, sin detalle fino). Guardalo como PNG. No importa si es feo: el objetivo es aprender el flujo dibujar → exportar.</p></div>
+
+<!-- CAP 16 -->
+<h2 class="ch"><span class="cn">Capítulo 16 · Nivel: medio</span>Tilesets y autotiling</h2>
+<p>Un <strong>tileset</strong> es tu "caja de piezas" para construir el mapa: pasto, camino, agua, pared, piso de casa. La clave es que las piezas <strong>calcen entre sí</strong> (los bordes tienen que continuar de un tile al siguiente).</p>
+
+<h3>Tiles que conectan</h3>
+<p>Para que un camino o una costa se vea natural, se dibujan las variantes de borde: recto, esquina, curva. Godot puede elegirlas solo (autotiling) si se lo configura, pero <strong>vos las tenés que dibujar</strong> primero. Es la parte más técnica del arte de tiles.</p>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+Necesitamos, como mínimo para el primer mapa jugable: pasto, tierra/camino, agua (para la costa y la pesca), árboles/arbustos, y paredes/piso de casas para el looteo. Con eso ya se puede armar una porción de pueblo + bosque + costa.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Dibujá un tile de pasto y un tile de camino de tierra (32×32) que se vean bien uno al lado del otro. Poné 4 copias juntas en Aseprite y fijate si "se nota el corte" o si fluyen. Ajustá los bordes hasta que fluyan.</p></div>
+
+<!-- CAP 17 -->
+<h2 class="ch"><span class="cn">Capítulo 17 · Nivel: medio-difícil</span>Personajes y animación</h2>
+<p>Un personaje vivo necesita al menos dos animaciones: <strong>idle</strong> (quieto, respirando) y <strong>walk</strong> (caminando). En top-down, además, suele haber una versión por dirección (arriba, abajo, izquierda, derecha).</p>
+
+<h3>Principios de animación en pixel art</h3>
+<ul>
+  <li><strong>Pocos frames alcanzan:</strong> una caminata de 4-6 frames ya se ve bien.</li>
+  <li><strong>El "bounce":</strong> un leve sube-y-baja del cuerpo al caminar da vida.</li>
+  <li><strong>Consistencia:</strong> el personaje tiene que ocupar el mismo lugar en cada frame (si "salta" de posición, se ve mal).</li>
+</ul>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+El jugador ya tiene la variable <code>facing</code> (hacia dónde mira) en el código. Cuando el arte esté listo, el programador conecta cada animación (idle/walk por dirección) a ese estado. Arte y programación se encuentran acá: el artista entrega el sprite sheet, el programador lo enchufa con un <code>AnimationPlayer</code> o <code>AnimatedSprite2D</code>.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Tomá tu sprite del personaje y hacé una caminata de 4 frames (mové las piernas/brazos apenas). Reproducila en Aseprite. Si "camina", ganaste. Exportala como sprite sheet.</p></div>
+
+<!-- CAP 18 -->
+<h2 class="ch"><span class="cn">Capítulo 18 · Nivel: fácil-medio</span>Interfaz (UI/HUD) con Figma</h2>
+<p>La <strong>UI</strong> (interfaz) es todo lo que no es el mundo: las barras de vida/hambre, el inventario, los menús. El <strong>HUD</strong> es la parte que se ve mientras jugás. Conviene <strong>diseñarla en Figma antes de programarla</strong>: mover cajas en Figma es gratis y rápido; rehacerla en código es caro.</p>
+
+<h3>Qué hace Figma acá</h3>
+<ul>
+  <li>Maquetar cómo se ven y se ordenan las pantallas (menú principal, inventario, HUD).</li>
+  <li>Probar variantes rápido sin tocar el juego.</li>
+  <li>Pasarle al programador una referencia clara de tamaños, posiciones y colores.</li>
+</ul>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+El HUD actual (barras de salud y hambre + "Comida: 0") es funcional pero feo, hecho directo en Godot. El plan es rediseñarlo en Figma (que se vea acorde al mundo de zombies) y después reconstruirlo. Ojo: Figma es para <em>diseñar</em> la interfaz; el pixel art final de los íconos igual se dibuja en Aseprite.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+En Figma, diseñá una pantalla de inventario simple: una grilla de casillas, un título, y la barra de vida/hambre arriba. No tiene que funcionar, solo verse. Es tu primer "plano" de UI.</p></div>
+
+<!-- ==================================================== -->
+<!-- PARTE 3 — RUTA DISEÑO + AUDIO                         -->
+<!-- ==================================================== -->
+<h1 class="part"><span class="pn">Parte 3 · Diseño + Audio</span>Ruta Diseño + Audio</h1>
+<p class="lead">Esta ruta es para quien piensa <em>por qué</em> el juego es divertido y le pone el sonido. Es menos "técnica" en herramientas, pero es la que decide si el juego engancha o aburre. No se programa ni se dibuja: se piensa, se prueba y se ajusta.</p>
+
+<!-- CAP 19 -->
+<h2 class="ch"><span class="cn">Capítulo 19 · Nivel: medio (conceptual)</span>Game design: que sea divertido y justo</h2>
+<p>El <strong>game design</strong> es el diseño de las reglas y la experiencia. No es "tener ideas", es <strong>tomar decisiones</strong> sobre cómo se siente jugar.</p>
+
+<h3>Conceptos que hay que manejar</h3>
+<ul>
+  <li><strong>Core loop:</strong> el ciclo que el jugador repite (explorar → juntar → sobrevivir → mejorar la base → repetir). Si ese ciclo es satisfactorio, el juego funciona.</li>
+  <li><strong>Progresión:</strong> cómo el jugador se vuelve más capaz con el tiempo (mejores herramientas, más habilidad). Sin progresión, aburre.</li>
+  <li><strong>Curva de dificultad:</strong> el desafío tiene que subir de a poco. Ni tan fácil que aburra, ni tan difícil que frustre.</li>
+  <li><strong>Tensión y alivio:</strong> momentos de peligro (noche, zombies) seguidos de momentos de calma (armar la base de día). El contraste es lo que hace memorable un survival.</li>
+  <li><strong>Economía de recursos:</strong> qué tan escasa es la comida, la munición, los materiales. Es la perilla que define si el juego es relajado o angustiante.</li>
+</ul>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+Nuestro pilar es "tensión sostenida, no sustos baratos". Eso es una decisión de diseño: el miedo viene de <em>administrar</em> (¿corro y hago ruido para llegar rápido, o me agacho y voy lento pero seguro?), no de que salte un zombie de la nada. El rol de diseño ajusta constantemente esas perillas: velocidad del hambre, ruido de cada acción, daño del zombie, cuánta comida hay. Todo eso son números en el código (<code>hunger_decay_per_second</code>, <code>run_noise</code>, <code>attack_damage</code>…) que se pueden tocar y probar.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Jugá el prototipo 10 minutos y anotá: ¿en qué momento te aburriste? ¿en qué momento sentiste tensión? ¿el hambre baja muy rápido o muy lento? Esas notas son <em>exactamente</em> el trabajo de un diseñador: observar y proponer ajustes.</p></div>
+
+<!-- CAP 20 -->
+<h2 class="ch"><span class="cn">Capítulo 20 · Nivel: medio</span>Diseño de niveles y del mapa</h2>
+<p>Diseñar el mapa no es solo dibujarlo (eso es arte): es decidir <strong>dónde va cada cosa y por qué</strong>, para que explorar sea interesante.</p>
+
+<h3>Preguntas que se hace el diseñador de niveles</h3>
+<ul>
+  <li>¿Dónde empieza el jugador y hacia dónde lo "invita" a ir el mapa?</li>
+  <li>¿Dónde están los recursos buenos, y qué riesgo tienen alrededor? (Recompensa alta = peligro alto.)</li>
+  <li>¿Hay lugares memorables que sirvan de referencia para orientarse?</li>
+  <li>¿El camino entre zonas es interesante o es un paseo aburrido?</li>
+</ul>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+Ya tenemos la estructura del mapa diseñada (ver <code>docs/WORLD_MAP.md</code>): un <strong>hub central</strong> (Refugio Central) del que salen caminos hacia puntos de interés, cada uno con un rol: un puesto militar (armas, más peligro), un campamento maderero (madera), zonas de cultivo (comida), un cementerio infestado (alto riesgo/alto botín). Ese "alto riesgo = alta recompensa" es diseño de niveles puro.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Agarrá el mapa de <code>world_map.json</code> y proponé un lugar nuevo: ¿qué ofrece?, ¿qué peligro tiene?, ¿por qué el jugador querría ir? Escribilo en 3 líneas. Así se diseña un punto de interés.</p></div>
+
+<!-- CAP 21 -->
+<h2 class="ch"><span class="cn">Capítulo 21 · Nivel: fácil-medio</span>Audio: sonido y música (y el ruido como mecánica)</h2>
+<p>El sonido es la mitad de la inmersión (probá jugar cualquier juego de terror sin audio: no da nada de miedo). Hay dos tipos:</p>
+<ul>
+  <li><strong>SFX (efectos):</strong> pasos, golpes, agarrar un objeto, el gruñido del zombie.</li>
+  <li><strong>Música:</strong> el ambiente. Un tema calmo de día, uno tenso de noche.</li>
+</ul>
+
+<h3>De dónde sacar audio sin gastar</h3>
+<p>Hay bancos de sonidos y música <strong>libres o royalty-free</strong> (Freesound, OpenGameArt, música con licencia Creative Commons). <strong>Ojo con las licencias</strong> (ver el capítulo de seguridad/legal): algunos piden dar crédito, otros no permiten uso comercial. Anotá siempre de dónde sacaste cada sonido.</p>
+
+<div class="box game"><span class="t">🎮 En nuestro juego, el ruido no es solo sonido: es una mecánica</span>
+Correr hace ruido y <strong>atrae zombies</strong> (es el círculo punteado de la captura). Entonces el audio y el diseño se cruzan: cuando el jugador corre, además de <em>escuchar</em> los pasos fuertes, el juego <em>usa</em> ese ruido para que los zombies lo detecten. El sonido de pasos debería reflejar eso (pasos silenciosos agachado, fuertes corriendo). Es un detalle que hace al juego coherente.</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio</span>
+Buscá en Freesound 3 sonidos que nos servirían (pasos, un gruñido de zombie, agarrar un objeto) y fijate la licencia de cada uno. Armá una lista con el nombre, el link y la licencia. Ese es el primer ladrillo de la biblioteca de audio del juego.</p></div>
+
+<!-- ==================================================== -->
+<!-- PARTE 4 — AVANZADO                                    -->
+<!-- ==================================================== -->
+<h1 class="part"><span class="pn">Parte 4 · Avanzado</span>Temas avanzados (un vistazo para todos)</h1>
+<p class="lead">Estos temas son para <strong>más adelante</strong> (fases futuras del proyecto). No hace falta dominarlos ahora, pero sí conviene que los tres sepan que existen y de qué se tratan, sobre todo el multijugador, que es lo más difícil de todo el proyecto.</p>
+
+<!-- CAP 22 -->
+<h2 class="ch"><span class="cn">Capítulo 22 · Nivel: difícil</span>Buenas prácticas y organización del código</h2>
+<p>A medida que el juego crece, la diferencia entre un proyecto que avanza y uno que se traba es el <strong>orden del código</strong>.</p>
+<ul>
+  <li><strong>Nombres claros:</strong> <code>attack_damage</code> se entiende; <code>x</code> no. El código se lee mucho más de lo que se escribe.</li>
+  <li><strong>Una cosa, un lugar:</strong> si la fórmula del daño está en 5 lugares, cambiarla es un infierno. Ponela en uno solo.</li>
+  <li><strong>Componentes chicos</strong> (como <code>needs_component.gd</code>) en vez de scripts gigantes.</li>
+  <li><strong>Comentarios donde el "por qué" no es obvio</strong> (no para explicar lo evidente).</li>
+  <li><strong>Probar seguido:</strong> correr el juego después de cada cambio, no acumular 20 cambios y después no saber cuál rompió.</li>
+</ul>
+<div class="box tip"><span class="t">💡 Rendimiento en 2D</span>
+Los juegos 2D rara vez tienen problemas de rendimiento si no hacés cosas locas (miles de nodos, cálculos pesados cada frame). No te obsesiones con optimizar antes de tiempo: primero que funcione y sea divertido, después se optimiza <em>solo lo que haga falta</em>.</p></div>
+
+<!-- CAP 23 -->
+<h2 class="ch"><span class="cn">Capítulo 23 · Nivel: muy difícil</span>Multijugador: lo más difícil</h2>
+<p>El cooperativo es el sueño del proyecto, y también <strong>lo más complejo de programar</strong>. Por eso en el plan lo dejamos para el final, después de que el juego solo ya sea divertido.</p>
+
+<h3>Por qué es tan difícil</h3>
+<p>En un juego de un jugador, hay una sola computadora que sabe todo. En multijugador hay <strong>varias computadoras que tienen que estar de acuerdo</strong> sobre qué está pasando, comunicándose por internet (con demoras, cortes, etc.). Los problemas típicos:</p>
+<ul>
+  <li><strong>Sincronización:</strong> que todos vean al zombie en el mismo lugar al mismo tiempo.</li>
+  <li><strong>Autoridad:</strong> ¿quién decide "la verdad"? Normalmente un <strong>servidor</strong> manda, y los jugadores (<strong>clientes</strong>) le hacen caso. Esto se llama modelo <strong>cliente-servidor</strong>.</li>
+  <li><strong>Latencia:</strong> la demora de internet hace que las cosas lleguen tarde; hay que disimularla.</li>
+</ul>
+
+<div class="box warn"><span class="t">⚠️ La regla de seguridad más importante del multijugador</span>
+<strong>Nunca confíes en el cliente.</strong> La computadora de cada jugador puede ser modificada para hacer trampa. La lógica importante (cuánta vida tenés, cuánto daño hacés, qué recursos tenés) la tiene que validar el servidor, no el cliente. Si confiás en lo que manda cada jugador, cualquiera puede decir "tengo 9999 de vida" y el juego le cree.</p></div>
+
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+Godot 4 trae un sistema de <strong>multijugador de alto nivel</strong> que ayuda bastante (nodos que se sincronizan casi solos). Aun así, es un mundo aparte. Por eso el código lo estamos escribiendo desde ahora <em>pensado</em> para que mañana sea más fácil separarlo en cliente/servidor, aunque todavía no lo hagamos.</p></div>
+
+<!-- CAP 24 -->
+<h2 class="ch"><span class="cn">Capítulo 24 · Nivel: difícil (conceptual)</span>Seguridad aplicada</h2>
+<p>Mientras el juego sea <strong>de un jugador y sin conexión</strong>, la seguridad casi no es un tema. Todo cambia cuando hay internet de por medio. Resumen de lo que hay que cuidar (el detalle está en el plan del proyecto):</p>
+<ul>
+  <li><strong>No confiar en el cliente</strong> (ya lo vimos): vale para trampas y para exploits.</li>
+  <li><strong>Validar todo lo que llega por la red:</strong> datos mal formados no deben crashear ni, peor, permitir ejecutar código.</li>
+  <li><strong>Datos de los jugadores:</strong> si algún día hay cuentas, nunca guardar contraseñas en texto plano; mejor usar login de terceros (Steam) y no manejarlas nosotros.</li>
+  <li><strong>Conexiones directas (P2P):</strong> los jugadores se ven las IP entre sí, que es un dato personal y un vector de ataque. Conviene avisarlo o usar un servidor intermedio.</li>
+  <li><strong>Chat / contenido:</strong> si hay chat, tiene que haber forma de moderar y reportar.</li>
+</ul>
+<div class="box tip"><span class="t">💡 Tranquilos por ahora</span>
+Todo esto es de la Fase 3-4. Hoy, con un juego offline que no recolecta ningún dato, nuestra exposición es prácticamente cero. Está acá para que sepan que existe y no los agarre desprevenidos cuando lleguemos al online.</p></div>
+
+<!-- CAP 25 -->
+<h2 class="ch"><span class="cn">Capítulo 25 · Nivel: medio</span>Exportar y publicar en itch.io</h2>
+<p>Cuando haya algo mostrable, Godot puede <strong>exportar</strong> el juego a un ejecutable (un <code>.exe</code> para Windows, versiones para Mac/Linux). Eso es un archivo que cualquiera puede correr sin tener Godot.</p>
+<h3>El camino a itch.io</h3>
+<ol>
+  <li>En Godot, agregar las "plantillas de exportación" y configurar el export para Windows (y Linux/Mac si se quiere).</li>
+  <li>Exportar → queda un ejecutable (o un ZIP con el juego).</li>
+  <li>Crear una cuenta en <strong>itch.io</strong> (gratis), crear la página del juego, subir el ZIP, poner descripción, capturas y el rating de contenido.</li>
+  <li>¡Publicado! Se puede poner gratis o "pagá lo que quieras".</li>
+</ol>
+<div class="box game"><span class="t">🎮 En nuestro juego</span>
+Como somos sin fines de lucro, itch.io es nuestro destino natural: publicar gratis, sin costos. Steam queda como opción lejana y opcional (tiene un costo de USD 100). Una buena práctica: subir versiones tempranas para amigos/testers mucho antes del "lanzamiento".</p></div>
+
+<div class="box ex"><span class="t">✏️ Mini-ejercicio (para el que tome programación/publicación)</span>
+Cuando tengas el proyecto abierto en Godot, probá exportar el prototipo actual a un ejecutable de tu sistema operativo y correlo fuera de Godot. Ver el juego andando como un programa "de verdad" es muy motivador.</p></div>
+
+<!-- ==================================================== -->
+<!-- APÉNDICES                                             -->
+<!-- ==================================================== -->
+<h1 class="part"><span class="pn">Apéndices</span>Material de apoyo</h1>
+
+<!-- APÉNDICE A -->
+<h2 class="ch nobreak"><span class="cn">Apéndice A</span>Cronograma de estudio de 1 semana</h2>
+<p>Una propuesta de cómo repartir la semana. Los <strong>días 1-3 son para todos</strong> (núcleo común). Del <strong>día 4 en adelante, cada uno sigue su ruta</strong>. Ajústenlo a su ritmo: es una guía, no una obligación.</p>
+
+<table>
+  <tr><th>Día</th><th>Todos</th><th><span class="role r-prog">Programación</span></th><th><span class="role r-art">Arte</span></th><th><span class="role r-des">Diseño+Audio</span></th></tr>
+  <tr><td><strong>1</strong></td><td colspan="4">Caps 1 y 2 (qué es un juego + nuestro juego). Instalar Godot y correr el prototipo (F5). Jugarlo un rato.</td></tr>
+  <tr><td><strong>2</strong></td><td colspan="4">Cap 3 (Git/GitHub): crear cuentas, acceso al repo, practicar pull/commit/push. Cap 5 (armar el Notion).</td></tr>
+  <tr><td><strong>3</strong></td><td colspan="4">Cap 4 (Godot y nuestro proyecto): abrir <code>Main.tscn</code>, explorar el árbol de nodos, tocar alguna variable y ver el efecto.</td></tr>
+  <tr><td><strong>4</strong></td><td>—</td><td>Caps 6-7 (GDScript, nodos y señales) + ejercicios</td><td>Caps 14-15 (fundamentos pixel art + Aseprite) + ejercicios</td><td>Cap 19 (game design) + jugar y anotar</td></tr>
+  <tr><td><strong>5</strong></td><td>—</td><td>Caps 8-9 (input/movimiento, colisiones) leyendo el código real</td><td>Cap 16 (tilesets) + primer tile de pasto/camino</td><td>Cap 20 (diseño de niveles) + proponer un POI</td></tr>
+  <tr><td><strong>6</strong></td><td>—</td><td>Caps 10-11 (componentes, IA del zombie)</td><td>Cap 17 (personaje + caminata)</td><td>Cap 21 (audio) + juntar sonidos libres</td></tr>
+  <tr><td><strong>7</strong></td><td colspan="4">Cada uno cierra su ruta (Prog: caps 12-13; Arte: cap 18 UI; D+A: repaso). Vistazo grupal a la Parte 4 (avanzado). <strong>Juntarse, repartir las primeras tareas reales en Notion y arrancar.</strong></td></tr>
+</table>
+
+<div class="box tip"><span class="t">💡 El día 7 es el más importante</span>
+No es para estudiar más: es para <strong>juntarse y planificar</strong>. Con todo fresco, definan las primeras 2-3 semanas de trabajo real: qué hace cada uno, cuál es el primer objetivo concreto (sugerencia: reemplazar el placeholder por un mini-mapa con tiles reales y el personaje animado). Ahí empieza el juego de verdad.</p></div>
+
+<!-- APÉNDICE B -->
+<h2 class="ch"><span class="cn">Apéndice B</span>Glosario de términos</h2>
+<table>
+  <tr><th>Término</th><th>Significado</th></tr>
+  <tr><td>Assets</td><td>Los recursos del juego: imágenes, sonidos, música, fuentes.</td></tr>
+  <tr><td>Build / Export</td><td>Generar el juego como programa ejecutable para distribuir.</td></tr>
+  <tr><td>Commit / Push / Pull</td><td>Guardar cambios (commit), subirlos (push), bajarlos (pull) en Git.</td></tr>
+  <tr><td>Delta</td><td>Tiempo transcurrido desde el frame anterior, en segundos.</td></tr>
+  <tr><td>FPS</td><td>Frames por segundo; cuántas veces por segundo se dibuja el juego.</td></tr>
+  <tr><td>Frame</td><td>Un "cuadro": una vuelta del game loop.</td></tr>
+  <tr><td>Game loop</td><td>El bucle que corre el juego: leer input, actualizar, dibujar.</td></tr>
+  <tr><td>GDScript</td><td>El lenguaje de programación de Godot.</td></tr>
+  <tr><td>HUD</td><td>La interfaz que se ve mientras jugás (barras, contadores).</td></tr>
+  <tr><td>Hitbox / Colisión</td><td>La forma que usa un objeto para detectar contactos.</td></tr>
+  <tr><td>JSON</td><td>Formato de texto para guardar datos ordenados.</td></tr>
+  <tr><td>Máquina de estados</td><td>Sistema donde algo está en un estado a la vez y cambia según reglas.</td></tr>
+  <tr><td>Nodo</td><td>La pieza básica de Godot; hace una cosa.</td></tr>
+  <tr><td>Placeholder</td><td>Arte/contenido provisorio hasta tener el definitivo.</td></tr>
+  <tr><td>Señal (signal)</td><td>Aviso que un nodo emite y otros escuchan.</td></tr>
+  <tr><td>Sprite</td><td>Imagen 2D que se dibuja en pantalla.</td></tr>
+  <tr><td>Tile / TileMap / TileSet</td><td>Azulejo / el mapa hecho de azulejos / la caja de azulejos disponibles.</td></tr>
+  <tr><td>Cliente-servidor</td><td>Modelo de multijugador donde el servidor manda y los clientes obedecen.</td></tr>
+</table>
+
+<!-- APÉNDICE C -->
+<h2 class="ch"><span class="cn">Apéndice C</span>Recursos gratis para seguir aprendiendo</h2>
+<h4>Godot y programación</h4>
+<ul>
+  <li><strong>Documentación oficial de Godot</strong> (docs.godotengine.org): tiene un tutorial "tu primer juego 2D" buenísimo para empezar.</li>
+  <li><strong>GDQuest</strong> y <strong>Brackeys</strong> (YouTube): tutoriales de Godot muy claros y gratuitos.</li>
+  <li>El propio <strong>código de nuestro juego</strong> (<code>game/scripts/</code>): el mejor material de estudio, porque es el que vamos a usar.</li>
+</ul>
+<h4>Pixel art</h4>
+<ul>
+  <li><strong>Pixel art de cero</strong> — tutoriales de <em>Pixel Pete</em>, <em>AdamCYounis</em> (YouTube).</li>
+  <li><strong>Lospec</strong> (lospec.com): paletas gratis y guías de pixel art.</li>
+  <li><strong>LibreSprite / Piskel</strong>: alternativas gratis a Aseprite.</li>
+</ul>
+<h4>Assets libres (arte y sonido)</h4>
+<ul>
+  <li><strong>OpenGameArt.org</strong> — arte y audio libre (revisá la licencia de cada uno).</li>
+  <li><strong>Kenney.nl</strong> — packs de assets gratis y de excelente calidad.</li>
+  <li><strong>Freesound.org</strong> — efectos de sonido (revisá licencias).</li>
+  <li><strong>itch.io</strong> — muchísimos asset packs gratis o baratos, y donde vamos a publicar.</li>
+</ul>
+<div class="box warn"><span class="t">⚠️ Siempre revisá la licencia</span>
+Antes de usar cualquier asset descargado, fijate qué permite su licencia (uso comercial, si hay que dar crédito, si se puede modificar) y anotalo en un archivo <code>CREDITS.md</code>. Es la regla que nos mantiene fuera de problemas legales.</p></div>
+
+<div class="box tip"><span class="t">🚀 Última cosa</span>
+No se estresen por entender todo a la perfección en una semana. Con este libro tienen el mapa completo del terreno. El conocimiento de verdad va a llegar <strong>haciendo el juego</strong>, equivocándose y arreglando. Lo importante es empezar. ¡Éxitos, equipo! 🧟‍♂️🎮</p></div>
+
+</body>
+</html>
