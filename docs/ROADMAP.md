@@ -24,7 +24,7 @@ Objetivo: validar que el loop central es divertido antes de invertir en contenid
 - [x] Sistema de sigilo/ruido básico (agacharse, correr = más ruido = atrae zombies) (`player.gd`).
 - [x] Necesidades básicas del personaje: hambre y salud (`needs_component.gd` + HUD).
 - [x] Recolección básica de un recurso (comida) + consumo (`pickup.gd`, tecla E). Falta ampliar a looteo/tala.
-- [ ] Mapa chico jugable con arte de tiles (una porción de pueblo + bosque + algo de costa). Hoy es un piso liso de placeholder.
+- [x] Mapa chico jugable con TileMap real (pasto/camino/agua/árboles/casita), con colisiones y editable desde `data/level_prototype.txt` (`world.gd`). Arte de tiles todavía placeholder.
 - [ ] Caza o pesca básica (al menos una de las dos, para validar la mecánica).
 - [ ] Construcción de una estructura simple (ej. barricada) en cualquier punto del mapa.
 - [ ] Guardado/carga simple.

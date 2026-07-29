@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MapScreen.tscn" id="2"]
@@ -6,13 +6,17 @@
 [ext_resource type="PackedScene" path="res://scenes/Zombie.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/Pickup.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="6"]
+[ext_resource type="Script" path="res://scripts/world.gd" id="7"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("3")
 
-[node name="Ground" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-600, -400, 600, -400, 600, 400, -600, 400)
-color = Color(0.15, 0.25, 0.12, 1)
+[node name="Background" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-1200, -800, 1200, -800, 1200, 800, -1200, 800)
+color = Color(0.08, 0.1, 0.07, 1)
+
+[node name="World" type="TileMap" parent="."]
+script = ExtResource("7")
 
 [node name="Player" parent="." instance=ExtResource("1")]
 

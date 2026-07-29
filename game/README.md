@@ -33,7 +33,23 @@ Todo el arte es placeholder a propósito (cuadrados y rombos de colores): la pri
 ### Cómo probar el loop
 Junta algo de comida evitando al zombie, mantené el hambre arriba comiendo con **E**, y usá **C** (agacharse) para pasar cerca del zombie sin que te oiga. Si corrés (Shift) cerca del zombie, te va a escuchar y perseguir.
 
-## Cómo agregar/editar ubicaciones del mapa
+## Cómo editar el mundo (el mapa de tiles)
+
+El terreno jugable se dibuja con un **TileMap** que se arma por código (`scripts/world.gd`) leyendo un mapa de texto: `data/level_prototype.txt`. No hace falta abrir el editor de tiles: se edita el `.txt` con cualquier editor de texto.
+
+Cada caracter es un tile de 16×16:
+
+| Caracter | Tile | ¿Frena / tapa visión? |
+|---|---|---|
+| `.` | pasto | no (se camina) |
+| `=` | camino | no |
+| `~` | agua | sí (para pesca a futuro) |
+| `T` | árbol | sí (madera + tapa la visión del zombie) |
+| `#` | pared | sí |
+
+El mapa se **centra en el origen (0,0)**, que es donde spawnea el jugador — por eso el centro del `.txt` conviene dejarlo despejado. El tileset visual es placeholder (`assets/tiles/placeholder_tiles.png`, 5 tiles de colores); el arte real lo reemplaza sin tocar código, respetando `docs/ARTE_SPEC.md`.
+
+## Cómo agregar/editar ubicaciones del mapa mundial (pantalla del mapa)
 
 Editar `data/world_map.json`. Cada punto de interés tiene:
 
