@@ -46,7 +46,7 @@ func _physics_process(delta: float) -> void:
 	_attack_timer -= delta
 	_time_since_seen += delta
 
-	var player := _detect_player()
+	var player = _detect_player()
 	if player != null:
 		last_known_position = player.global_position
 		_time_since_seen = 0.0
@@ -65,6 +65,7 @@ func _physics_process(delta: float) -> void:
 ## Devuelve el jugador si lo detecta por visión o por oído, si no null.
 ## Sin tipo de retorno a propósito: le pedimos métodos (get_noise_radius,
 ## apply_damage) que no existen en Node2D y GDScript valida tipos al compilar.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _detect_player():
 	for p in get_tree().get_nodes_in_group("player"):
 		if not (p is Node2D):

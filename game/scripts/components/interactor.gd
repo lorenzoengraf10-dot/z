@@ -63,7 +63,7 @@ func try_interact() -> void:
 		action_ended.emit("Acción cancelada")
 		return
 
-	var world := _world()
+	var world = _world()
 	if world == null:
 		return
 
@@ -104,7 +104,7 @@ func _complete() -> void:
 	var message := ""
 	match kind:
 		"talar":
-			var world := _world()
+			var world = _world()
 			if world != null:
 				world.set_char_at_cell(cell, GRASS)
 			_player.inventory.add("madera", wood_per_tree)
@@ -130,5 +130,6 @@ func _reset() -> void:
 
 # Sin tipar: usamos cell_at/char_at_cell/set_char_at_cell, que son de world.gd
 # y no existen en Node.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _world():
 	return get_tree().get_first_node_in_group("world")

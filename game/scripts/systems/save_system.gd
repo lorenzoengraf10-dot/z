@@ -26,7 +26,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func save_game() -> bool:
-	var player := _player()
+	var player = _player()
 	if player == null:
 		save_message.emit("No se pudo guardar (no hay jugador)")
 		return false
@@ -41,11 +41,11 @@ func save_game() -> bool:
 		},
 	}
 
-	var world := _world()
+	var world = _world()
 	if world != null:
 		data["tiles"] = world.modified_to_dict()
 
-	var build := _build_system()
+	var build = _build_system()
 	if build != null:
 		data["construcciones"] = build.placed_cells()
 
@@ -72,7 +72,7 @@ func load_game() -> bool:
 		save_message.emit("No hay partida guardada")
 		return false
 
-	var player := _player()
+	var player = _player()
 	if player == null:
 		save_message.emit("No se pudo cargar (no hay jugador)")
 		return false
@@ -87,12 +87,12 @@ func load_game() -> bool:
 		if typeof(inv_data) == TYPE_DICTIONARY:
 			player.inventory.from_dict(inv_data)
 
-	var world := _world()
+	var world = _world()
 	var tiles: Variant = data.get("tiles", {})
 	if world != null and typeof(tiles) == TYPE_DICTIONARY:
 		world.apply_modified(tiles)
 
-	var build := _build_system()
+	var build = _build_system()
 	var built: Variant = data.get("construcciones", [])
 	if build != null and typeof(built) == TYPE_ARRAY:
 		build.clear_all()
@@ -118,14 +118,17 @@ func _read_save() -> Dictionary:
 
 
 # Sin tipar: usamos player.needs / player.inventory, que no existen en Node2D.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _player():
 	return get_tree().get_first_node_in_group("player")
 
 
 # Sin tipar: usamos métodos propios de world.gd y build_system.gd.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _world():
 	return get_tree().get_first_node_in_group("world")
 
 
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _build_system():
 	return get_tree().get_first_node_in_group("build_system")

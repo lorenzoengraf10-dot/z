@@ -45,7 +45,7 @@ func _process(_delta: float) -> void:
 	if not active:
 		return
 	var cell := _hovered_cell()
-	var world := _world()
+	var world = _world()
 	if world == null:
 		return
 	_ghost.global_position = world.center_of(cell)
@@ -85,15 +85,15 @@ func set_active(value: bool) -> void:
 
 
 func _hovered_cell() -> Vector2i:
-	var world := _world()
+	var world = _world()
 	if world == null:
 		return Vector2i.ZERO
 	return world.cell_at(get_global_mouse_position())
 
 
 func _can_build(cell: Vector2i) -> bool:
-	var world := _world()
-	var player := _player()
+	var world = _world()
+	var player = _player()
 	if world == null or player == null:
 		return false
 	if _placed.has(_key(cell)):
@@ -106,8 +106,8 @@ func _can_build(cell: Vector2i) -> bool:
 
 
 func _try_place(cell: Vector2i) -> void:
-	var player := _player()
-	var world := _world()
+	var player = _player()
+	var world = _world()
 	if player == null or world == null:
 		return
 
@@ -136,17 +136,18 @@ func _try_remove(cell: Vector2i) -> void:
 	_placed.erase(key)
 	if is_instance_valid(node):
 		node.queue_free()
-	var player := _player()
+	var player = _player()
 	if player != null:
 		player.inventory.add(COST_ITEM, REFUND_AMOUNT)
 	build_message.emit("Barricada desarmada (+%d madera)" % REFUND_AMOUNT)
 
 
 func _spawn_at(cell: Vector2i) -> void:
-	var world := _world()
+	var world = _world()
 	if world == null or _barricade == null:
 		return
-	var node := _barricade.instantiate()
+	# Sin ":=" : instantiate() devuelve Node y le seteamos global_position.
+	var node = _barricade.instantiate()
 	node.global_position = world.center_of(cell)
 	_structures().add_child(node)
 	_placed[_key(cell)] = node
@@ -187,12 +188,14 @@ func _cell_from_key(key: String) -> Vector2i:
 
 
 # Sin tipar: usamos cell_at/center_of/is_solid_cell, propios de world.gd.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _world():
 	return get_tree().get_first_node_in_group("world")
 
 
 # Sin tipo de retorno a propósito: le pedimos al jugador propiedades (inventory)
 # que no existen en Node2D y GDScript valida los tipos estáticos al compilar.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _player():
 	return get_tree().get_first_node_in_group("player")
 

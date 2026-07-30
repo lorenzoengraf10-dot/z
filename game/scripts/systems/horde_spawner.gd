@@ -51,7 +51,7 @@ func _process(delta: float) -> void:
 		return
 	_cooldown = maxf(0.0, _cooldown - delta)
 
-	var player := _player()
+	var player = _player()
 	if player == null:
 		return
 
@@ -100,7 +100,7 @@ func _random_variant() -> String:
 
 ## Busca una celda libre lejos del jugador. Devuelve Vector2.INF si no encuentra.
 func _find_spawn_position(player) -> Vector2:
-	var world := _world()
+	var world = _world()
 	for attempt in range(12):
 		var angle := randf() * TAU
 		var dist := spawn_distance * randf_range(0.85, 1.25)
@@ -120,7 +120,8 @@ func _spawn_one(position_global: Vector2, variant: String) -> void:
 	if _zombie == null:
 		return
 	var stats: Dictionary = VARIANTS.get(variant, VARIANTS["normal"])
-	var z := _zombie.instantiate()
+	# Sin ":=" : instantiate() devuelve Node y acá le seteamos las stats propias.
+	var z = _zombie.instantiate()
 	z.zombie_type = variant
 	z.chase_speed = float(stats["chase_speed"])
 	z.wander_speed = float(stats["wander_speed"])
@@ -136,10 +137,12 @@ func _spawn_one(position_global: Vector2, variant: String) -> void:
 
 
 # Sin tipar: usamos player.get_noise_radius(), que no existe en Node2D.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _player():
 	return get_tree().get_first_node_in_group("player")
 
 
 # Sin tipar: usamos is_solid(), propio de world.gd.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _world():
 	return get_tree().get_first_node_in_group("world")

@@ -9,7 +9,9 @@ extends Node
 ## Música: assets/audio/musica_<nombre>.ogg (ej. musica_ambiente.ogg)
 
 const AUDIO_DIR := "res://assets/audio/"
-const EXTENSIONS := [".ogg", ".wav", ".mp3"]
+# Tipado como Array[String] a propósito: si fuera un Array común, `ext` sería
+# Variant y el `var path := ...` de abajo no podría inferir su tipo.
+const EXTENSIONS: Array[String] = [".ogg", ".wav", ".mp3"]
 const VOICES := 8
 
 var _players: Array[AudioStreamPlayer] = []

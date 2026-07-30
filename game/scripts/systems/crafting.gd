@@ -110,7 +110,7 @@ func toggle() -> void:
 
 
 func _refresh() -> void:
-	var player := _player()
+	var player = _player()
 	for i in range(_rows.size()):
 		var recipe: Dictionary = recipes[i]
 		var costs: Dictionary = recipe.get("cuesta", {})
@@ -135,7 +135,7 @@ func _can_afford(player, costs: Dictionary) -> bool:
 
 
 func _craft(index: int) -> void:
-	var player := _player()
+	var player = _player()
 	if player == null:
 		return
 	var recipe: Dictionary = recipes[index]
@@ -159,5 +159,6 @@ func _craft(index: int) -> void:
 
 
 # Sin tipar: usamos player.inventory, que no existe en Node/Node2D.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _player():
 	return get_tree().get_first_node_in_group("player")

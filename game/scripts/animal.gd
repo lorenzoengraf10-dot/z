@@ -105,7 +105,8 @@ func _drop_meat() -> void:
 	var scene: PackedScene = load("res://scenes/Pickup.tscn")
 	if scene == null:
 		return
-	var drop := scene.instantiate()
+	# Sin ":=" : instantiate() devuelve Node y le seteamos item/amount/position.
+	var drop = scene.instantiate()
 	drop.item = "carne"
 	drop.amount = meat_drop
 
