@@ -32,15 +32,19 @@ var _message_label: Label
 var _action_box: VBoxContainer
 var _action_label: Label
 var _action_bar: ProgressBar
+var _clock_label: Label
 var _message_timer := 0.0
+var _day_night = null
 
 
 func _ready() -> void:
 	layer = 2
 	_build_ui()
+	_build_toolbar()
 	# Esperamos un frame para que el jugador y los sistemas ya estén en el árbol.
 	await get_tree().process_frame
 	_connect_signals()
+	_day_night = get_tree().get_first_node_in_group("day_night")
 
 
 func _process(delta: float) -> void:
@@ -48,6 +52,10 @@ func _process(delta: float) -> void:
 		_message_timer -= delta
 		if _message_timer <= 0.0:
 			_message_label.text = ""
+
+	if _day_night != null and is_instance_valid(_day_night):
+		var moment := "🌙 Noche" if _day_night.is_night() else "☀ Día"
+		_clock_label.text = "%s  %s" % [_day_night.time_string(), moment]
 
 
 func _build_ui() -> void:
@@ -119,6 +127,62 @@ func _build_ui() -> void:
 	_message_label.offset_top = -64
 	_message_label.offset_bottom = -40
 	add_child(_message_label)
+
+
+## Barra de arriba a la derecha: reloj + botones para abrir mapa, crafteo y
+## construcción sin depender de acordarse de las teclas.
+func _build_toolbar() -> void:
+	var column := VBoxContainer.new()
+	column.anchor_left = 1.0
+	column.anchor_right = 1.0
+	column.offset_left = -350.0
+	column.offset_right = -12.0
+	column.offset_top = 10.0
+	column.offset_bottom = 90.0
+	column.alignment = BoxContainer.ALIGNMENT_END
+	add_child(column)
+
+	_clock_label = Label.new()
+	_clock_label.add_theme_font_size_override("font_size", 17)
+	_clock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_clock_label.text = ""
+	column.add_child(_clock_label)
+
+	var bar := HBoxContainer.new()
+	bar.alignment = BoxContainer.ALIGNMENT_END
+	column.add_child(bar)
+
+	bar.add_child(_make_button("Mapa (M)", _toggle_map))
+	bar.add_child(_make_button("Crafteo (C)", _toggle_crafting))
+	bar.add_child(_make_button("Construir (B)", _toggle_build))
+
+
+func _make_button(text: String, action: Callable) -> Button:
+	var button := Button.new()
+	button.text = text
+	# Sin foco: si no, después de hacer clic la barra espaciadora volvería a
+	# apretar el botón en vez de atacar.
+	button.focus_mode = Control.FOCUS_NONE
+	button.pressed.connect(action)
+	return button
+
+
+func _toggle_map() -> void:
+	var map = get_tree().get_first_node_in_group("map_screen")
+	if map != null:
+		map.visible = not map.visible
+
+
+func _toggle_crafting() -> void:
+	var crafting = get_tree().get_first_node_in_group("crafting")
+	if crafting != null and crafting.has_method("toggle"):
+		crafting.toggle()
+
+
+func _toggle_build() -> void:
+	var build = get_tree().get_first_node_in_group("build_system")
+	if build != null and build.has_method("toggle"):
+		build.toggle()
 
 
 func _connect_signals() -> void:

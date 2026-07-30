@@ -6,6 +6,7 @@ const MAP_DATA_PATH := "res://data/world_map.json"
 @onready var title_label: Label = $Title
 
 func _ready() -> void:
+	add_to_group("map_screen")
 	var data := _load_map_data()
 	if data.is_empty():
 		title_label.text = "Mapa — sin datos (revisar data/world_map.json)"

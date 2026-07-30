@@ -9,16 +9,26 @@
   {
     "id": "carne_cocida",
     "nombre": "Cocinar carne",
-    "cuesta": { "carne": 1, "madera": 1 },
+    "cuesta": { "carne": 1 },
     "produce": { "carne_cocida": 1 },
+    "requiere_fuego": true,
     "descripcion": "Alimenta más y no te infecta."
   },
   {
     "id": "pescado_cocido",
     "nombre": "Cocinar pescado",
-    "cuesta": { "pescado": 1, "madera": 1 },
+    "cuesta": { "pescado": 1 },
     "produce": { "pescado_cocido": 1 },
+    "requiere_fuego": true,
     "descripcion": "Alimenta más que el pescado crudo."
+  },
+  {
+    "id": "agua_hervida",
+    "nombre": "Hervir agua",
+    "cuesta": { "madera": 1 },
+    "produce": { "agua": 1 },
+    "requiere_fuego": true,
+    "descripcion": "Agua segura: sacia la sed sin infectarte."
   },
   {
     "id": "vendaje",

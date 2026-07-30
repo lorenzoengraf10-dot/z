@@ -35,8 +35,10 @@ Vista plana de todo lo que el juego necesita, más allá del orden por fases (es
 | Crafteo | ✅ hecho | Fase 2 |
 | Construcción de base en cualquier lugar | ✅ hecho (barricadas) | Fase 2 |
 | Necesidades (salud, hambre, sed, energía, temperatura, infección) | ✅ hecho | Fase 2 |
+| Ciclo día/noche + iluminación | ✅ hecho | Fase 2 |
+| Fogatas (luz, calor, cocinar) + minijuego de fricción | ✅ hecho | Fase 2 |
 | Guardado/carga | ✅ hecho | Fase 1-2 |
-| HUD (necesidades, inventario, progreso, mensajes) | ✅ hecho | Fase 3 (pulido) |
+| HUD (necesidades, inventario, progreso, mensajes, reloj, botones) | ✅ hecho | Fase 3 (pulido) |
 | Looteo de estructuras | ⏳ pendiente | Fase 3 |
 | Progresión por uso de habilidades | ⏳ pendiente | Fase 3 |
 | Permadeath configurable | ⏳ pendiente | Fase 3 |

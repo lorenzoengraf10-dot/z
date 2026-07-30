@@ -53,5 +53,10 @@
     "comestible": false,
     "cura": 25,
     "cura_infeccion": 40
+  },
+  "mechero": {
+    "nombre": "Mechero",
+    "comestible": false,
+    "descripcion": "Prender fuego se vuelve mucho más fácil: no hay que acertar el timing."
   }
 }

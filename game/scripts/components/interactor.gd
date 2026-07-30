@@ -17,6 +17,9 @@ const WATER := "~"
 const GRASS := "."
 
 @export var reach := 18.0
+## Las fogatas se agarran desde un poco más lejos que un tile, porque son un
+## objeto en el mundo y no un cuadrado de la grilla.
+@export var campfire_reach := 30.0
 @export var chop_seconds := 1.8
 @export var fish_seconds := 3.5
 @export var chop_noise := 170.0
@@ -63,6 +66,13 @@ func try_interact() -> void:
 		action_ended.emit("Acción cancelada")
 		return
 
+	# Las fogatas tienen prioridad sobre los tiles: si tenés una al lado, E es
+	# para prenderla o echarle leña.
+	var campfire = _nearby_campfire()
+	if campfire != null:
+		_use_campfire(campfire)
+		return
+
 	var world = _world()
 	if world == null:
 		return
@@ -76,6 +86,39 @@ func try_interact() -> void:
 			_begin("pescar", "Pescando...", fish_seconds, cell)
 		_:
 			action_ended.emit("Nada para hacer acá")
+
+
+## Fogata más cercana dentro del alcance, o null.
+## Sin tipo de retorno: le pedimos is_lit()/add_fuel(), que no existen en Node2D.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
+func _nearby_campfire():
+	var best = null
+	var best_dist := campfire_reach
+	for node in get_tree().get_nodes_in_group("campfire"):
+		if not (node is Node2D):
+			continue
+		var dist: float = _player.global_position.distance_to(node.global_position)
+		if dist <= best_dist:
+			best_dist = dist
+			best = node
+	return best
+
+
+func _use_campfire(campfire) -> void:
+	if campfire.is_lit():
+		# Ya prendida: le echamos leña para que dure más.
+		if _player.inventory.remove("madera", 1):
+			campfire.add_fuel(1)
+			action_ended.emit("Le echaste una madera al fuego")
+		else:
+			action_ended.emit("Necesitás madera para alimentar el fuego")
+		return
+
+	var minigame = get_tree().get_first_node_in_group("fire_minigame")
+	if minigame == null:
+		action_ended.emit("No se pudo abrir el minijuego de fuego")
+		return
+	minigame.start(campfire, _player.inventory.has("mechero"))
 
 
 func cancel() -> void:

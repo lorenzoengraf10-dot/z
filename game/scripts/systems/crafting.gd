@@ -111,13 +111,30 @@ func toggle() -> void:
 
 func _refresh() -> void:
 	var player = _player()
+	var near_fire := _has_fire_nearby(player)
 	for i in range(_rows.size()):
 		var recipe: Dictionary = recipes[i]
 		var costs: Dictionary = recipe.get("cuesta", {})
-		var affordable := player != null and _can_afford(player, costs)
+		var needs_fire := bool(recipe.get("requiere_fuego", false))
+		var ok := player != null and _can_afford(player, costs) and (not needs_fire or near_fire)
+
+		var suffix := ""
+		if needs_fire:
+			suffix = "  [fogata prendida]" if near_fire else "  [necesitás una fogata prendida]"
+
 		var row := _rows[i]
-		row.text = "%d) %s — %s" % [i + 1, str(recipe.get("nombre", "?")), _cost_text(costs)]
-		row.modulate = Color(1, 1, 1) if affordable else Color(0.55, 0.55, 0.55)
+		row.text = "%d) %s — %s%s" % [i + 1, str(recipe.get("nombre", "?")), _cost_text(costs), suffix]
+		row.modulate = Color(1, 1, 1) if ok else Color(0.55, 0.55, 0.55)
+
+
+## ¿Hay una fogata prendida lo bastante cerca como para cocinar?
+func _has_fire_nearby(player) -> bool:
+	if player == null:
+		return false
+	for fire in get_tree().get_nodes_in_group("campfire"):
+		if fire.has_method("can_cook_from") and fire.can_cook_from(player.global_position):
+			return true
+	return false
 
 
 func _cost_text(costs: Dictionary) -> String:
@@ -144,6 +161,10 @@ func _craft(index: int) -> void:
 
 	if not _can_afford(player, costs):
 		craft_message.emit("Te faltan materiales para %s" % str(recipe.get("nombre", "eso")))
+		return
+
+	if bool(recipe.get("requiere_fuego", false)) and not _has_fire_nearby(player):
+		craft_message.emit("Para eso necesitás estar al lado de una fogata prendida")
 		return
 
 	for id in costs.keys():

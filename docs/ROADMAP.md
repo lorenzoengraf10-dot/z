@@ -38,6 +38,9 @@ Objetivo: validar que el loop central es divertido antes de invertir en contenid
 - [x] Necesidades completas: sed, cansancio (energía), temperatura, infección.
 - [x] IA de zombies con variedad (normal / corredor / resistente) y **hordas que reaccionan al ruido acumulado** (`horde_spawner.gd`).
 - [x] Mapa más grande (costa al oeste, lago, bosques y pueblo con edificios).
+- [x] **Ciclo día/noche** con oscurecimiento e iluminación 2D (`day_night.gd`), que además baja la temperatura de noche.
+- [x] **Fogatas**: se construyen, se prenden con un **minijuego de fricción** (aguja girando + zona verde del 15% + mantener 3 s), iluminan, abrigan y habilitan las recetas de cocina.
+- [x] Botones en pantalla para mapa / crafteo / construcción, más reloj del juego.
 - [ ] **Arte final** (o casi final) de personaje, tiles, zombies y UI. → rol de arte
 - [ ] **Música y sonido base**. El enganche ya está listo (`audio_manager.gd`): solo hay que copiar los archivos a `assets/audio/`. → rol de audio
 
