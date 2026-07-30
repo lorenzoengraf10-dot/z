@@ -9,7 +9,9 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 
-func _on_body_entered(body: Node) -> void:
+# El parámetro va sin tipo porque llamamos collect(), que es del jugador y no
+# existe en Node (GDScript valida los tipos estáticos al compilar).
+func _on_body_entered(body) -> void:
 	if body.is_in_group("player") and body.has_method("collect"):
 		body.collect(item, amount)
 		queue_free()

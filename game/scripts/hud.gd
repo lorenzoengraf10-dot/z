@@ -1,41 +1,204 @@
 extends CanvasLayer
-## HUD: barras de salud y hambre + contador de comida. Se conecta a las señales
-## del jugador para actualizarse solo.
+## HUD: barras de necesidades, inventario, barra de progreso de la acción en
+## curso (talar/pescar) y una línea de mensajes.
+##
+## Toda la interfaz se arma por código: así agregar una necesidad nueva en
+## NeedsComponent la hace aparecer sola acá, sin tocar ninguna escena.
 
-@onready var health_bar: ProgressBar = $Panel/HealthBar
-@onready var hunger_bar: ProgressBar = $Panel/HungerBar
-@onready var food_label: Label = $Panel/FoodLabel
+const BAR_WIDTH := 190
+const BAR_HEIGHT := 14
+const MESSAGE_SECONDS := 3.0
+
+const COLORS := {
+	"salud": Color(0.83, 0.24, 0.24),
+	"hambre": Color(0.88, 0.63, 0.14),
+	"sed": Color(0.25, 0.60, 0.88),
+	"energia": Color(0.35, 0.78, 0.36),
+	"temperatura": Color(0.62, 0.82, 0.92),
+	"infeccion": Color(0.62, 0.32, 0.78),
+}
+const LABELS := {
+	"salud": "Salud",
+	"hambre": "Hambre",
+	"sed": "Sed",
+	"energia": "Energía",
+	"temperatura": "Temp.",
+	"infeccion": "Infección",
+}
+
+var _bars: Dictionary = {}
+var _inventory_label: Label
+var _message_label: Label
+var _action_box: VBoxContainer
+var _action_label: Label
+var _action_bar: ProgressBar
+var _message_timer := 0.0
 
 
 func _ready() -> void:
-	# Esperamos un frame para asegurarnos de que el jugador ya esté en el árbol.
+	layer = 2
+	_build_ui()
+	# Esperamos un frame para que el jugador y los sistemas ya estén en el árbol.
 	await get_tree().process_frame
+	_connect_signals()
 
-	var players := get_tree().get_nodes_in_group("player")
-	if players.is_empty():
+
+func _process(delta: float) -> void:
+	if _message_timer > 0.0:
+		_message_timer -= delta
+		if _message_timer <= 0.0:
+			_message_label.text = ""
+
+
+func _build_ui() -> void:
+	var root := MarginContainer.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_theme_constant_override("margin_left", 12)
+	root.add_theme_constant_override("margin_top", 10)
+	root.add_theme_constant_override("margin_right", 12)
+	root.add_theme_constant_override("margin_bottom", 10)
+	add_child(root)
+
+	var column := VBoxContainer.new()
+	column.alignment = BoxContainer.ALIGNMENT_BEGIN
+	root.add_child(column)
+
+	# Barras de necesidades
+	for id in NeedsComponent.ORDER:
+		var row := HBoxContainer.new()
+		column.add_child(row)
+
+		var name_label := Label.new()
+		name_label.text = str(LABELS.get(id, id))
+		name_label.custom_minimum_size = Vector2(78, 0)
+		row.add_child(name_label)
+
+		var bar := ProgressBar.new()
+		bar.custom_minimum_size = Vector2(BAR_WIDTH, BAR_HEIGHT)
+		bar.max_value = 100.0
+		bar.value = 100.0
+		bar.show_percentage = false
+		var fill := StyleBoxFlat.new()
+		fill.bg_color = COLORS.get(id, Color.WHITE)
+		bar.add_theme_stylebox_override("fill", fill)
+		row.add_child(bar)
+		_bars[id] = bar
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 8)
+	column.add_child(spacer)
+
+	_inventory_label = Label.new()
+	_inventory_label.text = "Mochila: vacía"
+	column.add_child(_inventory_label)
+
+	# Barra de acción (talar / pescar)
+	_action_box = VBoxContainer.new()
+	_action_box.visible = false
+	column.add_child(_action_box)
+
+	_action_label = Label.new()
+	_action_box.add_child(_action_label)
+
+	_action_bar = ProgressBar.new()
+	_action_bar.custom_minimum_size = Vector2(BAR_WIDTH, 10)
+	_action_bar.max_value = 1.0
+	_action_bar.show_percentage = false
+	_action_box.add_child(_action_bar)
+
+	# Línea de mensajes: centrada abajo, anclada para que siga a la ventana.
+	_message_label = Label.new()
+	_message_label.add_theme_font_size_override("font_size", 16)
+	_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_message_label.anchor_left = 0.5
+	_message_label.anchor_right = 0.5
+	_message_label.anchor_top = 1.0
+	_message_label.anchor_bottom = 1.0
+	_message_label.offset_left = -350
+	_message_label.offset_right = 350
+	_message_label.offset_top = -64
+	_message_label.offset_bottom = -40
+	add_child(_message_label)
+
+
+func _connect_signals() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null:
+		_connect_if_possible(player, "message", _on_message)
+
+		var needs: NeedsComponent = player.get_node_or_null("NeedsComponent")
+		if needs != null:
+			needs.need_changed.connect(_on_need_changed)
+			for id in NeedsComponent.ORDER:
+				_on_need_changed(id, needs.get_need(id), needs.max_of(id))
+
+		var inventory: InventoryComponent = player.get_node_or_null("InventoryComponent")
+		if inventory != null:
+			inventory.changed.connect(_on_inventory_changed)
+			_on_inventory_changed(inventory.items)
+
+		var interactor: Interactor = player.get_node_or_null("Interactor")
+		if interactor != null:
+			interactor.action_started.connect(_on_action_started)
+			interactor.action_progress.connect(_on_action_progress)
+			interactor.action_ended.connect(_on_action_ended)
+
+	_connect_if_possible(get_tree().get_first_node_in_group("build_system"), "build_message", _on_message)
+	_connect_if_possible(get_tree().get_first_node_in_group("crafting"), "craft_message", _on_message)
+	_connect_if_possible(get_tree().get_first_node_in_group("horde_spawner"), "horde_spawned", _on_horde)
+
+	# Autoload de guardado.
+	var save := get_node_or_null("/root/SaveSystem")
+	_connect_if_possible(save, "save_message", _on_message)
+
+
+func _connect_if_possible(node: Object, signal_name: String, target: Callable) -> void:
+	if node == null or not is_instance_valid(node):
 		return
-	var player := players[0]
-
-	var needs: NeedsComponent = player.get_node("NeedsComponent")
-	needs.health_changed.connect(_on_health_changed)
-	needs.hunger_changed.connect(_on_hunger_changed)
-	_on_health_changed(needs.health, needs.max_health)
-	_on_hunger_changed(needs.hunger, needs.max_hunger)
-
-	if player.has_signal("inventory_changed"):
-		player.inventory_changed.connect(_on_inventory_changed)
-		_on_inventory_changed(player.inventory)
+	if not node.has_signal(signal_name):
+		return
+	if not node.is_connected(signal_name, target):
+		node.connect(signal_name, target)
 
 
-func _on_health_changed(current: float, maximum: float) -> void:
-	health_bar.max_value = maximum
-	health_bar.value = current
+func _on_need_changed(id: String, current: float, maximum: float) -> void:
+	var bar: ProgressBar = _bars.get(id)
+	if bar == null:
+		return
+	bar.max_value = maximum
+	bar.value = current
 
 
-func _on_hunger_changed(current: float, maximum: float) -> void:
-	hunger_bar.max_value = maximum
-	hunger_bar.value = current
+func _on_inventory_changed(items: Dictionary) -> void:
+	if items.is_empty():
+		_inventory_label.text = "Mochila: vacía"
+		return
+	var parts: Array[String] = []
+	for id in items.keys():
+		parts.append("%s x%d" % [ItemDB.display_name(str(id)), int(items[id])])
+	_inventory_label.text = "Mochila: " + " · ".join(parts)
 
 
-func _on_inventory_changed(inventory: Dictionary) -> void:
-	food_label.text = "Comida: %d" % int(inventory.get("comida", 0))
+func _on_action_started(label: String, _duration: float) -> void:
+	_action_box.visible = true
+	_action_label.text = label
+	_action_bar.value = 0.0
+
+
+func _on_action_progress(ratio: float) -> void:
+	_action_bar.value = ratio
+
+
+func _on_action_ended(message: String) -> void:
+	_action_box.visible = false
+	if message != "":
+		_on_message(message)
+
+
+func _on_horde(count: int) -> void:
+	_on_message("¡Escuchaste ruido... vienen %d zombies!" % count)
+
+
+func _on_message(text: String) -> void:
+	_message_label.text = text
+	_message_timer = MESSAGE_SECONDS

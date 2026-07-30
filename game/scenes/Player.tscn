@@ -1,7 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/components/needs_component.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/components/inventory_component.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/components/interactor.gd" id="4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(14, 14)
@@ -18,5 +20,15 @@ shape = SubResource("RectangleShape2D_1")
 polygon = PackedVector2Array(-7, -7, 7, -7, 7, 7, -7, 7)
 color = Color(0.2, 0.6, 0.9, 1)
 
+[node name="Facing" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-3, 7, 3, 7, 0, 11)
+color = Color(0.6, 0.85, 1, 1)
+
 [node name="NeedsComponent" type="Node" parent="."]
 script = ExtResource("2")
+
+[node name="InventoryComponent" type="Node" parent="."]
+script = ExtResource("3")
+
+[node name="Interactor" type="Node" parent="."]
+script = ExtResource("4")

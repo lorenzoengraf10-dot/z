@@ -23,23 +23,25 @@ Objetivo: validar que el loop central es divertido antes de invertir en contenid
 - [x] 1-2 zombies con IA básica: deambular, detección por visión/ruido, persecución y ataque (`zombie.gd`).
 - [x] Sistema de sigilo/ruido básico (agacharse, correr = más ruido = atrae zombies) (`player.gd`).
 - [x] Necesidades básicas del personaje: hambre y salud (`needs_component.gd` + HUD).
-- [x] Recolección básica de un recurso (comida) + consumo (`pickup.gd`, tecla E). Falta ampliar a looteo/tala.
-- [x] Mapa chico jugable con TileMap real (pasto/camino/agua/árboles/casita), con colisiones y editable desde `data/level_prototype.txt` (`world.gd`). Arte de tiles todavía placeholder.
-- [ ] Caza o pesca básica (al menos una de las dos, para validar la mecánica).
-- [ ] Construcción de una estructura simple (ej. barricada) en cualquier punto del mapa.
-- [ ] Guardado/carga simple.
-- [ ] Playtesting interno (vos + amigos) y ajuste de sensación de juego.
+- [x] Recolección de recursos: comida del piso, **tala de árboles** (madera) y **pesca** (`interactor.gd`, tecla E).
+- [x] Mapa jugable con TileMap real, con colisiones y editable desde `data/level_prototype.txt` (`world.gd`). Arte de tiles todavía placeholder.
+- [x] Pesca básica (tecla E frente al agua; también sacia la sed, con riesgo de infección).
+- [x] Construcción de barricadas en cualquier punto del mapa (`build_system.gd`, tecla B).
+- [x] Guardado/carga simple (`save_system.gd`, F5/F9).
+- [ ] **Playtesting interno (vos + amigos) y ajuste de sensación de juego.** ← lo único que falta de la Fase 1
 
 **Criterio de éxito de esta fase:** si después de jugarlo un rato el prototipo no engancha ni a ustedes mismos, hay que iterar el diseño antes de seguir.
 
 ## Fase 2 — Producción core (2-3 meses)
-- [ ] Sistemas completos de crafteo y construcción de base (en cualquier ubicación).
-- [ ] Caza y pesca completas como fuentes de comida confiables.
-- [ ] Necesidades completas: sed, cansancio, temperatura, infección/enfermedad.
-- [ ] IA de zombies con variedad (tipos, hordas, reacción a ruido a distancia).
-- [ ] Mapa más grande (pueblo completo + bosque + costa).
-- [ ] Arte final (o casi final) de personaje, tiles, zombies y UI.
-- [ ] Música y sonido base (incluyendo el "radio de ruido" como elemento audible).
+- [x] Sistemas completos de crafteo (`crafting.gd` + `data/recipes.json`) y construcción de base (en cualquier ubicación).
+- [x] Caza (`animal.gd`: los animales huyen del ruido) y pesca como fuentes de comida.
+- [x] Necesidades completas: sed, cansancio (energía), temperatura, infección.
+- [x] IA de zombies con variedad (normal / corredor / resistente) y **hordas que reaccionan al ruido acumulado** (`horde_spawner.gd`).
+- [x] Mapa más grande (costa al oeste, lago, bosques y pueblo con edificios).
+- [ ] **Arte final** (o casi final) de personaje, tiles, zombies y UI. → rol de arte
+- [ ] **Música y sonido base**. El enganche ya está listo (`audio_manager.gd`): solo hay que copiar los archivos a `assets/audio/`. → rol de audio
+
+> Nota: los sistemas de la Fase 2 están programados, pero el **balance** (velocidades, ritmo del hambre, dificultad de las hordas) se ajusta recién después del playtest de la Fase 1.
 
 ## Fase 3 — Contenido, pulido y arquitectura multijugador (2-3 meses)
 - [ ] Progresión por uso de habilidades (caza, combate, pesca, crafteo).

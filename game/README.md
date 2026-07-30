@@ -1,80 +1,95 @@
 # Cuarentena — proyecto Godot
 
-Este es el proyecto del juego (motor Godot 4). El diseño y el roadmap completos están en `../docs/GDD.md` y `../docs/ROADMAP.md`.
+Este es el proyecto del juego (motor Godot 4). El diseño y el roadmap completos están en `../docs/GDD.md`, `../docs/ROADMAP.md` y `../docs/MASTER_PLAN.md`.
 
-## Cómo abrirlo (cuando tengas la compu)
+## Cómo abrirlo
 
-1. Instalar [Godot 4.x](https://godotengine.org/download) (versión 4.2 o más nueva — es gratis y no requiere instalación, se ejecuta directo).
-2. Abrir Godot, click en **Import**, seleccionar el archivo `game/project.godot` de este repo.
-3. Una vez abierto el proyecto, apretar **F5** (o el botón de play) para correr el prototipo.
+1. Instalar [Godot 4.x](https://godotengine.org/download) — la versión **normal, NO la .NET** (todo el código es GDScript). Es gratis y no requiere instalación.
+2. Abrir Godot → **Import** → elegir `game/project.godot`.
+3. Apretar **F5** (o el botón de play) para correr el juego.
 
 ## Controles
 
 | Tecla | Acción |
 |---|---|
 | WASD / Flechas | Mover |
-| Shift | Correr (más rápido, **más ruido**) |
-| C | Agacharse (más lento, **casi sin ruido**) |
-| E | Comer (consume 1 comida, restaura hambre) |
-| M | Abrir/cerrar el mapa |
+| Shift | Correr (rápido, **mucho ruido**, gasta energía) |
+| Ctrl | Agacharse (lento, **casi sin ruido**) |
+| E | Interactuar: talar el árbol / pescar en el agua que tengas enfrente |
+| Q | Comer o beber lo que tengas en la mochila |
+| Espacio | Atacar (zombies y animales) |
+| B | Modo construcción (clic izq: poner barricada · clic der: sacarla) |
+| C | Panel de crafteo (número para fabricar) |
+| M | Mapa mundial |
+| F5 / F9 | Guardar / cargar partida |
 
-## Qué hay armado hasta ahora
+## Sistemas que ya funcionan
 
-- **Movimiento con sigilo** (`Player.tscn` + `player.gd`): caminar / correr / agacharse, cada modo con distinta velocidad y **radio de ruido**. Correr te delata; agacharte te esconde.
-- **Zombie con IA** (`Zombie.tscn` + `zombie.gd`): deambula al azar y te detecta de dos formas — te **ve** (cono de visión al frente, con línea de vista bloqueable por paredes) o te **oye** (si entrás en tu radio de ruido, aunque no te vea). Cuando te detecta, persigue tu última posición conocida; si te alcanza, ataca. Si te pierde por unos segundos, vuelve a deambular.
-- **Necesidades del personaje** (`components/needs_component.gd`): salud y hambre. El hambre baja sola con el tiempo; si llega a 0 empezás a perder salud. Si la salud llega a 0, la escena se reinicia (la permadeath/dificultad serán configurables más adelante).
-- **Recolección y consumo** (`Pickup.tscn` + `pickup.gd`): hay comida (rombos) tirada en el mapa; la juntás al pasarle por encima y la comés con **E**.
-- **HUD** (`scenes/ui/HUD.tscn` + `hud.gd`): barras de salud y hambre + contador de comida, que se actualizan solas.
-- **Pantalla de mapa** (`scenes/ui/MapScreen.tscn` + `map_screen.gd`): se abre/cierra con **M**. Lee las ubicaciones desde `data/world_map.json` y las dibuja como etiquetas (base funcional para cuando haya una ilustración de mapa real, estilo la referencia en `docs/WORLD_MAP.md`).
-- **Input por código** (`autoload/input_setup.gd`): las teclas se registran al arrancar, así no hay que configurar el mapa de input a mano.
+- **Sigilo y ruido** (`player.gd`) — caminar / correr / agacharse tienen distinto **radio de ruido**. Talar y atacar también hacen ruido. Es lo que usan zombies y animales para detectarte.
+- **Zombies con IA** (`zombie.gd`) — deambulan, te detectan por **visión** (cono al frente, que se corta con paredes, árboles y barricadas) o por **oído**, te persiguen y te muerden (la mordida infecta). Se los puede matar.
+- **Hordas por ruido** (`systems/horde_spawner.gd`) — cuanto más ruido hacés, más "calor" acumulás; al pasar el umbral aparece una horda desde fuera de pantalla. Hay 3 variantes: normal, corredor (rápido y débil) y resistente (lento y duro).
+- **Necesidades** (`components/needs_component.gd`) — salud, hambre, sed, energía, temperatura e infección, cada una con su efecto.
+- **Recolección** — talar árboles da madera; pescar da pescado y sacia la sed (pero el agua sin hervir infecta un poco).
+- **Caza** (`animal.gd`) — los animales huyen si te oyen; cazarlos deja carne en el piso.
+- **Crafteo** (`systems/crafting.gd` + `data/recipes.json`) — tablas, cocinar carne/pescado, vendajes.
+- **Construcción** (`systems/build_system.gd`) — barricadas en cualquier lado del mapa; frenan zombies y les tapan la visión.
+- **Guardado/carga** (`systems/save_system.gd`) — JSON en `user://savegame.json`.
+- **Mapa mundial** (`ui/MapScreen.tscn`) — se lee de `data/world_map.json`.
 
-Todo el arte es placeholder a propósito (cuadrados y rombos de colores): la prioridad de la Fase 1 (ver roadmap) es validar que el loop de juego es divertido, no el arte.
+Todo el arte es **placeholder** a propósito (cuadrados y rombos de colores). La prioridad ahora es validar que el loop es divertido; el arte real entra después respetando `../docs/ARTE_SPEC.md` (tiles 16×16, personajes 32×32).
 
-### Cómo probar el loop
-Junta algo de comida evitando al zombie, mantené el hambre arriba comiendo con **E**, y usá **C** (agacharse) para pasar cerca del zombie sin que te oiga. Si corrés (Shift) cerca del zombie, te va a escuchar y perseguir.
+## Qué probar primero (checklist de playtest)
+
+1. Moverte y ver que las barras del HUD bajan solas (hambre y sed).
+2. Ir hasta un árbol, apretar **E** y ver la barra de progreso → conseguir madera.
+3. Ir al agua (oeste del mapa o el lago), **E** → pescar y llenar la sed.
+4. **Q** para comer el pescado.
+5. **B** y colocar barricadas con clic; probar que el zombie no las atraviesa.
+6. **C** y craftear una tabla.
+7. Correr cerca de un zombie (Shift) y ver que te escucha aunque no te vea; después pasar agachado (Ctrl) y ver que no.
+8. Correr mucho rato seguido hasta que aparezca una horda.
+9. **Espacio** para pelear; cazar un animal y juntar la carne.
+10. **F5**, cerrar, volver a abrir, **F9** → que vuelva todo como estaba.
 
 ## Cómo editar el mundo (el mapa de tiles)
 
-El terreno jugable se dibuja con un **TileMap** que se arma por código (`scripts/world.gd`) leyendo un mapa de texto: `data/level_prototype.txt`. No hace falta abrir el editor de tiles: se edita el `.txt` con cualquier editor de texto.
-
-Cada caracter es un tile de 16×16:
+El terreno se dibuja con un **TileMap** que se arma por código (`scripts/world.gd`) leyendo un mapa de texto: `data/level_prototype.txt`. Se edita con cualquier editor de texto, sin abrir el editor de tiles.
 
 | Caracter | Tile | ¿Frena / tapa visión? |
 |---|---|---|
-| `.` | pasto | no (se camina) |
+| `.` | pasto | no |
 | `=` | camino | no |
-| `~` | agua | sí (para pesca a futuro) |
-| `T` | árbol | sí (madera + tapa la visión del zombie) |
+| `~` | agua | sí (acá se pesca) |
+| `T` | árbol | sí (madera + tapa la visión) |
 | `#` | pared | sí |
 
-El mapa se **centra en el origen (0,0)**, que es donde spawnea el jugador — por eso el centro del `.txt` conviene dejarlo despejado. El tileset visual es placeholder (`assets/tiles/placeholder_tiles.png`, 5 tiles de colores); el arte real lo reemplaza sin tocar código, respetando `docs/ARTE_SPEC.md`.
+El mapa se **centra en el origen (0,0)**, que es donde spawnea el jugador — conviene dejar el centro del `.txt` despejado.
 
-## Cómo agregar/editar ubicaciones del mapa mundial (pantalla del mapa)
+## Cómo agregar ítems y recetas
 
-Editar `data/world_map.json`. Cada punto de interés tiene:
+- **Ítems:** `data/items.json` (nombre, si es comestible, cuánta hambre/sed restaura, etc.).
+- **Recetas:** `data/recipes.json` (qué cuesta y qué produce).
 
-```json
-{
-  "name": "Nombre del lugar",
-  "type": "camp | outpost | resource | danger | hub",
-  "position": [0.0, 0.0],
-  "description": "Texto corto"
-}
-```
+Los dos se leen solos: agregar cosas **no requiere tocar código**.
 
-`position` son coordenadas normalizadas (0.0 a 1.0, no píxeles), para que el mapa escale a cualquier resolución de pantalla. `[0.5, 0.5]` es el centro.
+## Cómo agregar sonidos
+
+`scripts/systems/audio_manager.gd` busca los archivos por nombre en `assets/audio/` y **no rompe si todavía no existen** (solo avisa por consola). Para que suenen, copiar archivos `.ogg`/`.wav` con estos nombres: `talar`, `pescar`, `golpe`, `comer`, `construir`, `paso`, y para música `musica_ambiente.ogg`.
 
 ## Estructura de carpetas
 
 ```
 game/
   project.godot
-  scenes/          escenas jugables (Main, Player, UI)
-  scripts/         código GDScript
-  data/            datos del juego (world_map.json, etc.)
-  assets/
-    sprites/       arte de personajes/objetos (vacío por ahora)
-    tiles/         tilesets del mundo (vacío por ahora)
-    audio/         música y sonido (vacío por ahora)
-    map/           arte de la pantalla de mapa mundial (vacío por ahora)
+  scenes/          escenas (Main, Player, Zombie, Animal, Pickup, Barricade, UI)
+  scripts/
+    components/    inventario, necesidades, interacción (se cuelgan del jugador)
+    systems/       construcción, crafteo, hordas, guardado, audio
+    autoload/      input y base de datos de ítems
+  data/            mapa del nivel, ítems, recetas, mapa mundial
+  assets/          arte y sonido (tiles placeholder; el resto vacío por ahora)
 ```
+
+## Nota técnica
+
+El nodo `TileMap` figura como **deprecado en Godot 4.3+** (lo reemplaza `TileMapLayer`), pero sigue funcionando. Se usa a propósito para que el proyecto abra igual en 4.2 y en versiones más nuevas. Si en algún momento migramos, el cambio es solo en `world.gd`.

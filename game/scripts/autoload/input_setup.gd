@@ -2,15 +2,40 @@ extends Node
 ## Autoload. Registra las acciones de input por código para no depender de
 ## editar el mapa de teclas a mano en project.godot. Se ejecuta al arrancar,
 ## antes que la escena principal.
+##
+## Controles:
+##   WASD / flechas  mover
+##   Shift           correr (gasta energía, hace mucho ruido)
+##   Ctrl            agacharse (lento y silencioso)
+##   E               interactuar (talar árbol / pescar)
+##   Q               comer o beber lo que tengas
+##   Espacio         atacar
+##   B               modo construcción
+##   C               crafteo
+##   M               mapa
+##   F5 / F9         guardar / cargar
+
+const ACTIONS := {
+	"move_up": [KEY_W, KEY_UP],
+	"move_down": [KEY_S, KEY_DOWN],
+	"move_left": [KEY_A, KEY_LEFT],
+	"move_right": [KEY_D, KEY_RIGHT],
+	"run": [KEY_SHIFT],
+	"crouch": [KEY_CTRL],
+	"interact": [KEY_E],
+	"eat": [KEY_Q],
+	"attack": [KEY_SPACE],
+	"build_mode": [KEY_B],
+	"crafting": [KEY_C],
+	"toggle_map": [KEY_M],
+	"quick_save": [KEY_F5],
+	"quick_load": [KEY_F9],
+}
+
 
 func _ready() -> void:
-	_add_action("move_up", [KEY_W, KEY_UP])
-	_add_action("move_down", [KEY_S, KEY_DOWN])
-	_add_action("move_left", [KEY_A, KEY_LEFT])
-	_add_action("move_right", [KEY_D, KEY_RIGHT])
-	_add_action("run", [KEY_SHIFT])
-	_add_action("crouch", [KEY_C])
-	_add_action("interact", [KEY_E])
+	for action in ACTIONS.keys():
+		_add_action(str(action), ACTIONS[action])
 
 
 func _add_action(action: String, keys: Array) -> void:

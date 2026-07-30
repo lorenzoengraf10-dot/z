@@ -23,24 +23,29 @@ Vista plana de todo lo que el juego necesita, más allá del orden por fases (es
 |---|---|---|
 | Movimiento y cámara | ✅ hecho (placeholder) | Fase 1 |
 | Pantalla de mapa mundial | ✅ base hecha (placeholder) | Fase 1 (arte final en Fase 4) |
-| Mapa jugable chico | ⏳ pendiente (hoy piso liso placeholder) | Fase 1 |
-| IA de zombies (deambular, visión/ruido, persecución, ataque) | ✅ base hecha | Fase 1 (variedad y hordas en Fase 2) |
-| Sigilo / ruido (caminar/correr/agacharse) | ✅ base hecha | Fase 1 |
-| Recolección + consumo de comida | ✅ base hecha | Fase 1 |
-| Looteo de estructuras | ⏳ pendiente | Fase 1 |
-| Caza | ⏳ pendiente | Fase 1 (completa en Fase 2) |
-| Pesca | ⏳ pendiente | Fase 1 (completa en Fase 2) |
-| Tala / minería | ⏳ pendiente | Fase 1 |
-| Crafteo | ⏳ pendiente | Fase 2 |
-| Construcción de base en cualquier lugar | ⏳ pendiente (estructura simple en Fase 1) | Fase 2 |
-| Necesidades (hambre, sed, salud, cansancio, temperatura, infección) | 🟡 hambre/salud hechas | Fase 2 |
+| Mapa jugable (TileMap con costa, lago, bosques y pueblo) | ✅ hecho (tiles placeholder) | Fase 1-2 |
+| IA de zombies (deambular, visión/ruido, persecución, ataque) | ✅ hecho | Fase 1 |
+| Variedad de zombies + hordas por ruido | ✅ hecho | Fase 2 |
+| Sigilo / ruido (caminar/correr/agacharse) | ✅ hecho | Fase 1 |
+| Combate del jugador | ✅ hecho | Fase 1 |
+| Recolección + consumo de comida | ✅ hecho | Fase 1 |
+| Tala de árboles (madera) | ✅ hecho | Fase 1 |
+| Pesca | ✅ hecho | Fase 1 |
+| Caza | ✅ hecho | Fase 2 |
+| Crafteo | ✅ hecho | Fase 2 |
+| Construcción de base en cualquier lugar | ✅ hecho (barricadas) | Fase 2 |
+| Necesidades (salud, hambre, sed, energía, temperatura, infección) | ✅ hecho | Fase 2 |
+| Guardado/carga | ✅ hecho | Fase 1-2 |
+| HUD (necesidades, inventario, progreso, mensajes) | ✅ hecho | Fase 3 (pulido) |
+| Looteo de estructuras | ⏳ pendiente | Fase 3 |
 | Progresión por uso de habilidades | ⏳ pendiente | Fase 3 |
 | Permadeath configurable | ⏳ pendiente | Fase 3 |
-| Guardado/carga | ⏳ pendiente (simple en Fase 1) | Fase 1-2 |
-| HUD (salud, hambre, comida) | 🟡 base hecha | Fase 3 (completa) |
-| Audio (ambiente + ruido como mecánica) | ⏳ pendiente | Fase 2 |
-| Arquitectura preparada para multijugador | ⏳ pendiente | Fase 0-3 |
+| **Arte final** (personaje, tiles, zombies, UI) | ⏳ pendiente → **rol de arte** | Fase 2 |
+| **Audio** (música y efectos) | 🟡 enganche listo, faltan los archivos → **rol de audio** | Fase 2 |
+| Arquitectura preparada para multijugador | 🟡 en camino (lógica separada en componentes) | Fase 0-3 |
 | Netcode cooperativo real | ⏳ pendiente | Fase 3-4 |
+
+> ⚠️ Todo lo marcado ✅ está **programado pero todavía no probado en Godot** (se escribió sin poder ejecutar el motor). El primer playtest puede pedir ajustes.
 
 ## 3. Mundo y contenido
 

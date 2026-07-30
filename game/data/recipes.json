@@ -1,0 +1,30 @@
+[
+  {
+    "id": "tabla",
+    "nombre": "Tabla",
+    "cuesta": { "madera": 2 },
+    "produce": { "tabla": 1 },
+    "descripcion": "Material más resistente para construir."
+  },
+  {
+    "id": "carne_cocida",
+    "nombre": "Cocinar carne",
+    "cuesta": { "carne": 1, "madera": 1 },
+    "produce": { "carne_cocida": 1 },
+    "descripcion": "Alimenta más y no te infecta."
+  },
+  {
+    "id": "pescado_cocido",
+    "nombre": "Cocinar pescado",
+    "cuesta": { "pescado": 1, "madera": 1 },
+    "produce": { "pescado_cocido": 1 },
+    "descripcion": "Alimenta más que el pescado crudo."
+  },
+  {
+    "id": "vendaje",
+    "nombre": "Vendaje",
+    "cuesta": { "tabla": 1 },
+    "produce": { "vendaje": 1 },
+    "descripcion": "Cura salud y baja la infección."
+  }
+]

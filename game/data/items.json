@@ -1,0 +1,57 @@
+{
+  "comida": {
+    "nombre": "Comida enlatada",
+    "comestible": true,
+    "hambre": 30,
+    "sed": 0
+  },
+  "pescado": {
+    "nombre": "Pescado",
+    "comestible": true,
+    "hambre": 35,
+    "sed": 5
+  },
+  "carne": {
+    "nombre": "Carne cruda",
+    "comestible": true,
+    "hambre": 45,
+    "sed": 0,
+    "infeccion": 12
+  },
+  "carne_cocida": {
+    "nombre": "Carne cocida",
+    "comestible": true,
+    "hambre": 60,
+    "sed": 0
+  },
+  "pescado_cocido": {
+    "nombre": "Pescado cocido",
+    "comestible": true,
+    "hambre": 50,
+    "sed": 5
+  },
+  "agua": {
+    "nombre": "Agua",
+    "comestible": true,
+    "hambre": 0,
+    "sed": 45
+  },
+  "madera": {
+    "nombre": "Madera",
+    "comestible": false
+  },
+  "tabla": {
+    "nombre": "Tabla",
+    "comestible": false
+  },
+  "piedra": {
+    "nombre": "Piedra",
+    "comestible": false
+  },
+  "vendaje": {
+    "nombre": "Vendaje",
+    "comestible": false,
+    "cura": 25,
+    "cura_infeccion": 40
+  }
+}

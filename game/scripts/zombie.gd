@@ -2,9 +2,14 @@ extends CharacterBody2D
 ## Zombie con IA básica: deambula, detecta al jugador por visión (cono al frente,
 ## con línea de vista) o por oído (si estás dentro de tu radio de ruido), lo
 ## persigue hasta su última posición conocida, y ataca cuerpo a cuerpo.
+##
+## Las estadísticas están todas como @export para poder tener variantes sin
+## duplicar código: el spawner de hordas (horde_spawner.gd) crea zombies
+## normales, corredores (rápidos y débiles) y resistentes (lentos y duros).
 
 enum State { WANDER, CHASE, ATTACK }
 
+@export var zombie_type := "normal"
 @export var wander_speed := 30.0
 @export var chase_speed := 110.0
 @export var vision_range := 220.0
@@ -12,12 +17,15 @@ enum State { WANDER, CHASE, ATTACK }
 @export var attack_range := 20.0
 @export var attack_damage := 8.0
 @export var attack_cooldown := 1.0
+@export var infection_per_bite := 7.0
+@export var max_health := 45.0
 ## Segundos sin detectar al jugador antes de dejar de perseguir.
 @export var lose_interest_time := 4.0
 
 var state: State = State.WANDER
 var facing := Vector2.DOWN
 var last_known_position := Vector2.ZERO
+var health := 0.0
 
 var _wander_target := Vector2.ZERO
 var _wander_timer := 0.0
@@ -29,6 +37,8 @@ var _attack_timer := 0.0
 
 func _ready() -> void:
 	add_to_group("zombie")
+	add_to_group("damageable")
+	health = max_health
 	_pick_wander_target()
 
 
@@ -49,11 +59,13 @@ func _physics_process(delta: float) -> void:
 		State.CHASE:
 			_do_chase(delta, player)
 		State.ATTACK:
-			_do_attack(delta, player)
+			_do_attack(player)
 
 
 ## Devuelve el jugador si lo detecta por visión o por oído, si no null.
-func _detect_player() -> Node2D:
+## Sin tipo de retorno a propósito: le pedimos métodos (get_noise_radius,
+## apply_damage) que no existen en Node2D y GDScript valida tipos al compilar.
+func _detect_player():
 	for p in get_tree().get_nodes_in_group("player"):
 		if not (p is Node2D):
 			continue
@@ -78,7 +90,7 @@ func _detect_player() -> Node2D:
 func _has_line_of_sight(target: Node2D) -> bool:
 	_vision_ray.target_position = _vision_ray.to_local(target.global_position)
 	_vision_ray.force_raycast_update()
-	# La máscara del ray solo incluye paredes: si choca, hay algo tapando.
+	# La máscara del ray solo incluye paredes/estructuras: si choca, algo tapa.
 	return not _vision_ray.is_colliding()
 
 
@@ -103,17 +115,16 @@ func _pick_wander_target() -> void:
 	_wander_timer = randf_range(2.0, 4.0)
 
 
-func _do_chase(delta: float, player: Node2D) -> void:
+func _do_chase(_delta: float, player) -> void:
 	if _time_since_seen >= lose_interest_time:
 		state = State.WANDER
 		_pick_wander_target()
 		return
-	var to_target := last_known_position - global_position
-	var dist := to_target.length()
 	if player != null and player.global_position.distance_to(global_position) <= attack_range:
 		state = State.ATTACK
 		return
-	if dist > 2.0:
+	var to_target := last_known_position - global_position
+	if to_target.length() > 2.0:
 		var dir := to_target.normalized()
 		facing = dir
 		velocity = dir * chase_speed
@@ -122,7 +133,7 @@ func _do_chase(delta: float, player: Node2D) -> void:
 	move_and_slide()
 
 
-func _do_attack(_delta: float, player: Node2D) -> void:
+func _do_attack(player) -> void:
 	velocity = Vector2.ZERO
 	move_and_slide()
 	if player == null:
@@ -137,3 +148,19 @@ func _do_attack(_delta: float, player: Node2D) -> void:
 		_attack_timer = attack_cooldown
 		if player.has_method("apply_damage"):
 			player.apply_damage(attack_damage)
+		if player.has_method("apply_infection"):
+			player.apply_infection(infection_per_bite)
+
+
+## La llama el ataque del jugador.
+func take_damage(amount: float) -> void:
+	health -= amount
+	if health <= 0.0:
+		queue_free()
+		return
+	# Que le peguen lo alerta aunque no te hubiera visto.
+	var players := get_tree().get_nodes_in_group("player")
+	if not players.is_empty() and players[0] is Node2D:
+		last_known_position = (players[0] as Node2D).global_position
+		_time_since_seen = 0.0
+		state = State.CHASE

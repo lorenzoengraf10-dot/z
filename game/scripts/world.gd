@@ -7,25 +7,42 @@ extends TileMap
 ##   0 pasto | 1 camino | 2 agua | 3 arbol | 4 pared
 ## Las tiles sólidas (agua, arbol, pared) colisionan en la capa 1 → frenan al
 ## jugador/zombie y tapan la visión del zombie (que hace raycast contra esa capa).
+##
+## Nota: en Godot 4.3+ el nodo TileMap figura como deprecado (lo reemplaza
+## TileMapLayer), pero sigue funcionando. Se usa TileMap a propósito para que el
+## proyecto abra igual en 4.2 que en versiones más nuevas.
 
 const TILE_SIZE := 16
 const SOURCE_ID := 0
 const TILES_TEXTURE := "res://assets/tiles/placeholder_tiles.png"
 const LEVEL_PATH := "res://data/level_prototype.txt"
 
+const GRASS := "."
+const PATH := "="
+const WATER := "~"
+const TREE := "T"
+const WALL := "#"
+
 # Caracter del mapa ASCII -> índice de tile en el atlas.
 const CHAR_TO_TILE := {
-	".": 0,  # pasto
-	"=": 1,  # camino
-	"~": 2,  # agua
-	"T": 3,  # arbol
-	"#": 4,  # pared
+	GRASS: 0,
+	PATH: 1,
+	WATER: 2,
+	TREE: 3,
+	WALL: 4,
 }
 # Índices de tiles que colisionan (y tapan la visión).
 const SOLID := {2: true, 3: true, 4: true}
 
+var _tile_to_char: Dictionary = {}
+## Tiles que el jugador modificó (ej. árboles talados). Se guardan en la partida.
+var _modified: Dictionary = {}
+
 
 func _ready() -> void:
+	add_to_group("world")
+	for ch in CHAR_TO_TILE.keys():
+		_tile_to_char[CHAR_TO_TILE[ch]] = ch
 	tile_set = _build_tileset()
 	_paint_level()
 
@@ -89,6 +106,8 @@ func _load_level_lines() -> PackedStringArray:
 	if not FileAccess.file_exists(LEVEL_PATH):
 		return PackedStringArray()
 	var f := FileAccess.open(LEVEL_PATH, FileAccess.READ)
+	if f == null:
+		return PackedStringArray()
 	var text := f.get_as_text()
 	var result := PackedStringArray()
 	for raw in text.split("\n"):
@@ -96,3 +115,69 @@ func _load_level_lines() -> PackedStringArray:
 		if ln.length() > 0:
 			result.append(ln)
 	return result
+
+
+# --- Consulta y modificación de tiles ---
+
+func cell_at(global_pos: Vector2) -> Vector2i:
+	return local_to_map(to_local(global_pos))
+
+
+## Centro (en coordenadas globales) de una celda.
+func center_of(cell: Vector2i) -> Vector2:
+	return to_global(map_to_local(cell))
+
+
+func char_at_cell(cell: Vector2i) -> String:
+	var atlas := get_cell_atlas_coords(0, cell)
+	if atlas.x < 0:
+		return ""
+	return str(_tile_to_char.get(atlas.x, ""))
+
+
+func char_at(global_pos: Vector2) -> String:
+	return char_at_cell(cell_at(global_pos))
+
+
+func is_solid_cell(cell: Vector2i) -> bool:
+	var atlas := get_cell_atlas_coords(0, cell)
+	if atlas.x < 0:
+		return true  # fuera del mapa cuenta como sólido
+	return SOLID.has(atlas.x)
+
+
+func is_solid(global_pos: Vector2) -> bool:
+	return is_solid_cell(cell_at(global_pos))
+
+
+func set_char_at_cell(cell: Vector2i, ch: String) -> void:
+	if not CHAR_TO_TILE.has(ch):
+		return
+	set_cell(0, cell, SOURCE_ID, Vector2i(int(CHAR_TO_TILE[ch]), 0))
+	_modified[_key(cell)] = ch
+
+
+# --- Guardado ---
+
+func modified_to_dict() -> Dictionary:
+	return _modified.duplicate()
+
+
+func apply_modified(data: Dictionary) -> void:
+	for key in data.keys():
+		var cell := _cell_from_key(str(key))
+		var ch := str(data[key])
+		if CHAR_TO_TILE.has(ch):
+			set_cell(0, cell, SOURCE_ID, Vector2i(int(CHAR_TO_TILE[ch]), 0))
+			_modified[str(key)] = ch
+
+
+func _key(cell: Vector2i) -> String:
+	return "%d,%d" % [cell.x, cell.y]
+
+
+func _cell_from_key(key: String) -> Vector2i:
+	var parts := key.split(",")
+	if parts.size() != 2:
+		return Vector2i.ZERO
+	return Vector2i(int(parts[0]), int(parts[1]))
