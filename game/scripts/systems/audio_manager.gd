@@ -21,6 +21,9 @@ var _warned: Dictionary = {}
 
 
 func _ready() -> void:
+	# El minijuego de fuego pausa el juego, y queremos que sus sonidos igual
+	# suenen: por eso el audio no se pausa nunca.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	for i in range(VOICES):
 		var p := AudioStreamPlayer.new()
 		add_child(p)

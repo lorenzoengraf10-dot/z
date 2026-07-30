@@ -96,7 +96,14 @@ func start(campfire, has_lighter: bool = false) -> void:
 	_speed = needle_speed
 	_wait_release = true
 	_close_timer = 0.0
-	_duration = lighter_seconds if has_lighter else friction_seconds
+	# maxf evita dividir por cero al dibujar el progreso si alguien pone 0 en el
+	# inspector.
+	_duration = maxf(0.1, lighter_seconds if has_lighter else friction_seconds)
+
+	# Que no quede el panel de crafteo abierto atrás del minijuego.
+	var crafting = get_tree().get_first_node_in_group("crafting")
+	if crafting != null and crafting.visible:
+		crafting.visible = false
 
 	# Con mechero no hay que apuntar: vas directo a la fricción.
 	_state = State.FRICTION if has_lighter else State.AIM
@@ -115,13 +122,16 @@ func _process(delta: float) -> void:
 	if _state == State.CLOSED:
 		return
 
-	# Esperamos a que sueltes la tecla con la que abriste el minijuego.
-	if _wait_release:
-		if not Input.is_action_pressed("interact"):
-			_wait_release = false
-	elif Input.is_action_just_pressed("ui_cancel"):
+	# Escape siempre cancela, incluso si todavía tenés apretada la E con la que
+	# abriste el minijuego.
+	if Input.is_action_just_pressed("ui_cancel"):
 		_close(false)
 		return
+
+	# Esperamos a que sueltes la tecla con la que abriste el minijuego, así ese
+	# mismo E no cuenta como primer intento de timing.
+	if _wait_release and not Input.is_action_pressed("interact"):
+		_wait_release = false
 
 	match _state:
 		State.AIM:

@@ -35,7 +35,8 @@ También hay **botones en pantalla** (arriba a la derecha) para Mapa, Crafteo y 
 - **Caza** (`animal.gd`) — los animales huyen si te oyen; cazarlos deja carne en el piso.
 - **Crafteo** (`systems/crafting.gd` + `data/recipes.json`) — tablas, cocinar carne/pescado, vendajes.
 - **Construcción** (`systems/build_system.gd`) — barricadas en cualquier lado del mapa; frenan zombies y les tapan la visión.
-- **Ciclo día/noche** (`systems/day_night.gd`) — el mundo se oscurece de noche y **baja la temperatura**, así que de noche necesitás fuego. Un día completo dura 4 minutos reales (ajustable).
+- **Ciclo día/noche con amanecer y atardecer** (`systems/day_night.gd`) — el mundo cambia de color según la hora: **noche** azul profundo → **amanecer** rosa cálido (05:00-07:30) → **día** → **atardecer** naranja (18:00-21:00) → noche. De noche además **baja la temperatura**, así que necesitás fuego. Un día completo dura 4 minutos reales (ajustable con `day_seconds`).
+  - Los colores salen de la tabla `SKY` arriba del script: para cambiar cómo se ve el atardecer alcanza con tocar esa tabla, sin tocar la lógica.
 - **Fogata** (`campfire.gd`) — se construye con 5 madera y arranca **apagada**. Prendida: ilumina, te abriga y habilita las recetas de cocina. Consume leña; se le echa más con E.
 - **Minijuego de fricción** (`ui/fire_minigame.gd`) — ver abajo.
 - **Guardado/carga** (`systems/save_system.gd`) — JSON en `user://savegame.json`. Guarda también si cada fogata quedó prendida y con cuánta leña.
@@ -65,7 +66,7 @@ Todo el arte es **placeholder** a propósito (cuadrados y rombos de colores). La
 7. Correr cerca de un zombie (Shift) y ver que te escucha aunque no te vea; después pasar agachado (Ctrl) y ver que no.
 8. Correr mucho rato seguido hasta que aparezca una horda.
 9. **Espacio** para pelear; cazar un animal y juntar la carne.
-10. Esperar a que caiga la noche (mirá el reloj arriba a la derecha) y ver que oscurece y baja la temperatura.
+10. Mirar el reloj arriba a la derecha y esperar a que pase el **atardecer** (naranja) y caiga la noche: tiene que oscurecer y bajar la temperatura. Después esperá el **amanecer** (rosa).
 11. Acercarte a la **fogata que ya está puesta cerca del spawn**, apretar **E** y probar el minijuego hasta prenderla. Ver que ilumina y que la temperatura sube al estar cerca.
 12. Con la fogata prendida, abrir **C** y cocinar la carne (esa receta solo aparece habilitada al lado del fuego).
 13. **B**, **2** para construir tu propia fogata donde quieras.

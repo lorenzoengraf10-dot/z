@@ -47,6 +47,26 @@ func _ready() -> void:
 	_ghost = _make_ghost()
 	add_child(_ghost)
 	_ghost.visible = false
+	# Las estructuras que ya vienen puestas en la escena (la fogata de prueba
+	# cerca del spawn) se registran igual que las construidas: si no, no se
+	# guardaban ni se podían desarmar.
+	_register_preplaced.call_deferred()
+
+
+## Adopta lo que ya estaba colgado del nodo Structures al arrancar.
+func _register_preplaced() -> void:
+	var world = _world()
+	if world == null:
+		return
+	for child in _structures().get_children():
+		if child == _ghost or not (child is Node2D):
+			continue
+		var cell: Vector2i = world.cell_at(child.global_position)
+		var key := _key(cell)
+		if _placed.has(key):
+			continue
+		var type_id := "fogata" if child.is_in_group("campfire") else "barricada"
+		_placed[key] = {"nodo": child, "tipo": type_id}
 
 
 func _current() -> Dictionary:

@@ -17,6 +17,12 @@ const COLORS := {
 	"temperatura": Color(0.62, 0.82, 0.92),
 	"infeccion": Color(0.62, 0.32, 0.78),
 }
+const PHASE_ICONS := {
+	"Amanecer": "🌅",
+	"Día": "☀",
+	"Atardecer": "🌇",
+	"Noche": "🌙",
+}
 const LABELS := {
 	"salud": "Salud",
 	"hambre": "Hambre",
@@ -54,8 +60,10 @@ func _process(delta: float) -> void:
 			_message_label.text = ""
 
 	if _day_night != null and is_instance_valid(_day_night):
-		var moment := "🌙 Noche" if _day_night.is_night() else "☀ Día"
-		_clock_label.text = "%s  %s" % [_day_night.time_string(), moment]
+		var phase := str(_day_night.phase_name())
+		_clock_label.text = "%s  %s %s" % [
+			_day_night.time_string(), PHASE_ICONS.get(phase, ""), phase,
+		]
 
 
 func _build_ui() -> void:
