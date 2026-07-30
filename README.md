@@ -10,6 +10,6 @@ Detalle por tema:
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — roadmap por fases, hitos y pasos inmediatos
 - [`docs/WORLD_MAP.md`](docs/WORLD_MAP.md) — diseño del mapa mundial (hub + puntos de interés)
 - [`docs/ARTE_SPEC.md`](docs/ARTE_SPEC.md) — especificación de arte (tiles 16×16, personajes 32×32)
-- [`docs/LEGAL_Y_PRIVACIDAD.md`](docs/LEGAL_Y_PRIVACIDAD.md) — legal, privacidad y licencias (Argentina y global)
+- [`docs/LEGAL_Y_PRIVACIDAD.md`](docs/LEGAL_Y_PRIVACIDAD.md) — legal, privacidad y licencias (Argentina y global). También en [PDF](docs/Cuarentena-Legal-y-Privacidad.pdf) para compartir o imprimir
 
 El proyecto del juego (Godot 4) está en [`game/`](game/) — ver [`game/README.md`](game/README.md) para instrucciones de cómo abrirlo.
