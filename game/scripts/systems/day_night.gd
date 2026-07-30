@@ -138,9 +138,12 @@ func _update_player_temperature(dark: float) -> void:
 	var ambient: float = lerpf(day_ambient_temp, night_ambient_temp, dark)
 
 	# Estar cerca de una fogata prendida te abriga.
-	for source in get_tree().get_nodes_in_group("heat_source"):
-		if not (source is Node2D) or not source.has_method("heat_at"):
+	# El for sobre Array[Node] da elementos tipados como Node: los pasamos a una
+	# variable sin tipo para poder llamarles heat_at().
+	for node in get_tree().get_nodes_in_group("heat_source"):
+		if not (node is Node2D) or not node.has_method("heat_at"):
 			continue
+		var source = node
 		ambient = maxf(ambient, float(source.heat_at(player.global_position)))
 
 	player.needs.ambient_temperature = ambient

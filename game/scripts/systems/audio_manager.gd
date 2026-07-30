@@ -74,10 +74,13 @@ func _load_stream(sound_name: String) -> AudioStream:
 	for ext in EXTENSIONS:
 		var path := AUDIO_DIR + sound_name + ext
 		if ResourceLoader.exists(path):
+			# load() devuelve Resource; hace falta el cast para devolverlo como
+			# AudioStream (GDScript no angosta el tipo con el `is` de arriba).
 			var res := load(path)
 			if res is AudioStream:
-				_cache[sound_name] = res
-				return res
+				var stream := res as AudioStream
+				_cache[sound_name] = stream
+				return stream
 
 	# Todavía no hay archivo para este sonido: avisamos una vez y seguimos.
 	if not _warned.has(sound_name):

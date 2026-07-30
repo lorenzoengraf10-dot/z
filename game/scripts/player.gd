@@ -118,10 +118,13 @@ func _try_attack() -> void:
 	interactor.cancel()
 
 	var hits := 0
-	for target in get_tree().get_nodes_in_group("damageable"):
-		if not (target is Node2D):
+	# get_nodes_in_group() devuelve Array[Node]: pasamos cada uno a una variable
+	# sin tipo para poder llamarle take_damage(), que no existe en Node.
+	for node in get_tree().get_nodes_in_group("damageable"):
+		if not (node is Node2D):
 			continue
-		var to_target: Vector2 = (target as Node2D).global_position - global_position
+		var target = node
+		var to_target: Vector2 = target.global_position - global_position
 		var dist := to_target.length()
 		if dist < 0.01 or dist > attack_range:
 			continue

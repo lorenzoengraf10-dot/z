@@ -67,9 +67,13 @@ func _physics_process(delta: float) -> void:
 ## apply_damage) que no existen en Node2D y GDScript valida tipos al compilar.
 # Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _detect_player():
-	for p in get_tree().get_nodes_in_group("player"):
-		if not (p is Node2D):
+	# get_nodes_in_group() devuelve Array[Node], así que el elemento del for
+	# queda tipado como Node. Lo pasamos a una variable sin tipo para poder
+	# pedirle global_position y get_noise_radius(), que no existen en Node.
+	for node in get_tree().get_nodes_in_group("player"):
+		if not (node is Node2D):
 			continue
+		var p = node
 		var to_player: Vector2 = p.global_position - global_position
 		var dist := to_player.length()
 

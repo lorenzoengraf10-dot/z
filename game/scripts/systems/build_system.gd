@@ -43,7 +43,8 @@ var _placed: Dictionary = {}
 func _ready() -> void:
 	add_to_group("build_system")
 	for entry in BUILDABLES:
-		_scenes.append(load(str(entry["escena"])))
+		# load() devuelve Resource: sin el cast no entra en un Array[PackedScene].
+		_scenes.append(load(str(entry["escena"])) as PackedScene)
 	_ghost = _make_ghost()
 	add_child(_ghost)
 	_ghost.visible = false
@@ -58,9 +59,12 @@ func _register_preplaced() -> void:
 	var world = _world()
 	if world == null:
 		return
-	for child in _structures().get_children():
-		if child == _ghost or not (child is Node2D):
+	# get_children() devuelve Array[Node]: pasamos cada uno a una variable sin
+	# tipo para poder pedirle global_position.
+	for raw in _structures().get_children():
+		if raw == _ghost or not (raw is Node2D):
 			continue
+		var child = raw
 		var cell: Vector2i = world.cell_at(child.global_position)
 		var key := _key(cell)
 		if _placed.has(key):

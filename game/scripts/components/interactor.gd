@@ -94,13 +94,16 @@ func try_interact() -> void:
 func _nearby_campfire():
 	var best = null
 	var best_dist := campfire_reach
+	# El for sobre Array[Node] da elementos tipados como Node, y Node no tiene
+	# global_position: lo pasamos a una variable sin tipo.
 	for node in get_tree().get_nodes_in_group("campfire"):
 		if not (node is Node2D):
 			continue
-		var dist: float = _player.global_position.distance_to(node.global_position)
+		var fire = node
+		var dist: float = _player.global_position.distance_to(fire.global_position)
 		if dist <= best_dist:
 			best_dist = dist
-			best = node
+			best = fire
 	return best
 
 

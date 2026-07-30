@@ -41,10 +41,13 @@ func _physics_process(delta: float) -> void:
 
 
 func _senses_player() -> bool:
-	for p in get_tree().get_nodes_in_group("player"):
-		if not (p is Node2D):
+	# El for sobre Array[Node] da elementos tipados como Node: los pasamos a una
+	# variable sin tipo para poder pedirles cosas del jugador.
+	for node in get_tree().get_nodes_in_group("player"):
+		if not (node is Node2D):
 			continue
-		var dist := global_position.distance_to(p.global_position)
+		var p = node
+		var dist: float = global_position.distance_to(p.global_position)
 		var noise := 0.0
 		if p.has_method("get_noise_radius"):
 			noise = p.get_noise_radius()
@@ -102,7 +105,7 @@ func _die() -> void:
 
 
 func _drop_meat() -> void:
-	var scene: PackedScene = load("res://scenes/Pickup.tscn")
+	var scene := load("res://scenes/Pickup.tscn") as PackedScene
 	if scene == null:
 		return
 	# Sin ":=" : instantiate() devuelve Node y le seteamos item/amount/position.

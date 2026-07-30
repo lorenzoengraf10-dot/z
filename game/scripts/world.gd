@@ -56,7 +56,7 @@ func _build_tileset() -> TileSet:
 	ts.set_physics_layer_collision_layer(0, 1)
 
 	var src := TileSetAtlasSource.new()
-	src.texture = load(TILES_TEXTURE)
+	src.texture = load(TILES_TEXTURE) as Texture2D
 	src.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
 
 	var half := TILE_SIZE / 2.0

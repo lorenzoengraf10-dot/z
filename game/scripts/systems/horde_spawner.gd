@@ -43,7 +43,7 @@ var _cooldown := 0.0
 
 func _ready() -> void:
 	add_to_group("horde_spawner")
-	_zombie = load(ZOMBIE_SCENE)
+	_zombie = load(ZOMBIE_SCENE) as PackedScene
 
 
 func _process(delta: float) -> void:

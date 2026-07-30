@@ -131,7 +131,10 @@ func _refresh() -> void:
 func _has_fire_nearby(player) -> bool:
 	if player == null:
 		return false
-	for fire in get_tree().get_nodes_in_group("campfire"):
+	# El for sobre Array[Node] da elementos tipados como Node: los pasamos a una
+	# variable sin tipo para poder llamarles can_cook_from().
+	for node in get_tree().get_nodes_in_group("campfire"):
+		var fire = node
 		if fire.has_method("can_cook_from") and fire.can_cook_from(player.global_position):
 			return true
 	return false
