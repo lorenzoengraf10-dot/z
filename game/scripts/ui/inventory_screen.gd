@@ -103,6 +103,10 @@ func open() -> void:
 	var fire = get_tree().get_first_node_in_group("fire_minigame")
 	if fire != null and fire.is_open():
 		return
+	# Ni encima del resumen de la partida: ahí ya estás muerto.
+	var summary = get_tree().get_first_node_in_group("run_summary")
+	if summary != null and summary.visible:
+		return
 	visible = true
 	get_tree().paused = true
 	_refresh()

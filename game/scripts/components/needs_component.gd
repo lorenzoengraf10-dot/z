@@ -21,11 +21,12 @@ const SED := "sed"
 const ENERGIA := "energia"
 const TEMPERATURA := "temperatura"
 const INFECCION := "infeccion"
+const SANGRADO := "sangrado"
 
 ## Orden en que el HUD las dibuja.
-const ORDER: Array[String] = [SALUD, HAMBRE, SED, ENERGIA, TEMPERATURA, INFECCION]
+const ORDER: Array[String] = [SALUD, HAMBRE, SED, ENERGIA, TEMPERATURA, INFECCION, SANGRADO]
 
-## "invertida" = 0 es lo bueno (solo infección).
+## "invertida" = 0 es lo bueno (infección y sangrado).
 const CONFIG := {
 	SALUD:       {"max": 100.0, "inicial": 100.0, "invertida": false},
 	HAMBRE:      {"max": 100.0, "inicial": 100.0, "invertida": false},
@@ -33,6 +34,7 @@ const CONFIG := {
 	ENERGIA:     {"max": 100.0, "inicial": 100.0, "invertida": false},
 	TEMPERATURA: {"max": 100.0, "inicial": 70.0,  "invertida": false},
 	INFECCION:   {"max": 100.0, "inicial": 0.0,   "invertida": true},
+	SANGRADO:    {"max": 100.0, "inicial": 0.0,   "invertida": true},
 }
 
 # --- Ritmos (se ajustan después del playtest) ---
@@ -50,6 +52,15 @@ const CONFIG := {
 @export var cold_threshold := 25.0     ## debajo de esto empezás a congelarte
 @export var infection_threshold := 35.0 ## arriba de esto la infección hace daño
 @export var infection_growth := 0.45   ## cuánto crece sola por segundo si ya empezó
+
+## Sangrado: es lo que más rápido te mata. No se frena solo, hay que vendarse.
+@export var bleed_damage_factor := 0.06  ## daño/seg por punto de sangrado
+@export var bleed_natural_stop := 0.35   ## cuánto baja solo por segundo (muy poco)
+## Lo baja el perk "Sangre fría" (1.0 = normal, 0.6 = sangrás menos).
+var bleed_rate_multiplier := 1.0
+## Lo baja el perk "Estómago de hierro" (1.0 = normal, 0.5 = la carne cruda
+## infecta la mitad).
+var raw_infection_multiplier := 1.0
 
 ## Temperatura del ambiente hacia la que tiende el cuerpo. La puede cambiar el
 ## clima, la noche o estar cerca de una fogata.
@@ -88,6 +99,10 @@ func _process(delta: float) -> void:
 	if get_need(INFECCION) > 0.0:
 		change(INFECCION, infection_growth * delta)
 
+	# El sangrado cede solo muy de a poco: en la práctica hay que vendarse.
+	if get_need(SANGRADO) > 0.0:
+		change(SANGRADO, -bleed_natural_stop * delta)
+
 	_apply_damage_over_time(delta)
 
 
@@ -101,6 +116,8 @@ func _apply_damage_over_time(delta: float) -> void:
 		dps += freezing_damage
 	if get_need(INFECCION) >= infection_threshold:
 		dps += infection_damage
+	# El sangrado pega proporcional a cuánto estés sangrando.
+	dps += get_need(SANGRADO) * bleed_damage_factor
 	if dps > 0.0:
 		change(SALUD, -dps * delta)
 
@@ -164,13 +181,28 @@ func infect(amount: float) -> void:
 	change(INFECCION, amount)
 
 
-## Aplica los efectos de un ítem comestible (hambre, sed, infección, cura).
+## Empezar (o empeorar) una hemorragia. La llaman los zombies y los lobos.
+func bleed(amount: float) -> void:
+	change(SANGRADO, amount * bleed_rate_multiplier)
+
+
+func is_bleeding() -> bool:
+	return get_need(SANGRADO) > 0.0
+
+
+## Aplica los efectos de un ítem (comida, vendaje, trapo).
 func consume_item(id: String) -> void:
 	change(HAMBRE, ItemDB.value_of(id, "hambre"))
 	change(SED, ItemDB.value_of(id, "sed"))
-	change(INFECCION, ItemDB.value_of(id, "infeccion"))
+	# La infección de la comida cruda la amortigua el perk "Estómago de hierro".
+	change(INFECCION, ItemDB.value_of(id, "infeccion") * raw_infection_multiplier)
 	change(SALUD, ItemDB.value_of(id, "cura"))
 	change(INFECCION, -ItemDB.value_of(id, "cura_infeccion"))
+
+	# Los vendajes cortan del todo; los trapos solo una parte.
+	var stops := ItemDB.value_of(id, "corta_sangrado")
+	if stops > 0.0:
+		change(SANGRADO, -get_need(SANGRADO) * (stops / 100.0))
 
 
 func to_dict() -> Dictionary:

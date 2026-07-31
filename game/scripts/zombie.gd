@@ -18,6 +18,8 @@ enum State { WANDER, CHASE, ATTACK }
 @export var attack_damage := 8.0
 @export var attack_cooldown := 1.0
 @export var infection_per_bite := 7.0
+@export var bleed_chance := 0.45
+@export var bleed_per_bite := 18.0
 @export var max_health := 45.0
 ## Segundos sin detectar al jugador antes de dejar de perseguir.
 @export var lose_interest_time := 4.0
@@ -155,12 +157,19 @@ func _do_attack(player) -> void:
 			player.apply_damage(attack_damage)
 		if player.has_method("apply_infection"):
 			player.apply_infection(infection_per_bite)
+		# La mordida abre una herida a veces: sangrar es lo que más rápido mata.
+		if randf() < bleed_chance and player.has_method("apply_bleed"):
+			player.apply_bleed(bleed_per_bite)
 
 
 ## La llama el ataque del jugador.
 func take_damage(amount: float) -> void:
 	health -= amount
 	if health <= 0.0:
+		# Le avisamos al run_manager para el resumen de la partida.
+		var run = get_tree().get_first_node_in_group("run_manager")
+		if run != null:
+			run.count_kill("zombie")
 		queue_free()
 		return
 	# Que le peguen lo alerta aunque no te hubiera visto.

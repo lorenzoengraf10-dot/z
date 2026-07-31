@@ -16,6 +16,7 @@ const COLORS := {
 	"energia": Color(0.35, 0.78, 0.36),
 	"temperatura": Color(0.62, 0.82, 0.92),
 	"infeccion": Color(0.62, 0.32, 0.78),
+	"sangrado": Color(0.90, 0.15, 0.18),
 }
 const PHASE_ICONS := {
 	"Amanecer": "🌅",
@@ -30,6 +31,7 @@ const LABELS := {
 	"energia": "Energía",
 	"temperatura": "Temp.",
 	"infeccion": "Infección",
+	"sangrado": "SANGRADO",
 }
 
 var _bars: Dictionary = {}
@@ -41,8 +43,10 @@ var _action_bar: ProgressBar
 var _clock_label: Label
 var _weapon_label: Label
 var _message_timer := 0.0
+var _blink := 0.0
 var _day_night = null
 var _player_ref = null
+var _run = null
 
 
 func _ready() -> void:
@@ -53,6 +57,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_connect_signals()
 	_day_night = get_tree().get_first_node_in_group("day_night")
+	_run = get_tree().get_first_node_in_group("run_manager")
 
 
 func _process(delta: float) -> void:
@@ -63,15 +68,41 @@ func _process(delta: float) -> void:
 
 	if _player_ref != null and is_instance_valid(_player_ref):
 		var weapon: Dictionary = _player_ref.weapon_stats()
-		_weapon_label.text = "En mano: %s  (daño %d · alcance %d)" % [
+		var text := "En mano: %s  (daño %d · alcance %d)" % [
 			str(weapon["nombre"]), int(weapon["dano"]), int(weapon["alcance"]),
 		]
+		# Las de fuego valen lo que la munición que te queda.
+		if bool(weapon["fuego"]):
+			var ammo := str(weapon["municion"])
+			text += "  ·  %s: %d" % [ItemDB.display_name(ammo), _player_ref.inventory.count(ammo)]
+		_weapon_label.text = text
+
+	_blink_bleed_bar(delta)
 
 	if _day_night != null and is_instance_valid(_day_night):
 		var phase := str(_day_night.phase_name())
-		_clock_label.text = "%s  %s %s" % [
-			_day_night.time_string(), PHASE_ICONS.get(phase, ""), phase,
+		_clock_label.text = "%s%s  %s %s" % [
+			_day_prefix(), _day_night.time_string(), PHASE_ICONS.get(phase, ""), phase,
 		]
+
+
+## "Día 4 · " si hay run_manager; vacío si no (por si abrís la escena sola).
+func _day_prefix() -> String:
+	if _run == null or not is_instance_valid(_run):
+		return ""
+	return "Día %d · " % (int(_run.stats.get("dias", 0)) + 1)
+
+
+## La barra de sangrado parpadea: es la que te mata si la ignorás.
+func _blink_bleed_bar(delta: float) -> void:
+	var bar: ProgressBar = _bars.get(NeedsComponent.SANGRADO)
+	if bar == null:
+		return
+	if bar.value <= 0.0:
+		bar.modulate = Color.WHITE
+		return
+	_blink = fmod(_blink + delta * 4.0, TAU)
+	bar.modulate = Color(1, 1, 1, 0.55 + 0.45 * absf(sin(_blink)))
 
 
 func _build_ui() -> void:
@@ -189,8 +220,8 @@ func _make_button(text: String, action: Callable) -> Button:
 
 func _toggle_map() -> void:
 	var map = get_tree().get_first_node_in_group("map_screen")
-	if map != null:
-		map.visible = not map.visible
+	if map != null and map.has_method("toggle"):
+		map.toggle()
 
 
 func _toggle_crafting() -> void:
@@ -220,6 +251,7 @@ func _connect_signals() -> void:
 		var inventory: InventoryComponent = player.get_node_or_null("InventoryComponent")
 		if inventory != null:
 			inventory.changed.connect(_on_inventory_changed)
+			inventory.full.connect(_on_inventory_full)
 			_on_inventory_changed(inventory.items)
 
 		var interactor: Interactor = player.get_node_or_null("Interactor")
@@ -255,13 +287,17 @@ func _on_need_changed(id: String, current: float, maximum: float) -> void:
 
 
 func _on_inventory_changed(items: Dictionary) -> void:
+	var header := "Mochila"
+	if _player_ref != null and is_instance_valid(_player_ref):
+		var inv = _player_ref.inventory
+		header = "Mochila %d/%d" % [inv.used(), inv.capacity()]
 	if items.is_empty():
-		_inventory_label.text = "Mochila: vacía"
+		_inventory_label.text = header + ": vacía"
 		return
 	var parts: Array[String] = []
 	for id in items.keys():
 		parts.append("%s x%d" % [ItemDB.display_name(str(id)), int(items[id])])
-	_inventory_label.text = "Mochila: " + " · ".join(parts)
+	_inventory_label.text = header + ": " + " · ".join(parts)
 
 
 func _on_action_started(label: String, _duration: float) -> void:
@@ -278,6 +314,10 @@ func _on_action_ended(message: String) -> void:
 	_action_box.visible = false
 	if message != "":
 		_on_message(message)
+
+
+func _on_inventory_full(item: String) -> void:
+	_on_message("¡Mochila llena! Necesitás una mochila más grande (%s)" % ItemDB.display_name(item))
 
 
 func _on_horde(count: int) -> void:
