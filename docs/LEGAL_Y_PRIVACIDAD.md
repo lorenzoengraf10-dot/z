@@ -117,15 +117,37 @@ Estos son los que de verdad le pasan a proyectos como este:
    registrar el suyo, pero sí evitar pisar el de otro y tener que renombrar todo
    más adelante.
 
-3. **Disputa de coautoría** entre ustedes (ver sección 2). Se evita con un papel.
+3. **Inspirarse en otro juego.** El proyecto toma mecánicas de *DayZ*, *The
+   Forest*, *Project Zomboid* y *Mini DAYZ* (Bohemia Interactive). Eso es normal y
+   está permitido: **las mecánicas de juego no tienen copyright** — nadie es dueño
+   de "mochila con espacio limitado" ni de "sangrado que se corta con vendaje".
+   Lo que sí está protegido, y hay que evitar, es todo lo demás:
 
-4. **Exposición de IPs en el cooperativo** (Fase 3-4). Si los jugadores se
+   | Se puede | No se puede |
+   |---|---|
+   | Copiar la *idea* de un sistema (loot en edificios, perks entre partidas) | Copiar el **nombre** o algo confundible con él ("Mini DayZ", "DayZ Mini") |
+   | Estudiar cómo se siente su balance y apuntar a algo parecido | Usar su **arte, íconos, tipografía, música o sonidos** |
+   | Decir en un devlog que nos inspiramos en ellos | Calcar su **interfaz** pantalla por pantalla |
+   | | Vender/publicar como "el Mini DAYZ de X" o dar a entender que es oficial |
+   | | Usar sus **marcas** (logo de Bohemia) en capturas, portada o descripción |
+
+   En la práctica, la regla es simple: **mecánicas sí, identidad no**. Nombre,
+   arte, textos, música y UI tienen que ser nuestros. Mientras eso se cumpla, el
+   parecido de gameplay no genera reclamo — hay decenas de survivals top-down y
+   ninguno le debe nada al otro.
+
+   También conviene no llamar al juego "clon de X" en la página de descarga: aunque
+   legalmente no cambia nada, es lo que hace que alguien mire el proyecto con lupa.
+
+4. **Disputa de coautoría** entre ustedes (ver sección 2). Se evita con un papel.
+
+5. **Exposición de IPs en el cooperativo** (Fase 3-4). Si los jugadores se
    conectan directo entre sí (P2P, que es lo más fácil de programar), **se ven
    las IPs entre ellos**. Eso es un dato personal y además un vector de ataque
    (alguien podría tirarle la conexión a otro). Hay que avisarlo o meter un
    servidor en el medio.
 
-5. **Moderación**, si algún día hay chat. Sin forma de reportar y moderar, el
+6. **Moderación**, si algún día hay chat. Sin forma de reportar y moderar, el
    juego puede volverse un canal de acoso.
 
 ## 6. Seguridad (crece de golpe con el multijugador)
