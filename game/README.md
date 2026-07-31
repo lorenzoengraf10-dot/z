@@ -56,8 +56,10 @@ lo dice ahí mismo (*"Necesitás un pico"*).
 - **Arriba a la derecha**: el día, la hora, la fase (☀ 🌇 🌙 🌅) y los botones.
 - **Abajo a la derecha**: el **minimapa**, con la misma niebla que el mapa
   grande. Los enemigos aparecen ahí **solo si ya te detectaron**.
-- **Alrededor tuyo**: un **anillo** con el radio exacto en el que te escuchan.
-  Se agranda al correr y casi desaparece agachado.
+- **Arriba de tu cabeza**: una **barra de ruido** chiquita que muestra cuánto te
+  escuchan, tomando **correr = 100%**: agachado 25%, caminando 50%, talando o
+  atacando 75%. Va de verde a amarillo a rojo, desaparece cuando estás en
+  silencio y **parpadea llena** si un disparo se pasa de la escala.
 - **Sobre cada enemigo**: nada si está tranquilo, **`?`** amarillo si te escuchó
   y va hacia tu última posición, **`!`** rojo si te está viendo.
 
@@ -103,11 +105,22 @@ id a un número del jugador).
 
 ## Sistemas que ya funcionan
 
-- **Sigilo y ruido** (`player.gd`) — caminar / correr / agacharse tienen distinto **radio de ruido**. Talar y atacar también hacen ruido. Es lo que usan zombies y animales para detectarte.
+- **Sigilo y ruido** (`player.gd`) — todo se mide contra **correr = 100%**, que es
+  el tope de la escala:
+
+  | Qué hacés | Ruido | Dónde se toca |
+  |---|---|---|
+  | Agachado | 25% | `player.gd` · `crouch_noise` |
+  | Caminando | 50% | `player.gd` · `walk_noise` |
+  | Talar / atacar | 75% | `interactor.gd` · `chop_noise`, `player.gd` · `attack_noise` |
+  | Correr / picar roca | 100% | `player.gd` · `run_noise`, `interactor.gd` · `mine_noise` |
+
+  Las **armas de fuego** tienen su propio ruido en `data/items.json` y se pasan de
+  la escala a propósito. Es lo que usan zombies y animales para detectarte.
 - **Zombies con IA** (`zombie.gd`) — deambulan, te detectan por **visión** (cono al frente, que se corta con paredes, árboles y barricadas) o por **oído**, te persiguen y te muerden (la mordida casi siempre te hace **sangrar**). Se los puede matar.
 - **Hordas por ruido** (`systems/horde_spawner.gd`) — cuanto más ruido hacés, más "calor" acumulás; al pasar el umbral aparece una horda desde fuera de pantalla. Hay 3 variantes: normal, corredor (rápido y débil) y resistente (lento y duro).
 - **Paredes que frenan** (`world.gd`) — árboles, paredes de ladrillo, rocas y vetas colisionan de verdad, y cortan la línea de vista de los zombies. Encerrarte en una casa con la puerta cerrada es una defensa real. El mapa además está cerrado por **cuatro paredes invisibles** en el borde, así que no te podés ir al vacío.
-- **Sigilo visible** (`player.gd`, `components/hunter_display.gd`) — el anillo de ruido, el `?`/`!` sobre cada enemigo y el chip del HUD. Antes el sistema de ruido existía pero era invisible y no se podía jugar con él.
+- **Sigilo visible** (`player.gd`, `components/hunter_display.gd`) — la barra de ruido arriba de la cabeza, el `?`/`!` sobre cada enemigo y el chip del HUD. Antes el sistema de ruido existía pero era invisible y no se podía jugar con él.
 - **Feedback de combate** (`systems/floating_text.gd`, `ui/game_camera.gd`) — números de daño, parpadeo y retroceso del enemigo al golpearlo, barra de vida sobre el que estás peleando, y sacudida de cámara cuando te pegan a vos.
 - **Objetivos del arranque** (`systems/objectives.gd`) — cuatro cosas que te empujan a descubrir los sistemas (saquear, comer, prender fuego, sobrevivir la noche). Se tachan solas y después desaparecen.
 - **Minimapa** (`ui/minimap.gd`) — comparte la niebla con el mapa grande.
@@ -215,8 +228,9 @@ Después, lo de siempre:
 23. Pegale a un zombi: tiene que salir el **número de daño** en amarillo,
     parpadear en blanco, **retroceder** y aparecerle la barra de vida arriba.
 24. Dejá que te muerda: número **rojo**, parpadeo rojo tuyo y **sacudida de cámara**.
-25. Corré y fijate cómo **crece el anillo de ruido**; agachate y mirá cómo casi
-    desaparece. Acercate a un zombi caminando hasta que le salga el **`?`**, y
+25. Corré y fijate cómo **se llena la barra de ruido** arriba de tu cabeza (correr
+    la llena entera y la pone roja); caminando queda a la mitad y **agachado en un
+    cuarto**. Acercate a un zombi caminando hasta que le salga el **`?`**, y
     después ponete en su campo de visión hasta que sea **`!`**. El chip del HUD
     tiene que ir cambiando junto con eso.
 26. Apretá **H**: se abre la ayuda y el juego se pausa.
@@ -226,6 +240,17 @@ Después, lo de siempre:
     entrar ni verte**. Ojo que esto ahora hace que esconderse sea una estrategia
     muy fuerte; si les parece demasiado, lo hablamos (una opción sería que los
     zombies rompan las puertas, pero eso ya es una función nueva).
+
+**Del mapa (esto se rompió una vez y no se notó hasta jugar):**
+
+29. Mirá el panel **Salida** apenas arranca: tiene que decir
+    `world.gd: 9 de 9 tiles con atlas OK`. Si nombra alguno, ese tile quedó
+    transparente y en pantalla no se va a ver.
+30. Parado en el pasto, tenés que **distinguir** el pasto del camino de tierra, los
+    árboles, el agua y las rocas. Si es todo un verde plano, el atlas quedó vacío.
+31. Metete adentro de una casa: se tienen que ver las **paredes de ladrillo**
+    (rojizas) y el **piso de madera**, distintos entre sí y distintos del pasto de
+    afuera.
 
 ## Cómo editar el mundo (el mapa de tiles)
 
@@ -318,3 +343,14 @@ python3 tools/verificadores/run_all.py
 ```
 
 No reemplazan probar el juego, pero evitan subir algo que ni siquiera abre.
+
+Si tocaste algo del **atlas de tiles** (`_build_atlas()` en `world.gd`, o el
+placeholder), hay además una prueba que arma el atlas en Python y lo dibuja:
+
+```bash
+python3 tools/prueba_atlas.py          # deja atlas_resultado.png para mirarlo
+python3 tools/gen_tiles_placeholder.py # regenera el placeholder de los 9 tiles
+```
+
+Avisa si algún tile quedó transparente o si dos salieron del mismo color. El
+fucsia en la imagen marca lo que quedaría transparente.

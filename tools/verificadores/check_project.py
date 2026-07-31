@@ -133,7 +133,40 @@ if os.path.exists(world_gd):
                           "llamada falla en silencio y NINGUN tile del mapa colisiona. "
                           "Mover ts.add_source() arriba del for que crea los tiles.")
 
-# --- 7. autoloads existen ---
+# --- 7. world.gd: todo lo que se pega con blit_rect() pasa por la conversion ---
+#
+# La otra trampa que fallo en silencio: Image.blit_rect() EXIGE que las dos
+# imagenes tengan el mismo formato (ERR_FAIL_COND_MSG "Source image format is
+# different"). Si no coinciden no copia nada, no tira excepcion, y el atlas
+# entero queda transparente: el mapa se ve como un color plano y el juego abre
+# igual. El atlas se crea FORMAT_RGBA8 y el placeholder venia RGB8.
+#
+# La regla: el primer argumento de cada blit_rect() tiene que ser una variable
+# que haya salido de _listo_para_pegar(), la funcion que hace la conversion.
+CONVERSOR = "_listo_para_pegar"
+if os.path.exists(world_gd):
+    # Mismo cuidado que en la regla 6: sin sacar los comentarios, el comentario
+    # que explica este bug nombra blit_rect() y ensucia la busqueda.
+    if CONVERSOR not in src:
+        errors.append(f"world.gd: no existe {CONVERSOR}(); es la funcion que pasa las "
+                      "imagenes a FORMAT_RGBA8 antes de pegarlas en el atlas")
+    elif "FORMAT_RGBA8" not in src[src.find(f"func {CONVERSOR}"):]:
+        errors.append(f"world.gd: {CONVERSOR}() ya no convierte a FORMAT_RGBA8. Sin esa "
+                      "conversion blit_rect() no copia nada y el mapa entero queda "
+                      "transparente (se ve un color plano).")
+
+    # Sirven tanto "var x := _listo_para_pegar(...)" como "x = _listo_para_pegar(...)"
+    # sobre una variable ya declarada arriba.
+    convertidas = set(re.findall(rf"^\s*(?:var\s+)?(\w+)[^=\n]*=\s*{CONVERSOR}\(", src, re.M))
+    for m in re.finditer(r"\.blit_rect\(\s*([A-Za-z_]\w*)", src):
+        origen = m.group(1)
+        if origen not in convertidas:
+            linea = src[:m.start()].count("\n") + 1
+            errors.append(f"world.gd:{linea}: blit_rect() pega '{origen}', que no salio de "
+                          f"{CONVERSOR}(). Si el formato no coincide con el del atlas, la "
+                          "copia falla EN SILENCIO y el tile queda transparente.")
+
+# --- 8. autoloads existen ---
 proj = open(os.path.join(ROOT, "project.godot"), encoding="utf-8").read()
 for name, path in re.findall(r'^(\w+)="\*(res://[^"]+)"', proj, re.M):
     if not os.path.exists(res_to_fs(path)):

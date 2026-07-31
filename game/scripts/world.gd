@@ -145,7 +145,7 @@ func _build_atlas() -> Texture2D:
 	var fallback := load(TILES_TEXTURE) as Texture2D
 	var base: Image = null
 	if fallback != null:
-		base = fallback.get_image()
+		base = _listo_para_pegar(fallback.get_image())
 
 	var total := CHAR_TO_TILE.size()
 	var atlas := Image.create(TILE_SIZE * total, TILE_SIZE, false, Image.FORMAT_RGBA8)
@@ -161,10 +161,8 @@ func _build_atlas() -> Texture2D:
 		if nombre != "" and ResourceLoader.exists(path):
 			var art := load(path) as Texture2D
 			if art != null:
-				var image := art.get_image()
+				var image := _listo_para_pegar(art.get_image())
 				if image.get_width() == TILE_SIZE and image.get_height() == TILE_SIZE:
-					if image.get_format() != Image.FORMAT_RGBA8:
-						image.convert(Image.FORMAT_RGBA8)
 					atlas.blit_rect(image, cuadro, destino)
 					propios += 1
 					continue
@@ -177,7 +175,57 @@ func _build_atlas() -> Texture2D:
 
 	if propios > 0:
 		print("world.gd: %d de %d tiles con arte propio" % [propios, total])
+	_verify_atlas(atlas)
 	return ImageTexture.create_from_image(atlas)
+
+
+## Deja una imagen lista para blit_rect().
+##
+## ⚠ ACÁ ESTUVO EL BUG DE "NO SE VE NADA DEL MAPA", NO BORRAR LA CONVERSIÓN.
+##
+## blit_rect() exige que las dos imágenes tengan **el mismo formato**: si no
+## coinciden, no copia nada y no tira excepción, solo un error en el panel
+## Salida. El atlas se crea RGBA8 y el placeholder era RGB8 (sin alpha), así que
+## no se pegaba ni un tile: el mapa entero quedaba transparente y se veía el
+## fondo de Main.tscn. El juego abría igual, por eso no se notaba de entrada.
+func _listo_para_pegar(image: Image) -> Image:
+	if image == null:
+		return null
+	# Según cómo Godot importe el PNG, get_image() puede devolverlo comprimido,
+	# y convert() no funciona sobre un formato comprimido.
+	if image.is_compressed():
+		image.decompress()
+	if image.get_format() != Image.FORMAT_RGBA8:
+		image.convert(Image.FORMAT_RGBA8)
+	return image
+
+
+## Comprueba que en el atlas haya quedado algo dibujado en cada tile.
+##
+## Existe por el mismo motivo que _verify_collisions(): el bug fallaba EN
+## SILENCIO. El juego abría, no había excepción, y recién te dabas cuenta al ver
+## que la pantalla era un color plano.
+func _verify_atlas(atlas: Image) -> void:
+	var vacios: Array[String] = []
+	for ch in CHAR_TO_TILE.keys():
+		var index: int = CHAR_TO_TILE[ch]
+		var pintado := false
+		for y in range(TILE_SIZE):
+			for x in range(TILE_SIZE):
+				if atlas.get_pixel(index * TILE_SIZE + x, y).a > 0.0:
+					pintado = true
+					break
+			if pintado:
+				break
+		if not pintado:
+			vacios.append("%s (%s)" % [str(ch), str(TILE_NAMES.get(ch, "?"))])
+
+	if vacios.is_empty():
+		print("world.gd: %d de %d tiles con atlas OK" % [CHAR_TO_TILE.size(), CHAR_TO_TILE.size()])
+		return
+	push_error("world.gd: estos tiles quedaron TRANSPARENTES y el mapa se va a ver " +
+			"como un color plano: %s — revisá _listo_para_pegar() en _build_atlas()"
+			% ", ".join(vacios))
 
 
 ## Comprueba que los tiles sólidos hayan quedado realmente con colisión.

@@ -29,8 +29,11 @@ const ORE := "O"
 @export var chop_seconds := 1.8
 @export var fish_seconds := 3.5
 @export var mine_seconds := 2.6
-@export var chop_noise := 170.0
-@export var mine_noise := 200.0
+# Misma escala que player.gd, medida sobre correr = 190 = 100%.
+@export var chop_noise := 143.0    ## 75%
+## Picar era 200, o sea MÁS ruidoso que correr, y se salía de la escala. Queda
+## en el tope: es la acción más ruidosa que podés hacer sin un arma de fuego.
+@export var mine_noise := 190.0    ## 100%
 @export var wood_per_tree := 3
 @export var stone_per_rock := 2
 @export var metal_per_ore := 2

@@ -6,8 +6,8 @@ extends CharacterBody2D
 ## Movimiento top-down con tres modos que afectan velocidad y ruido: agachado
 ## (lento, silencioso), caminar (normal) y correr (rápido, ruidoso). El "radio
 ## de ruido" es lo que los zombies usan para oírte aunque no te vean, y se
-## dibuja como un anillo alrededor tuyo para que la mecánica se entienda sin
-## tener que explicarla.
+## muestra como una **barra arriba de la cabeza** para que la mecánica se
+## entienda sin tener que explicarla.
 ##
 ## El ruido sale de tres fuentes y siempre gana la más fuerte:
 ##   - moverse (según el modo)
@@ -21,15 +21,23 @@ signal message(text: String)
 @export var crouch_speed := 45.0
 
 ## Radio de ruido (en píxeles) según el modo de movimiento.
-@export var walk_noise := 90.0
-@export var run_noise := 190.0
-@export var crouch_noise := 35.0
+##
+## La escala se mide **como porcentaje de correr**, que es el 100%. La barra que
+## se dibuja sobre tu cabeza muestra ese mismo porcentaje, así lo que ves en
+## pantalla y estos números son lo mismo.
+##
+##   agachado  25%      caminar  50%      talar  75%      correr  100%
+##
+## (talar y picar están en interactor.gd, que sigue la misma escala)
+@export var run_noise := 190.0      ## 100%
+@export var walk_noise := 95.0      ## 50%
+@export var crouch_noise := 48.0    ## 25%
 
 @export var attack_damage := 18.0
 @export var attack_range := 26.0
 @export var attack_arc_deg := 65.0
 @export var attack_cooldown := 0.45
-@export var attack_noise := 130.0
+@export var attack_noise := 143.0   ## 75%, igual que talar
 @export var attack_noise_time := 0.35
 
 var facing := Vector2.DOWN
@@ -43,8 +51,11 @@ var equipped_weapon := ""
 ## Lo baja el perk "Pisada liviana" (1.0 = normal, 0.75 = hacés menos ruido).
 var noise_multiplier := 1.0
 
-## Qué tan visible es el anillo de ruido (0 = no se dibuja).
-@export var noise_ring_alpha := 0.16
+# --- Barra de ruido (la que se dibuja arriba de la cabeza) ---
+@export var noise_bar_width := 20.0
+@export var noise_bar_height := 3.0
+## A qué altura flota, en píxeles sobre el centro del jugador.
+@export var noise_bar_offset := 15.0
 
 var _move_noise := 0.0
 var _burst_noise := 0.0
@@ -66,7 +77,7 @@ var _camera_cache = null
 func _ready() -> void:
 	add_to_group("player")
 	needs.died.connect(_on_died)
-	# El anillo de ruido se dibuja acá mismo, en coordenadas locales.
+	# La barra de ruido se dibuja acá mismo (_draw), en coordenadas locales.
 	z_index = 1
 
 
@@ -90,20 +101,45 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
-## Anillo con el radio exacto en el que te escuchan. Se agranda al correr y casi
-## desaparece agachado: es la forma más directa de enseñar el sigilo.
+## Cuánto ruido estás haciendo, de 0 a 1, donde correr es 1.
+##
+## Un disparo puede pasarse de 1: una escopeta hace mucho más ruido que correr.
+func noise_ratio() -> float:
+	if run_noise <= 0.0:
+		return 0.0
+	return get_noise_radius() / run_noise
+
+
+## Barra chiquita arriba de la cabeza con el ruido que estás haciendo.
+##
+## Antes esto era un círculo del radio exacto en el que te escuchaban. Era
+## preciso pero tapaba media pantalla y quedaba feo, así que se cambió por una
+## barra al estilo de la que tienen los enemigos (components/hunter_display.gd).
+##
+## Cuando no hacés ruido no se dibuja nada, para no ensuciar la pantalla.
 func _draw() -> void:
-	if noise_ring_alpha <= 0.0:
+	var ratio := noise_ratio()
+	if ratio <= 0.01:
 		return
-	var radius := get_noise_radius()
-	if radius <= 1.0:
-		return
-	var loud := clampf(radius / run_noise, 0.0, 1.0)
-	var tint := Color(1.0, 0.85, 0.4).lerp(Color(1.0, 0.35, 0.3), loud)
-	tint.a = noise_ring_alpha
-	draw_circle(Vector2.ZERO, radius, tint)
-	tint.a = minf(1.0, noise_ring_alpha * 3.0)
-	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, tint, 1.0)
+
+	var lleno := minf(ratio, 1.0)
+	# Verde callado -> amarillo -> rojo a todo volumen. Se lee de un vistazo sin
+	# tener que medir cuánto ocupa la barra.
+	var tint := Color(0.35, 0.85, 0.40)
+	if lleno > 0.5:
+		tint = Color(0.95, 0.80, 0.25).lerp(Color(1.0, 0.30, 0.25), (lleno - 0.5) * 2.0)
+	else:
+		tint = tint.lerp(Color(0.95, 0.80, 0.25), lleno * 2.0)
+
+	# Más ruidoso que correr (un disparo): la barra queda llena y parpadea.
+	if ratio > 1.0:
+		tint = Color(1.0, 0.25, 0.20)
+		tint.a = 0.55 + 0.45 * absf(sin(Time.get_ticks_msec() / 90.0))
+
+	var esquina := Vector2(-noise_bar_width * 0.5, -noise_bar_offset)
+	draw_rect(Rect2(esquina - Vector2.ONE, Vector2(noise_bar_width, noise_bar_height) + Vector2(2, 2)),
+			Color(0, 0, 0, 0.55))
+	draw_rect(Rect2(esquina, Vector2(noise_bar_width * lleno, noise_bar_height)), tint)
 
 
 func _physics_process(delta: float) -> void:

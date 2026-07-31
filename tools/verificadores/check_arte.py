@@ -235,6 +235,32 @@ for personaje in PERSONAJES:
 
 print(f"direcciones de personaje: {hay_sprites}/{total_sprites}")
 
+# ------------------------------------------------- el placeholder de los tiles
+#
+# El placeholder tiene que tener alpha (RGBA) aunque sea todo opaco. Godot arma
+# el atlas en FORMAT_RGBA8 y blit_rect() no copia nada si los formatos no
+# coinciden: falla EN SILENCIO y el mapa entero se ve como un color plano. Ya
+# paso una vez, con el placeholder guardado como RGB.
+placeholder = os.path.join(ASSETS, "tiles", "placeholder_tiles.png")
+if not os.path.exists(placeholder):
+    errors.append("falta assets/tiles/placeholder_tiles.png — sin el, los tiles que "
+                  "todavia no tienen arte quedan transparentes "
+                  "(se regenera con: python3 tools/gen_tiles_placeholder.py)")
+else:
+    try:
+        ancho, alto, tiene_alpha, _ = leer_png(placeholder)
+        if not tiene_alpha:
+            errors.append("placeholder_tiles.png esta guardado SIN alpha. El atlas de "
+                          "world.gd es RGBA8 y blit_rect() exige el mismo formato: si no "
+                          "coincide no copia nada y el mapa se ve como un color plano. "
+                          "Regeneralo con: python3 tools/gen_tiles_placeholder.py")
+        esperado = TILE_SIZE * len(TILES)
+        if (ancho, alto) != (esperado, TILE_SIZE):
+            errors.append(f"placeholder_tiles.png mide {ancho}x{alto} y tendria que medir "
+                          f"{esperado}x{TILE_SIZE} ({len(TILES)} tiles de {TILE_SIZE}px)")
+    except ValueError as e:
+        errors.append(f"placeholder_tiles.png: {e}")
+
 # ------------------------------------------------------------------- resultado
 if faltan_tiles or faltan_sprites:
     print("\n-- todavia se dibujan como placeholder --")
