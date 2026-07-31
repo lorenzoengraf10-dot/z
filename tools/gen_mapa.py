@@ -69,13 +69,26 @@ while ry < H - 4 and rx > 14:
     if ry % 3 == 0:
         rx -= 1
 
-# --- Bosques ---
-blob(14, 40, 9, 20, "T", 0.55)
-blob(16, 118, 10, 20, "T", 0.5)
-blob(46, 30, 10, 12, "T", 0.5)
-blob(88, 62, 8, 22, "T", 0.5)
-blob(70, 108, 10, 18, "T", 0.45)
-blob(36, 68, 6, 9, "T", 0.4)
+# --- Bosques grandes: son la cobertura, lo que te deja moverte sin que te vean ---
+blob(14, 40, 10, 22, "T", 0.62)
+blob(16, 118, 11, 21, "T", 0.58)
+blob(46, 30, 11, 13, "T", 0.58)
+blob(88, 62, 9, 24, "T", 0.58)
+blob(70, 108, 11, 19, "T", 0.52)
+blob(36, 68, 7, 10, "T", 0.45)
+blob(60, 136, 9, 12, "T", 0.5)
+blob(92, 96, 6, 16, "T", 0.5)
+
+# --- Arboledas sueltas, para que el campo abierto no sea una cancha de futbol ---
+for cy, cx in [(8, 26), (10, 70), (12, 92), (22, 34), (28, 78), (32, 128),
+               (42, 100), (44, 134), (54, 68), (58, 108), (60, 34), (64, 128),
+               (72, 26), (74, 88), (82, 118), (90, 140), (94, 66), (20, 148),
+               (48, 84), (66, 46)]:
+    blob(cy, cx, random.randint(2, 4), random.randint(3, 6), "T", 0.65)
+
+# --- Charcos: agua potable lejos de la costa (y pesca de emergencia) ---
+for cy, cx, r in [(30, 108, 3), (58, 62, 3), (86, 96, 3), (18, 60, 2)]:
+    blob(cy, cx, r, r + 2, "~", 1.0)
 
 # --- Roca y mineral al este (para la mineria) ---
 blob(38, 146, 16, 11, "R", 0.72)
