@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/animal.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/components/sprite_directional.gd" id="2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(12, 12)
@@ -20,3 +21,8 @@ color = Color(0.75, 0.62, 0.36, 1)
 [node name="Head" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(4, -8, 9, -8, 9, -3, 4, -3)
 color = Color(0.62, 0.5, 0.28, 1)
+
+[node name="SpriteDirectional" type="Node2D" parent="."]
+script = ExtResource("2")
+sprite_name = "animal"
+placeholder_paths = [NodePath("../Visual"), NodePath("../Head")]

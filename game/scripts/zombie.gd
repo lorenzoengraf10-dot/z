@@ -46,6 +46,7 @@ var _attack_timer := 0.0
 
 @onready var _vision_ray: RayCast2D = $VisionRay
 @onready var _visual: Node2D = $Visual
+@onready var _art: SpriteDirectional = $SpriteDirectional
 
 
 func _ready() -> void:
@@ -205,7 +206,16 @@ func take_damage(amount: float) -> void:
 # vida, ícono de alerta y punto en el minimapa, sin tocar nada más.
 
 ## Pinta al zombi según la variante. La llama horde_spawner.gd al crearlo.
+##
+## Con pixel art no se repinta el sprite (quedaría un manchón): se le da un tinte
+## suave, lo justo para distinguir al corredor del resistente sin arruinar el
+## dibujo. El zombi normal queda con sus colores tal cual.
 func set_tint(color: Color) -> void:
+	if _art.has_art():
+		if zombie_type != "normal":
+			_art.modulate = Color.WHITE.lerp(color, 0.35)
+		return
+
 	var body := _visual.get_node_or_null("Body") as Polygon2D
 	if body != null:
 		body.color = color
@@ -240,9 +250,16 @@ func _update_feedback(delta: float) -> void:
 	_health_bar_timer = maxf(0.0, _health_bar_timer - delta)
 	if _hit_flash > 0.0:
 		_hit_flash = maxf(0.0, _hit_flash - delta * 4.0)
-		_visual.modulate = Color.WHITE.lerp(Color(3.0, 3.0, 3.0), _hit_flash)
+		var target := _art.flash_target()
+		target.modulate = Color.WHITE.lerp(Color(3.0, 3.0, 3.0), _hit_flash)
 	_knockback = _knockback.move_toward(Vector2.ZERO, knockback_force * 4.0 * delta)
-	_visual.rotation = facing.angle()
+
+	# Con pixel art se elige el cuadro (arriba/abajo/lado); sin arte, se rota la
+	# silueta. Un sprite de pixel art NO se rota: se ve borroso y tiembla.
+	if _art.has_art():
+		_art.set_facing(facing)
+	else:
+		_visual.rotation = facing.angle()
 
 
 ## move_and_slide() sumándole el empujón del último golpe recibido.

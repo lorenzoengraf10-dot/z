@@ -19,6 +19,7 @@ python3 tools/verificadores/run_all.py -v     # con la salida completa
 | `check_loot.py` | que cada edificio reciba al menos un contenedor (piso pegado a pared y lejos de la puerta) |
 | `check_runspawn.py` | que haya puntos de spawn aleatorio válidos y repartidos por los cuatro cuadrantes del mapa |
 | `check_spawns.py` | que las entidades colocadas en `Main.tscn` no caigan sobre un tile sólido |
+| `check_arte.py` | el pixel art: que sea PNG de verdad (no un JPG renombrado), que los personajes tengan transparencia, que las medidas den, que los cuadros de animación no tengan saltos y que los colores estén en la paleta. Además lista **qué falta dibujar** |
 
 `check_loot.py` y `check_runspawn.py` aceptan un mapa como argumento
 (`python3 tools/verificadores/check_loot.py otro_mapa.txt`), que es como se
@@ -32,6 +33,31 @@ verificador que nunca falló no sirve de nada: hay que verlo fallar una vez.
 **Ojo con lo que NO revisan:** no ejecutan el juego. Que esté todo en verde
 significa que el proyecto debería *abrir*, no que se juegue bien. Eso lo dice el
 playtest.
+
+## `gen_paleta.py` — la paleta del proyecto
+
+Genera `game/assets/paleta.gpl` (el que importa Aseprite), `paleta.png` y la
+tabla en hex. Los tres dibujan con esa paleta; sin eso, tres personas sacan tres
+estilos distintos y unificarlo después es rehacer, no retocar.
+
+```bash
+python3 tools/gen_paleta.py
+```
+
+Para agregar un color, se toca la lista `PALETA` del script y se vuelve a
+correr. Avisar al resto antes: `check_arte.py` marca los colores de afuera.
+
+## `gen_sprite_prueba.py` — probar el andamiaje sin tener arte
+
+Genera un muñeco de 32×32 en las 3 direcciones y lo deja en la carpeta del
+jugador. Sirve para ver **con los ojos** que el sistema anda:
+
+```bash
+python3 tools/gen_sprite_prueba.py     # abrí el juego: es un muñeco
+rm -rf game/assets/sprites/jugador     # abrí de nuevo: vuelve el cuadrado azul
+```
+
+Es una prueba, no arte del juego.
 
 ## `gen_mapa.py` — regenerar el mapa del nivel
 

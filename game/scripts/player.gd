@@ -56,6 +56,7 @@ var _camera_cache = null
 
 @onready var _visual: Polygon2D = $Visual
 @onready var _facing_mark: Polygon2D = $Facing
+@onready var _art: SpriteDirectional = $SpriteDirectional
 
 @onready var needs: NeedsComponent = $NeedsComponent
 @onready var inventory: InventoryComponent = $InventoryComponent
@@ -76,11 +77,15 @@ func _process(delta: float) -> void:
 		var to_mouse := get_global_mouse_position() - global_position
 		if to_mouse.length() > 4.0:
 			facing = to_mouse.normalized()
+			# El sprite elige el cuadro; el placeholder rota. Solo uno de los dos
+			# está visible, según haya pixel art o no.
+			_art.set_facing(facing)
 			_facing_mark.rotation = facing.angle() - PI * 0.5
 
 	if _hurt_flash > 0.0:
 		_hurt_flash = maxf(0.0, _hurt_flash - delta * 3.0)
-		_visual.modulate = Color(1, 1, 1).lerp(Color(2.2, 0.5, 0.5), _hurt_flash)
+		var target := _art.flash_target()
+		target.modulate = Color(1, 1, 1).lerp(Color(2.2, 0.5, 0.5), _hurt_flash)
 
 	queue_redraw()
 

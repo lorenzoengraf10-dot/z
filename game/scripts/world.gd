@@ -17,7 +17,10 @@ extends TileMap
 
 const TILE_SIZE := 16
 const SOURCE_ID := 0
+## El atlas de respaldo: los 9 tiles de placeholder en una fila.
 const TILES_TEXTURE := "res://assets/tiles/placeholder_tiles.png"
+## Los tiles de verdad, uno por archivo. Ver docs/ARTE_SPEC.md.
+const TILE_ART := "res://assets/tiles/%s.png"
 const LEVEL_PATH := "res://data/level_prototype.txt"
 
 const GRASS := "."
@@ -29,6 +32,20 @@ const FLOOR := ","
 const ROCK := "R"
 const ORE := "O"
 const DOOR := "D"
+
+## Carácter del mapa -> nombre del archivo en assets/tiles/. Es el contrato con
+## quien dibuja: si el archivo se llama así, el juego lo usa solo.
+const TILE_NAMES := {
+	GRASS: "pasto",
+	PATH: "camino",
+	WATER: "agua",
+	TREE: "arbol",
+	WALL: "pared",
+	FLOOR: "piso",
+	ROCK: "roca",
+	ORE: "veta",
+	DOOR: "puerta",
+}
 
 # Caracter del mapa ASCII -> índice de tile en el atlas.
 const CHAR_TO_TILE := {
@@ -81,7 +98,7 @@ func _build_tileset() -> TileSet:
 	ts.set_physics_layer_collision_layer(0, 1)
 
 	var src := TileSetAtlasSource.new()
-	src.texture = load(TILES_TEXTURE) as Texture2D
+	src.texture = _build_atlas()
 	src.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
 
 	# ⚠ EL ORDEN DE ESTAS LÍNEAS IMPORTA Y NO SE ADIVINA LEYENDO EL CÓDIGO.
@@ -113,6 +130,54 @@ func _build_tileset() -> TileSet:
 
 	_verify_collisions(src)
 	return ts
+
+
+## Arma el atlas pegando los PNG sueltos de assets/tiles/.
+##
+## Cada tile es su propio archivo (`pasto.png`, `arbol.png`...) para que los tres
+## puedan dibujar a la vez sin pisarse en git. Acá se juntan en una sola textura
+## porque es lo que necesita el TileSet.
+##
+## El que falte se rellena con el placeholder de siempre, así se puede ir
+## reemplazando de a un tile y ver el resultado al toque, sin que el mapa quede
+## con agujeros mientras tanto.
+func _build_atlas() -> Texture2D:
+	var fallback := load(TILES_TEXTURE) as Texture2D
+	var base: Image = null
+	if fallback != null:
+		base = fallback.get_image()
+
+	var total := CHAR_TO_TILE.size()
+	var atlas := Image.create(TILE_SIZE * total, TILE_SIZE, false, Image.FORMAT_RGBA8)
+	var cuadro := Rect2i(0, 0, TILE_SIZE, TILE_SIZE)
+	var propios := 0
+
+	for ch in CHAR_TO_TILE.keys():
+		var index: int = CHAR_TO_TILE[ch]
+		var destino := Vector2i(index * TILE_SIZE, 0)
+		var nombre: String = TILE_NAMES.get(ch, "")
+		var path := TILE_ART % nombre
+
+		if nombre != "" and ResourceLoader.exists(path):
+			var art := load(path) as Texture2D
+			if art != null:
+				var image := art.get_image()
+				if image.get_width() == TILE_SIZE and image.get_height() == TILE_SIZE:
+					if image.get_format() != Image.FORMAT_RGBA8:
+						image.convert(Image.FORMAT_RGBA8)
+					atlas.blit_rect(image, cuadro, destino)
+					propios += 1
+					continue
+				push_warning("world.gd: %s mide %dx%d y tiene que ser %dx%d; se usa el placeholder"
+						% [path, image.get_width(), image.get_height(), TILE_SIZE, TILE_SIZE])
+
+		# Sin arte (o con el tamaño mal): va el placeholder.
+		if base != null:
+			atlas.blit_rect(base, Rect2i(destino.x, 0, TILE_SIZE, TILE_SIZE), destino)
+
+	if propios > 0:
+		print("world.gd: %d de %d tiles con arte propio" % [propios, total])
+	return ImageTexture.create_from_image(atlas)
 
 
 ## Comprueba que los tiles sólidos hayan quedado realmente con colisión.

@@ -22,6 +22,7 @@ CHECKS = [
     ("check_loot.py", "cada edificio recibe al menos un contenedor para saquear"),
     ("check_runspawn.py", "hay puntos de spawn aleatorio repartidos por todo el mapa"),
     ("check_spawns.py", "las entidades de Main.tscn caen sobre tiles caminables"),
+    ("check_arte.py", "el pixel art: medidas, transparencia, paleta y que falta"),
 ]
 
 verbose = "-v" in sys.argv

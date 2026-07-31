@@ -276,6 +276,37 @@ game/
 
 El nodo `TileMap` figura como **deprecado en Godot 4.3+** (lo reemplaza `TileMapLayer`), pero sigue funcionando. Se usa a propósito para que el proyecto abra igual en 4.2 y en versiones más nuevas. Si en algún momento migramos, el cambio es solo en `world.gd`.
 
+## Meter pixel art
+
+Todo lo que se ve hoy son **formas de colores** (placeholders). El arte real
+entra sin tocar código: se deja caer el PNG en la carpeta y listo.
+
+```
+game/assets/
+  tiles/     pasto.png  camino.png  agua.png  arbol.png  pared.png
+             piso.png   roca.png    veta.png  puerta.png        (16×16)
+  sprites/
+    jugador/  abajo.png  arriba.png  lado.png                   (32×32)
+    zombi/    lobo/      animal/     (igual)
+```
+
+- **Mientras el archivo no esté**, el juego sigue mostrando la forma de color y
+  no se rompe nada. Se puede ir reemplazando de a uno.
+- Los personajes se dibujan en **3 direcciones** (la izquierda es la derecha
+  espejada, la hace el juego).
+- Para **animar**: el mismo nombre con `_1`, `_2`, `_3`. Sin tocar nada más.
+- **Siempre PNG con transparencia, nunca JPG.**
+
+Todo el detalle —medidas, dónde apoyan los pies, la paleta y el checklist de los
+21 archivos del primer lote— está en **`../docs/ARTE_SPEC.md`**.
+
+Para ver que el sistema anda antes de tener arte propio:
+
+```bash
+python3 ../tools/gen_sprite_prueba.py   # el jugador pasa a ser un muñeco
+rm -rf assets/sprites/jugador           # y vuelve a ser un cuadrado
+```
+
 ## Antes de subir cambios
 
 En la máquina de desarrollo hay verificadores estáticos que revisan lo que se

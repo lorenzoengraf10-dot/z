@@ -17,6 +17,8 @@ enum State { GRAZE, FLEE }
 var state: State = State.GRAZE
 var health := 0.0
 
+@onready var _art: SpriteDirectional = $SpriteDirectional
+
 var _target := Vector2.ZERO
 var _timer := 0.0
 var _flee_dir := Vector2.RIGHT
@@ -31,6 +33,10 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# El animal no tenía dirección propia: la sacamos de para dónde se mueve.
+	if velocity.length() > 4.0:
+		_art.set_facing(velocity)
+
 	match state:
 		State.GRAZE:
 			_graze(delta)

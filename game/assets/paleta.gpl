@@ -1,0 +1,38 @@
+GIMP Palette
+Name: Cuarentena
+Columns: 8
+# Paleta del proyecto. En Aseprite: menu de la paleta -> Load Palette.
+# NO dibujar con colores de afuera de esta lista.
+#
+ 18  16  15	Negro
+ 36  31  29	Sombra
+ 59  55  51	Gris oscuro
+ 92  87  81	Gris
+133 127 119	Gris claro
+186 179 166	Hueso
+230 224 210	Blanco sucio
+ 27  43  24	Verde muy oscuro
+ 44  68  35	Verde oscuro
+ 68  98  47	Verde
+107 138  62	Verde claro
+ 46  35  24	Tierra oscura
+ 77  56  38	Tierra
+111  79  47	Madera
+156 115  70	Madera clara
+194 160 102	Arena
+ 22  39  61	Agua profunda
+ 36  64  92	Agua
+ 58 100 128	Agua clara
+111 151 168	Cielo
+ 74  44  37	Ladrillo oscuro
+112  66  58	Ladrillo
+156 100  85	Ladrillo claro
+110  20  20	Sangre
+168  42  36	Rojo
+212  84  74	Rojo claro
+138  82  32	Oxido
+200 128  44	Naranja
+232 168  60	Fuego
+230 207 106	Amarillo
+ 56  38  74	Violeta oscuro
+ 92  68 112	Violeta

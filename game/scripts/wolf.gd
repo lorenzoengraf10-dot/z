@@ -44,6 +44,7 @@ var _time_since_seen := 999.0
 var _attack_timer := 0.0
 
 @onready var _visual: Node2D = $Visual
+@onready var _art: SpriteDirectional = $SpriteDirectional
 
 
 func _ready() -> void:
@@ -229,9 +230,16 @@ func _update_feedback(delta: float) -> void:
 	_health_bar_timer = maxf(0.0, _health_bar_timer - delta)
 	if _hit_flash > 0.0:
 		_hit_flash = maxf(0.0, _hit_flash - delta * 4.0)
-		_visual.modulate = Color.WHITE.lerp(Color(3.0, 3.0, 3.0), _hit_flash)
+		var target := _art.flash_target()
+		target.modulate = Color.WHITE.lerp(Color(3.0, 3.0, 3.0), _hit_flash)
 	_knockback = _knockback.move_toward(Vector2.ZERO, knockback_force * 4.0 * delta)
-	_visual.rotation = facing.angle()
+
+	# Con pixel art se elige el cuadro (arriba/abajo/lado); sin arte, se rota la
+	# silueta. Un sprite de pixel art NO se rota: se ve borroso y tiembla.
+	if _art.has_art():
+		_art.set_facing(facing)
+	else:
+		_visual.rotation = facing.angle()
 
 
 ## move_and_slide() sumándole el empujón del último golpe recibido.
