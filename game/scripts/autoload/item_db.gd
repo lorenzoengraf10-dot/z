@@ -41,5 +41,18 @@ func is_edible(id: String) -> bool:
 	return bool(definition(id).get("comestible", false))
 
 
+func is_weapon(id: String) -> bool:
+	return bool(definition(id).get("arma", false))
+
+
+func describe(id: String) -> String:
+	return str(definition(id).get("descripcion", ""))
+
+
+## Para qué sirve como herramienta: "tala", "mineria" o "" si no es herramienta.
+func tool_kind(id: String) -> String:
+	return str(definition(id).get("herramienta", ""))
+
+
 func value_of(id: String, key: String) -> float:
 	return float(definition(id).get(key, 0.0))

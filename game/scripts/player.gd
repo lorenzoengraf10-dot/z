@@ -29,11 +29,17 @@ signal message(text: String)
 var facing := Vector2.DOWN
 ## Ruido sostenido de una acción (ej. talar). Lo setea el Interactor.
 var action_noise := 0.0
+## Lo prenden las pantallas modales (minijuego de fuego): te frena sin pausar el
+## juego, así los zombies te siguen viniendo encima mientras forcejeás.
+var input_blocked := false
+## Arma equipada ("" = a mano pelada). La cambia el inventario.
+var equipped_weapon := ""
 
 var _move_noise := 0.0
 var _burst_noise := 0.0
 var _burst_timer := 0.0
 var _attack_timer := 0.0
+var _world_cache = null
 
 @onready var needs: NeedsComponent = $NeedsComponent
 @onready var inventory: InventoryComponent = $InventoryComponent
@@ -52,6 +58,14 @@ func _physics_process(delta: float) -> void:
 		if _burst_timer <= 0.0:
 			_burst_noise = 0.0
 
+	# Con una pantalla modal abierta te quedás quieto, pero el mundo sigue.
+	if input_blocked:
+		velocity = Vector2.ZERO
+		move_and_slide()
+		_move_noise = 0.0
+		needs.exertion = 0.0
+		return
+
 	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var moving := input_dir != Vector2.ZERO
 	var crouching := Input.is_action_pressed("crouch")
@@ -63,6 +77,9 @@ func _physics_process(delta: float) -> void:
 		speed = crouch_speed
 	elif running:
 		speed = run_speed
+
+	# El terreno frena: el agua te deja a menos de la mitad.
+	speed *= terrain_speed_multiplier()
 
 	velocity = input_dir * speed
 	move_and_slide()
@@ -81,8 +98,17 @@ func _physics_process(delta: float) -> void:
 		_move_noise = 0.0
 
 
+## Cuánto te frena el suelo que estás pisando (1.0 normal, menos en el agua).
+func terrain_speed_multiplier() -> float:
+	if _world_cache == null or not is_instance_valid(_world_cache):
+		_world_cache = get_tree().get_first_node_in_group("world")
+	if _world_cache == null:
+		return 1.0
+	return _world_cache.speed_at(global_position)
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if needs.is_dead():
+	if needs.is_dead() or input_blocked:
 		return
 	if event.is_action_pressed("interact"):
 		interactor.try_interact()
@@ -109,11 +135,47 @@ func _try_eat() -> void:
 		message.emit("Consumiste %s" % ItemDB.display_name(id))
 
 
+## Estadísticas del golpe actual: salen del arma equipada, o de los @export si
+## vas a mano pelada.
+func weapon_stats() -> Dictionary:
+	if equipped_weapon == "" or not inventory.has(equipped_weapon):
+		return {
+			"nombre": "Manos",
+			"dano": attack_damage,
+			"alcance": attack_range,
+			"ruido": attack_noise,
+			"espera": attack_cooldown,
+		}
+	return {
+		"nombre": ItemDB.display_name(equipped_weapon),
+		"dano": ItemDB.value_of(equipped_weapon, "dano"),
+		"alcance": ItemDB.value_of(equipped_weapon, "alcance"),
+		"ruido": ItemDB.value_of(equipped_weapon, "ruido"),
+		"espera": ItemDB.value_of(equipped_weapon, "espera"),
+	}
+
+
+## La usa el inventario al equipar.
+func equip(item_id: String) -> void:
+	if item_id != "" and not ItemDB.is_weapon(item_id):
+		return
+	equipped_weapon = item_id
+	if item_id == "":
+		message.emit("Guardaste el arma")
+	else:
+		message.emit("Equipaste %s" % ItemDB.display_name(item_id))
+
+
 func _try_attack() -> void:
 	if _attack_timer > 0.0:
 		return
-	_attack_timer = attack_cooldown
-	_burst_noise = attack_noise
+
+	var weapon := weapon_stats()
+	var damage := float(weapon["dano"])
+	var reach := float(weapon["alcance"])
+
+	_attack_timer = maxf(0.15, float(weapon["espera"]))
+	_burst_noise = float(weapon["ruido"])
 	_burst_timer = attack_noise_time
 	interactor.cancel()
 
@@ -126,12 +188,12 @@ func _try_attack() -> void:
 		var target = node
 		var to_target: Vector2 = target.global_position - global_position
 		var dist := to_target.length()
-		if dist < 0.01 or dist > attack_range:
+		if dist < 0.01 or dist > reach:
 			continue
 		if absf(rad_to_deg(facing.angle_to(to_target))) > attack_arc_deg:
 			continue
 		if target.has_method("take_damage"):
-			target.take_damage(attack_damage)
+			target.take_damage(damage)
 			hits += 1
 
 	if hits == 0:

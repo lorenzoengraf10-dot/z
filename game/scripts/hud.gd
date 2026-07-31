@@ -39,8 +39,10 @@ var _action_box: VBoxContainer
 var _action_label: Label
 var _action_bar: ProgressBar
 var _clock_label: Label
+var _weapon_label: Label
 var _message_timer := 0.0
 var _day_night = null
+var _player_ref = null
 
 
 func _ready() -> void:
@@ -58,6 +60,12 @@ func _process(delta: float) -> void:
 		_message_timer -= delta
 		if _message_timer <= 0.0:
 			_message_label.text = ""
+
+	if _player_ref != null and is_instance_valid(_player_ref):
+		var weapon: Dictionary = _player_ref.weapon_stats()
+		_weapon_label.text = "En mano: %s  (daño %d · alcance %d)" % [
+			str(weapon["nombre"]), int(weapon["dano"]), int(weapon["alcance"]),
+		]
 
 	if _day_night != null and is_instance_valid(_day_night):
 		var phase := str(_day_night.phase_name())
@@ -107,6 +115,10 @@ func _build_ui() -> void:
 	_inventory_label = Label.new()
 	_inventory_label.text = "Mochila: vacía"
 	column.add_child(_inventory_label)
+
+	_weapon_label = Label.new()
+	_weapon_label.text = ""
+	column.add_child(_weapon_label)
 
 	# Barra de acción (talar / pescar)
 	_action_box = VBoxContainer.new()
@@ -196,6 +208,7 @@ func _toggle_build() -> void:
 func _connect_signals() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null:
+		_player_ref = player
 		_connect_if_possible(player, "message", _on_message)
 
 		var needs: NeedsComponent = player.get_node_or_null("NeedsComponent")

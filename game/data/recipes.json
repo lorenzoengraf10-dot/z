@@ -2,13 +2,79 @@
   {
     "id": "tabla",
     "nombre": "Tabla",
+    "categoria": "Materiales",
     "cuesta": { "madera": 2 },
     "produce": { "tabla": 1 },
+    "requiere_mesa": true,
     "descripcion": "Material más resistente para construir."
+  },
+  {
+    "id": "cuerda",
+    "nombre": "Cuerda",
+    "categoria": "Materiales",
+    "cuesta": { "madera": 3 },
+    "produce": { "cuerda": 1 },
+    "requiere_mesa": true,
+    "descripcion": "Fibra trenzada para atar herramientas."
+  },
+  {
+    "id": "cuchillo",
+    "nombre": "Cuchillo",
+    "categoria": "Armas",
+    "cuesta": { "piedra": 2, "madera": 1 },
+    "produce": { "cuchillo": 1 },
+    "requiere_mesa": true,
+    "descripcion": "Rápido y silencioso."
+  },
+  {
+    "id": "lanza",
+    "nombre": "Lanza",
+    "categoria": "Armas",
+    "cuesta": { "madera": 3, "piedra": 1, "cuerda": 1 },
+    "produce": { "lanza": 1 },
+    "requiere_mesa": true,
+    "descripcion": "Ataca desde lejos."
+  },
+  {
+    "id": "hacha",
+    "nombre": "Hacha",
+    "categoria": "Armas",
+    "cuesta": { "madera": 2, "piedra": 3, "cuerda": 1 },
+    "produce": { "hacha": 1 },
+    "requiere_mesa": true,
+    "descripcion": "Pega fuerte y tala más rápido."
+  },
+  {
+    "id": "pico",
+    "nombre": "Pico",
+    "categoria": "Armas",
+    "cuesta": { "madera": 2, "piedra": 4, "cuerda": 1 },
+    "produce": { "pico": 1 },
+    "requiere_mesa": true,
+    "descripcion": "Sin esto no podés minar roca ni mineral."
+  },
+  {
+    "id": "bate_clavos",
+    "nombre": "Bate con clavos",
+    "categoria": "Armas",
+    "cuesta": { "tabla": 2, "metal": 3 },
+    "produce": { "bate_clavos": 1 },
+    "requiere_mesa": true,
+    "descripcion": "Lo más letal, y lo más ruidoso."
+  },
+  {
+    "id": "vendaje",
+    "nombre": "Vendaje",
+    "categoria": "Medicina",
+    "cuesta": { "tabla": 1 },
+    "produce": { "vendaje": 1 },
+    "requiere_mesa": true,
+    "descripcion": "Cura salud y baja la infección."
   },
   {
     "id": "carne_cocida",
     "nombre": "Cocinar carne",
+    "categoria": "Cocina",
     "cuesta": { "carne": 1 },
     "produce": { "carne_cocida": 1 },
     "requiere_fuego": true,
@@ -17,24 +83,19 @@
   {
     "id": "pescado_cocido",
     "nombre": "Cocinar pescado",
+    "categoria": "Cocina",
     "cuesta": { "pescado": 1 },
     "produce": { "pescado_cocido": 1 },
     "requiere_fuego": true,
-    "descripcion": "Alimenta más que el pescado crudo."
+    "descripcion": "Alimenta más que crudo."
   },
   {
     "id": "agua_hervida",
     "nombre": "Hervir agua",
+    "categoria": "Cocina",
     "cuesta": { "madera": 1 },
     "produce": { "agua": 1 },
     "requiere_fuego": true,
     "descripcion": "Agua segura: sacia la sed sin infectarte."
-  },
-  {
-    "id": "vendaje",
-    "nombre": "Vendaje",
-    "cuesta": { "tabla": 1 },
-    "produce": { "vendaje": 1 },
-    "descripcion": "Cura salud y baja la infección."
   }
 ]

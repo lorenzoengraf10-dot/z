@@ -15,15 +15,21 @@ Este es el proyecto del juego (motor Godot 4). El diseño y el roadmap completos
 | WASD / Flechas | Mover |
 | Shift | Correr (rápido, **mucho ruido**, gasta energía) |
 | Ctrl | Agacharse (lento, **casi sin ruido**) |
-| E | Interactuar: talar árbol / pescar / **prender fogata** o echarle leña |
+| E | Interactuar: abrir/cerrar puerta · prender fogata o echarle leña · talar · pescar · **picar roca** |
 | Q | Comer o beber lo que tengas en la mochila |
-| Espacio | Atacar (zombies y animales) |
-| B | Modo construcción (**1** barricada, **2** fogata · clic izq: poner, der: sacar) |
-| C | Panel de crafteo (número para fabricar) |
+| Espacio | Atacar con lo que tengas equipado |
+| **I** o Tab | **Inventario** (equipar armas, consumir) — **pausa el juego** |
+| B | Modo construcción (barricada / fogata / mesa · clic izq: poner, der: sacar) |
+| C | Panel de crafteo |
 | M | Mapa mundial |
 | F5 / F9 | Guardar / cargar partida |
 
 También hay **botones en pantalla** (arriba a la derecha) para Mapa, Crafteo y Construir, junto al reloj del juego — por si no te acordás las teclas.
+
+### Qué pausa y qué no
+
+- **El inventario pausa** el juego: podés mirar tranquilo qué llevás.
+- **El minijuego de la fogata NO pausa**: mientras hacés fricción el mundo sigue y los zombies se te pueden venir encima. Solo te quedás quieto (no podés moverte). Si te apuran, **Escape** cancela.
 
 ## Sistemas que ya funcionan
 
@@ -33,8 +39,13 @@ También hay **botones en pantalla** (arriba a la derecha) para Mapa, Crafteo y 
 - **Necesidades** (`components/needs_component.gd`) — salud, hambre, sed, energía, temperatura e infección, cada una con su efecto.
 - **Recolección** — talar árboles da madera; pescar da pescado y sacia la sed (pero el agua sin hervir infecta un poco).
 - **Caza** (`animal.gd`) — los animales huyen si te oyen; cazarlos deja carne en el piso.
-- **Crafteo** (`systems/crafting.gd` + `data/recipes.json`) — tablas, cocinar carne/pescado, vendajes.
-- **Construcción** (`systems/build_system.gd`) — barricadas en cualquier lado del mapa; frenan zombies y les tapan la visión.
+- **Minería** — con un **pico** podés picar las rocas y las **vetas de mineral** (las manchas naranjas de la zona rocosa al este) para sacar piedra y metal. Sin pico no se puede. Picar hace **más ruido que talar**.
+- **Crafteo** (`systems/crafting.gd` + `data/recipes.json`) — hace falta estar **al lado de una mesa de trabajo**; las recetas de cocina piden además una fogata prendida. Cada receta muestra cuánto tenés de cada material (`Madera 2/3`).
+- **Armas** — se craftean (cuchillo, lanza, hacha, bate con clavos, pico) y se **equipan desde el inventario**. Cada una tiene su daño, alcance, ruido y velocidad: el bate mata de un golpe pero se escucha de lejos, el cuchillo es rápido y silencioso. El hacha tala más rápido y el pico habilita minar.
+- **Construcción** (`systems/build_system.gd`) — barricadas, fogatas y mesas de trabajo en cualquier lado del mapa; las barricadas frenan zombies y les tapan la visión.
+- **Puertas** (`door.gd`) — los edificios tienen puerta. Con **E** la abrís y la cerrás, y **cerrada frena a los zombies y les corta la visión**: encerrarte es una defensa real.
+- **Techos** (`systems/roof_system.gd`) — desde afuera ves el techo tapando el edificio; al entrar se oculta y ves el interior.
+- **El agua ya no es una pared**: se puede cruzar, pero te deja a menos de la mitad de velocidad. Ojo con meterte al agua escapando de una horda.
 - **Ciclo día/noche con amanecer y atardecer** (`systems/day_night.gd`) — el mundo cambia de color según la hora: **noche** azul profundo → **amanecer** rosa cálido (05:00-07:30) → **día** → **atardecer** naranja (18:00-21:00) → noche. De noche además **baja la temperatura**, así que necesitás fuego. Un día completo dura 4 minutos reales (ajustable con `day_seconds`).
   - Los colores salen de la tabla `SKY` arriba del script: para cambiar cómo se ve el atardecer alcanza con tocar esa tabla, sin tocar la lógica.
 - **Fogata** (`campfire.gd`) — se construye con 5 madera y arranca **apagada**. Prendida: ilumina, te abriga y habilita las recetas de cocina. Consume leña; se le echa más con E.
@@ -58,20 +69,21 @@ Todo el arte es **placeholder** a propósito (cuadrados y rombos de colores). La
 ## Qué probar primero (checklist de playtest)
 
 1. Moverte y ver que las barras del HUD bajan solas (hambre y sed).
-2. Ir hasta un árbol, apretar **E** y ver la barra de progreso → conseguir madera.
-3. Ir al agua (oeste del mapa o el lago), **E** → pescar y llenar la sed.
-4. **Q** para comer el pescado.
-5. **B**, **1**, y colocar barricadas con clic; probar que el zombie no las atraviesa.
-6. **C** y craftear una tabla.
-7. Correr cerca de un zombie (Shift) y ver que te escucha aunque no te vea; después pasar agachado (Ctrl) y ver que no.
-8. Correr mucho rato seguido hasta que aparezca una horda.
-9. **Espacio** para pelear; cazar un animal y juntar la carne.
-10. Mirar el reloj arriba a la derecha y esperar a que pase el **atardecer** (naranja) y caiga la noche: tiene que oscurecer y bajar la temperatura. Después esperá el **amanecer** (rosa).
-11. Acercarte a la **fogata que ya está puesta cerca del spawn**, apretar **E** y probar el minijuego hasta prenderla. Ver que ilumina y que la temperatura sube al estar cerca.
-12. Con la fogata prendida, abrir **C** y cocinar la carne (esa receta solo aparece habilitada al lado del fuego).
-13. **B**, **2** para construir tu propia fogata donde quieras.
-14. **F5**, cerrar, volver a abrir, **F9** → que vuelva todo como estaba, fogata prendida incluida.
-15. Probar los **botones de arriba a la derecha** (Mapa / Crafteo / Construir).
+2. **Meterte al agua** y comprobar que te frena bastante (antes era una pared).
+3. Ir hasta un árbol, apretar **E** → madera. Después **E** en el agua → pescar y llenar la sed.
+4. **I** para abrir el inventario: el juego se tiene que **congelar**. Mirá lo que llevás y cerralo.
+5. **B** → aparece el panel de construcción abajo. Poner una **mesa de trabajo** (8 madera).
+6. **C** al lado de la mesa → ahora sí se puede craftear. Fabricar un **pico**.
+7. Ir a la zona rocosa (este del mapa) y **E** sobre una roca → piedra. Buscar las **vetas naranjas** → metal.
+8. Craftear un arma (lanza o hacha), abrir **I** y **equiparla**. Ver que el HUD muestra "En mano" y que pega más fuerte.
+9. Entrar a una de las **casas**: desde afuera se ve el techo, al entrar tiene que desaparecer y verse el interior.
+10. Pararte en la puerta y apretar **E** para cerrarla. Con un zombie afuera, comprobar que **no puede pasar**.
+11. Correr cerca de un zombie (Shift) y ver que te escucha aunque no te vea; después pasar agachado (Ctrl) y ver que no.
+12. Correr mucho rato seguido hasta que aparezca una horda.
+13. Esperar el **atardecer** (naranja) y la noche: tiene que oscurecer y bajar la temperatura. Después el **amanecer** (rosa).
+14. Prender la **fogata que está cerca del spawn** con **E**. Ojo: el juego **no se pausa**, así que fijate que no haya zombies cerca. Ver que ilumina y abriga.
+15. Con la fogata prendida, **C** → cocinar la carne (esa receta solo se habilita al lado del fuego).
+16. **F5**, cerrar, volver a abrir, **F9** → que vuelva todo como estaba: fogata prendida, puertas, arma equipada.
 
 ## Cómo editar el mundo (el mapa de tiles)
 
@@ -81,9 +93,15 @@ El terreno se dibuja con un **TileMap** que se arma por código (`scripts/world.
 |---|---|---|
 | `.` | pasto | no |
 | `=` | camino | no |
-| `~` | agua | sí (acá se pesca) |
-| `T` | árbol | sí (madera + tapa la visión) |
+| `~` | agua | **no**: se camina, pero a menos de la mitad de velocidad (acá se pesca) |
+| `T` | árbol | sí (da madera + tapa la visión) |
 | `#` | pared | sí |
+| `,` | piso de madera | no — **define el interior de un edificio** (de acá salen los techos) |
+| `D` | puerta | depende: cerrada frena, abierta no |
+| `R` | roca | sí (se pica con pico → piedra) |
+| `O` | veta de mineral | sí (se pica con pico → metal) |
+
+**Para dibujar un edificio nuevo:** paredes `#` alrededor, piso `,` adentro y al menos una puerta `D` en la pared. El techo y la puerta aparecen solos.
 
 El mapa se **centra en el origen (0,0)**, que es donde spawnea el jugador — conviene dejar el centro del `.txt` despejado.
 

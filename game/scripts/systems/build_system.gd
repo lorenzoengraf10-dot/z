@@ -25,6 +25,13 @@ const BUILDABLES := [
 		"costo": 5,
 		"color": Color(1.0, 0.6, 0.2, 0.5),
 	},
+	{
+		"id": "mesa",
+		"nombre": "Mesa de trabajo",
+		"escena": "res://scenes/Workbench.tscn",
+		"costo": 8,
+		"color": Color(0.65, 0.5, 0.25, 0.5),
+	},
 ]
 
 const COST_ITEM := "madera"
@@ -36,6 +43,8 @@ var selected := 0
 
 var _scenes: Array[PackedScene] = []
 var _ghost: Polygon2D
+var _palette: CanvasLayer
+var _palette_buttons: Array[Button] = []
 ## celda "x,y" -> { "nodo": Node, "tipo": String }
 var _placed: Dictionary = {}
 
@@ -48,10 +57,64 @@ func _ready() -> void:
 	_ghost = _make_ghost()
 	add_child(_ghost)
 	_ghost.visible = false
+	_build_palette()
 	# Las estructuras que ya vienen puestas en la escena (la fogata de prueba
 	# cerca del spawn) se registran igual que las construidas: si no, no se
 	# guardaban ni se podían desarmar.
 	_register_preplaced.call_deferred()
+
+
+## Panel de construcción: se muestra al entrar en modo construcción y deja
+## elegir qué poner con el mouse (o con los números).
+func _build_palette() -> void:
+	_palette = CanvasLayer.new()
+	_palette.layer = 4
+	add_child(_palette)
+
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 1.0
+	panel.anchor_bottom = 1.0
+	panel.offset_left = -250
+	panel.offset_right = 250
+	panel.offset_top = -104
+	panel.offset_bottom = -46
+	_palette.add_child(panel)
+
+	var margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 8)
+	panel.add_child(margin)
+
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	margin.add_child(row)
+
+	for i in range(BUILDABLES.size()):
+		var entry: Dictionary = BUILDABLES[i]
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(150, 40)
+		button.focus_mode = Control.FOCUS_NONE
+		button.text = "%d) %s\n%d madera" % [i + 1, str(entry["nombre"]), int(entry["costo"])]
+		button.pressed.connect(select.bind(i))
+		row.add_child(button)
+		_palette_buttons.append(button)
+
+	_palette.visible = false
+
+
+## Marca cuál está elegido y si te alcanza la madera.
+func _refresh_palette() -> void:
+	var player = _player()
+	for i in range(_palette_buttons.size()):
+		var button := _palette_buttons[i]
+		var cost := int(BUILDABLES[i]["costo"])
+		var affordable := player != null and player.inventory.has(COST_ITEM, cost)
+		if i == selected:
+			button.modulate = Color(1, 1, 1) if affordable else Color(1.0, 0.6, 0.6)
+		else:
+			button.modulate = Color(0.62, 0.62, 0.66)
 
 
 ## Adopta lo que ya estaba colgado del nodo Structures al arrancar.
@@ -103,6 +166,7 @@ func _process(_delta: float) -> void:
 		_ghost.color = _current()["color"]
 	else:
 		_ghost.color = Color(1.0, 0.3, 0.3, 0.45)
+	_refresh_palette()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -137,12 +201,14 @@ func toggle() -> void:
 
 func select(index: int) -> void:
 	selected = clampi(index, 0, BUILDABLES.size() - 1)
+	_refresh_palette()
 	build_message.emit("Construir: %s (%d madera)" % [str(_current()["nombre"]), _cost()])
 
 
 func set_active(value: bool) -> void:
 	active = value
 	_ghost.visible = value
+	_palette.visible = value
 	mode_changed.emit(active)
 	if not active:
 		build_message.emit("Modo construcción OFF")
@@ -153,10 +219,8 @@ func set_active(value: bool) -> void:
 	if crafting != null and crafting.visible:
 		crafting.visible = false
 
-	var options: Array[String] = []
-	for i in range(BUILDABLES.size()):
-		options.append("%d) %s (%d)" % [i + 1, str(BUILDABLES[i]["nombre"]), int(BUILDABLES[i]["costo"])])
-	build_message.emit("Construcción ON — " + " · ".join(options) + " · clic izq: poner, der: sacar")
+	_refresh_palette()
+	build_message.emit("Construcción ON — clic izq: poner · clic der: sacar")
 
 
 func _hovered_cell() -> Vector2i:
@@ -201,10 +265,14 @@ func _try_place(cell: Vector2i) -> void:
 
 	var entry := _current()
 	_spawn_at(cell, str(entry["id"]))
-	if str(entry["id"]) == "fogata":
-		build_message.emit("Fogata armada — apretá E para prenderla")
-	else:
-		build_message.emit("%s construida" % str(entry["nombre"]))
+	AudioManager.play("construir")
+	match str(entry["id"]):
+		"fogata":
+			build_message.emit("Fogata armada — apretá E para prenderla")
+		"mesa":
+			build_message.emit("Mesa lista — ahora podés craftear parado al lado (C)")
+		_:
+			build_message.emit("%s construida" % str(entry["nombre"]))
 
 
 func _try_remove(cell: Vector2i) -> void:

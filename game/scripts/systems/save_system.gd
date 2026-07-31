@@ -49,6 +49,12 @@ func save_game() -> bool:
 	if build != null:
 		data["construcciones"] = build.placed_cells()
 
+	var doors = _door_system()
+	if doors != null:
+		data["puertas"] = doors.to_dict()
+
+	data["arma"] = player.equipped_weapon
+
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		save_message.emit("No se pudo escribir el guardado")
@@ -98,6 +104,13 @@ func load_game() -> bool:
 		build.clear_all()
 		build.load_cells(built)
 
+	var doors = _door_system()
+	var door_data: Variant = data.get("puertas", {})
+	if doors != null and typeof(door_data) == TYPE_DICTIONARY:
+		doors.from_dict(door_data)
+
+	player.equip(str(data.get("arma", "")))
+
 	save_message.emit("Partida cargada")
 	loaded.emit()
 	return true
@@ -132,3 +145,8 @@ func _world():
 # Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _build_system():
 	return get_tree().get_first_node_in_group("build_system")
+
+
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
+func _door_system():
+	return get_tree().get_first_node_in_group("door_system")

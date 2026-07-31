@@ -3,60 +3,133 @@
     "nombre": "Comida enlatada",
     "comestible": true,
     "hambre": 30,
-    "sed": 0
+    "sed": 0,
+    "descripcion": "Dura para siempre y no necesita cocina."
   },
   "pescado": {
     "nombre": "Pescado",
     "comestible": true,
     "hambre": 35,
-    "sed": 5
+    "sed": 5,
+    "descripcion": "Crudo. Cocinado alimenta más."
+  },
+  "pescado_cocido": {
+    "nombre": "Pescado cocido",
+    "comestible": true,
+    "hambre": 50,
+    "sed": 5,
+    "descripcion": "Hecho al fuego."
   },
   "carne": {
     "nombre": "Carne cruda",
     "comestible": true,
     "hambre": 45,
     "sed": 0,
-    "infeccion": 12
+    "infeccion": 12,
+    "descripcion": "Comerla cruda te infecta: mejor cocinarla."
   },
   "carne_cocida": {
     "nombre": "Carne cocida",
     "comestible": true,
     "hambre": 60,
-    "sed": 0
-  },
-  "pescado_cocido": {
-    "nombre": "Pescado cocido",
-    "comestible": true,
-    "hambre": 50,
-    "sed": 5
+    "sed": 0,
+    "descripcion": "Lo más nutritivo que hay."
   },
   "agua": {
-    "nombre": "Agua",
+    "nombre": "Agua hervida",
     "comestible": true,
     "hambre": 0,
-    "sed": 45
+    "sed": 45,
+    "descripcion": "Segura: sacia la sed sin infectarte."
   },
   "madera": {
     "nombre": "Madera",
-    "comestible": false
+    "comestible": false,
+    "descripcion": "De talar árboles. Sirve para construir y como leña."
   },
   "tabla": {
     "nombre": "Tabla",
-    "comestible": false
+    "comestible": false,
+    "descripcion": "Madera trabajada en la mesa."
   },
   "piedra": {
     "nombre": "Piedra",
-    "comestible": false
+    "comestible": false,
+    "descripcion": "De picar roca. Para herramientas y construcción."
+  },
+  "metal": {
+    "nombre": "Chatarra de metal",
+    "comestible": false,
+    "descripcion": "De las vetas de mineral. Para las mejores armas."
+  },
+  "cuerda": {
+    "nombre": "Cuerda",
+    "comestible": false,
+    "descripcion": "Para atar cabezas de herramienta al mango."
   },
   "vendaje": {
     "nombre": "Vendaje",
     "comestible": false,
     "cura": 25,
-    "cura_infeccion": 40
+    "cura_infeccion": 40,
+    "descripcion": "Cura salud y baja la infección."
   },
   "mechero": {
     "nombre": "Mechero",
     "comestible": false,
     "descripcion": "Prender fuego se vuelve mucho más fácil: no hay que acertar el timing."
+  },
+
+  "cuchillo": {
+    "nombre": "Cuchillo",
+    "comestible": false,
+    "arma": true,
+    "dano": 22,
+    "alcance": 24,
+    "ruido": 90,
+    "espera": 0.32,
+    "descripcion": "Rápido y silencioso, pero hay que estar encima."
+  },
+  "lanza": {
+    "nombre": "Lanza",
+    "comestible": false,
+    "arma": true,
+    "dano": 30,
+    "alcance": 44,
+    "ruido": 120,
+    "espera": 0.65,
+    "descripcion": "Llega de lejos. Ideal para no dejar que se te acerquen."
+  },
+  "hacha": {
+    "nombre": "Hacha",
+    "comestible": false,
+    "arma": true,
+    "herramienta": "tala",
+    "dano": 42,
+    "alcance": 28,
+    "ruido": 165,
+    "espera": 0.8,
+    "descripcion": "Pega fuerte y tala más rápido, pero hace mucho ruido."
+  },
+  "bate_clavos": {
+    "nombre": "Bate con clavos",
+    "comestible": false,
+    "arma": true,
+    "dano": 55,
+    "alcance": 30,
+    "ruido": 185,
+    "espera": 0.9,
+    "descripcion": "Lo más letal cuerpo a cuerpo. Se escucha a la otra cuadra."
+  },
+  "pico": {
+    "nombre": "Pico",
+    "comestible": false,
+    "arma": true,
+    "herramienta": "mineria",
+    "dano": 26,
+    "alcance": 26,
+    "ruido": 150,
+    "espera": 0.75,
+    "descripcion": "Necesario para picar roca y vetas de mineral."
   }
 }

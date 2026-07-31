@@ -116,7 +116,8 @@ func _drop_meat() -> void:
 	# Lo colgamos del padre (no de este nodo, que se está por borrar). Dejamos la
 	# posición ya resuelta en el espacio del padre, así no hace falta tocar el
 	# drop después de agregarlo — este animal para entonces ya no existe.
-	var host := get_parent()
+	# Sin tipar: get_parent() devuelve Node y le pedimos to_local(), que es de Node2D.
+	var host = get_parent()
 	if host == null:
 		return
 	drop.position = host.to_local(global_position) if host is Node2D else global_position

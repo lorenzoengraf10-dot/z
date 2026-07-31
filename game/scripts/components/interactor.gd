@@ -1,10 +1,12 @@
 class_name Interactor
 extends Node
-## Acción contextual del jugador (tecla E). Mira el tile que tenés enfrente y
-## decide qué hacer con él:
-##   árbol → talás y conseguís madera (hace mucho ruido: los zombies te oyen)
-##   agua  → pescás y de paso tomás agua (sacia la sed, pero el agua sin hervir
-##           te suma un poco de infección)
+## Acción contextual del jugador (tecla E). Primero mira si tenés algo al lado
+## (puerta o fogata) y si no, el tile que tenés enfrente:
+##   puerta → la abrís o la cerrás (cerrada frena a los zombies)
+##   fogata → la prendés con el minijuego, o le echás leña si ya está prendida
+##   árbol  → talás y conseguís madera (hace mucho ruido: los zombies te oyen)
+##   agua   → pescás y de paso tomás agua (sacia la sed, pero sin hervir infecta)
+##   roca / veta → picás y conseguís piedra o metal (hace falta un pico)
 ##
 ## Las acciones llevan tiempo y se cancelan si te movés.
 
@@ -15,17 +17,26 @@ signal action_ended(message: String)
 const TREE := "T"
 const WATER := "~"
 const GRASS := "."
+const ROCK := "R"
+const ORE := "O"
 
 @export var reach := 18.0
-## Las fogatas se agarran desde un poco más lejos que un tile, porque son un
-## objeto en el mundo y no un cuadrado de la grilla.
+## Las fogatas y puertas se agarran desde un poco más lejos que un tile, porque
+## son objetos del mundo y no cuadrados de la grilla.
 @export var campfire_reach := 30.0
+@export var door_reach := 26.0
 @export var chop_seconds := 1.8
 @export var fish_seconds := 3.5
+@export var mine_seconds := 2.6
 @export var chop_noise := 170.0
+@export var mine_noise := 200.0
 @export var wood_per_tree := 3
+@export var stone_per_rock := 2
+@export var metal_per_ore := 2
 @export var fish_chance := 0.65
 @export var dirty_water_infection := 5.0
+## Con la herramienta adecuada las acciones tardan esta fracción del tiempo.
+@export var tool_speedup := 0.55
 
 var _kind := ""
 var _elapsed := 0.0
@@ -66,8 +77,14 @@ func try_interact() -> void:
 		action_ended.emit("Acción cancelada")
 		return
 
-	# Las fogatas tienen prioridad sobre los tiles: si tenés una al lado, E es
-	# para prenderla o echarle leña.
+	# Lo que tenés al lado gana sobre el tile de enfrente: una puerta pegada al
+	# cuerpo es más urgente que el pasto que estás mirando.
+	var door = _nearby_door()
+	if door != null:
+		door.toggle()
+		action_ended.emit("Puerta %s" % door.status_text())
+		return
+
 	var campfire = _nearby_campfire()
 	if campfire != null:
 		_use_campfire(campfire)
@@ -81,11 +98,42 @@ func try_interact() -> void:
 	var cell: Vector2i = world.cell_at(target)
 	match world.char_at_cell(cell):
 		TREE:
-			_begin("talar", "Talando árbol...", chop_seconds, cell)
+			_begin("talar", "Talando árbol...", _timed(chop_seconds, "tala"), cell)
 		WATER:
 			_begin("pescar", "Pescando...", fish_seconds, cell)
+		ROCK, ORE:
+			_try_mine(cell)
 		_:
 			action_ended.emit("Nada para hacer acá")
+
+
+## Empezar a picar exige un pico en la mochila.
+func _try_mine(cell: Vector2i) -> void:
+	if not _has_tool("mineria"):
+		action_ended.emit("Necesitás un pico para picar esto")
+		return
+	_begin("minar", "Picando...", _timed(mine_seconds, "mineria"), cell)
+
+
+## Duración de una acción, más corta si tenés la herramienta adecuada.
+func _timed(seconds: float, kind: String) -> float:
+	return seconds * (tool_speedup if _has_tool(kind) else 1.0)
+
+
+func _has_tool(kind: String) -> bool:
+	for key in _player.inventory.items.keys():
+		if ItemDB.tool_kind(str(key)) == kind:
+			return true
+	return false
+
+
+## Puerta más cercana dentro del alcance, o null.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
+func _nearby_door():
+	var system = get_tree().get_first_node_in_group("door_system")
+	if system == null:
+		return null
+	return system.nearest(_player.global_position, door_reach)
 
 
 ## Fogata más cercana dentro del alcance, o null.
@@ -138,6 +186,9 @@ func _begin(kind: String, label: String, duration: float, cell: Vector2i) -> voi
 	_anchor = _player.global_position
 	if kind == "talar":
 		_player.action_noise = chop_noise
+	elif kind == "minar":
+		# Picar piedra se escucha todavía más lejos que talar.
+		_player.action_noise = mine_noise
 	action_started.emit(label, _duration)
 	action_progress.emit(0.0)
 
@@ -163,6 +214,17 @@ func _complete() -> void:
 				message = "+1 pescado · tomaste agua (sin hervir)"
 			else:
 				message = "Se escapó... pero tomaste agua (sin hervir)"
+		"minar":
+			var mine_world = _world()
+			if mine_world != null:
+				var drop: String = mine_world.mineable_at(cell)
+				if drop == "":
+					message = "Ahí ya no queda nada"
+				else:
+					var amount := metal_per_ore if drop == "metal" else stone_per_rock
+					mine_world.set_char_at_cell(cell, GRASS)
+					_player.inventory.add(drop, amount)
+					message = "+%d %s" % [amount, ItemDB.display_name(drop)]
 
 	action_ended.emit(message)
 

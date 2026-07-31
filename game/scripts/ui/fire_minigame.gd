@@ -12,9 +12,10 @@ extends CanvasLayer
 ##
 ## Con un mechero salteás la puntería y solo tenés que mantener 1 segundo.
 ##
-## El juego se pausa mientras el minijuego está abierto. Es una decisión para
-## revisar después del playtest: sin pausa los zombies te llegarían encima
-## mientras forcejeás con el fuego (más tenso, pero puede ser injusto).
+## **El juego NO se pausa**: mientras hacés fricción el mundo sigue corriendo y
+## los zombies te pueden llegar encima. Lo único que se frena es el jugador
+## (`player.input_blocked`), así no podés moverte mientras forcejeás con el
+## fuego. Si te apura una horda, Escape cancela.
 
 signal finished(success: bool)
 
@@ -53,7 +54,6 @@ var _hint: Label
 func _ready() -> void:
 	add_to_group("fire_minigame")
 	layer = 8
-	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	visible = false
 
@@ -110,7 +110,7 @@ func start(campfire, has_lighter: bool = false) -> void:
 	_randomize_green()
 
 	visible = true
-	get_tree().paused = true
+	_set_player_blocked(true)
 	_update_text()
 
 
@@ -120,6 +120,12 @@ func _randomize_green() -> void:
 
 func _process(delta: float) -> void:
 	if _state == State.CLOSED:
+		return
+
+	# Como el juego ya no se pausa, te pueden matar en pleno minijuego.
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null or player.needs.is_dead():
+		_close(false)
 		return
 
 	# Escape siempre cancela, incluso si todavía tenés apretada la E con la que
@@ -188,9 +194,19 @@ func _succeed() -> void:
 func _close(success: bool) -> void:
 	_state = State.CLOSED
 	visible = false
-	get_tree().paused = false
+	_set_player_blocked(false)
 	_campfire = null
 	finished.emit(success)
+
+
+func is_open() -> bool:
+	return _state != State.CLOSED
+
+
+func _set_player_blocked(blocked: bool) -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	if player != null:
+		player.input_blocked = blocked
 
 
 func _in_green() -> bool:

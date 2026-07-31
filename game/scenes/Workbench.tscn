@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/workbench.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(16, 12)
+
+[node name="Workbench" type="StaticBody2D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Top" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-9, -6, 9, -6, 9, 0, -9, 0)
+color = Color(0.52, 0.37, 0.21, 1)
+
+[node name="Legs" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-7, 0, -4, 0, -4, 6, -7, 6)
+color = Color(0.36, 0.25, 0.14, 1)
+
+[node name="Legs2" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(4, 0, 7, 0, 7, 6, 4, 6)
+color = Color(0.36, 0.25, 0.14, 1)
+
+[node name="Tools" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-6, -9, -2, -9, -2, -6, -6, -6)
+color = Color(0.7, 0.7, 0.74, 1)

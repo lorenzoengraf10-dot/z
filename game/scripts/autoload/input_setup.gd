@@ -27,6 +27,7 @@ const ACTIONS := {
 	"attack": [KEY_SPACE],
 	"build_mode": [KEY_B],
 	"crafting": [KEY_C],
+	"inventory": [KEY_I, KEY_TAB],
 	"toggle_map": [KEY_M],
 	"quick_save": [KEY_F5],
 	"quick_load": [KEY_F9],

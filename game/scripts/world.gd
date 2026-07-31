@@ -22,6 +22,10 @@ const PATH := "="
 const WATER := "~"
 const TREE := "T"
 const WALL := "#"
+const FLOOR := ","
+const ROCK := "R"
+const ORE := "O"
+const DOOR := "D"
 
 # Caracter del mapa ASCII -> índice de tile en el atlas.
 const CHAR_TO_TILE := {
@@ -30,13 +34,30 @@ const CHAR_TO_TILE := {
 	WATER: 2,
 	TREE: 3,
 	WALL: 4,
+	FLOOR: 5,
+	ROCK: 6,
+	ORE: 7,
+	DOOR: 8,
 }
-# Índices de tiles que colisionan (y tapan la visión).
-const SOLID := {2: true, 3: true, 4: true}
+
+## Índices de tiles que colisionan (y tapan la visión).
+## El agua NO está: se puede caminar, solo que lento (ver SPEED).
+## La puerta tampoco: la colisión la pone el nodo Door cuando está cerrada.
+const SOLID := {3: true, 4: true, 6: true, 7: true}
+
+## Multiplicador de velocidad por tile (lo que no está acá va a 1.0).
+const SPEED := {2: 0.45}
+
+## Tiles que se pueden picar con el pico, y qué dejan.
+const MINEABLE := {ROCK: "piedra", ORE: "metal"}
 
 var _tile_to_char: Dictionary = {}
 ## Tiles que el jugador modificó (ej. árboles talados). Se guardan en la partida.
 var _modified: Dictionary = {}
+## Celdas donde el mapa marcó una puerta. Las usa door_system.gd.
+var _door_cells: Array[Vector2i] = []
+## Rectángulo del mapa en celdas, para que el sistema de techos sepa dónde barrer.
+var _bounds := Rect2i()
 
 
 func _ready() -> void:
@@ -93,13 +114,18 @@ func _paint_level() -> void:
 		w = maxi(w, ln.length())
 	var off_x := int(w / 2.0)
 	var off_y := int(h / 2.0)
+	_bounds = Rect2i(Vector2i(-off_x, -off_y), Vector2i(w, h))
+	_door_cells.clear()
 
 	for row in range(h):
 		var line: String = lines[row]
 		for col in range(line.length()):
 			var ch := line[col]
 			var tile_index: int = CHAR_TO_TILE.get(ch, 0)
-			set_cell(0, Vector2i(col - off_x, row - off_y), SOURCE_ID, Vector2i(tile_index, 0))
+			var cell := Vector2i(col - off_x, row - off_y)
+			set_cell(0, cell, SOURCE_ID, Vector2i(tile_index, 0))
+			if ch == DOOR:
+				_door_cells.append(cell)
 
 
 func _load_level_lines() -> PackedStringArray:
@@ -148,6 +174,29 @@ func is_solid_cell(cell: Vector2i) -> bool:
 
 func is_solid(global_pos: Vector2) -> bool:
 	return is_solid_cell(cell_at(global_pos))
+
+
+## Cuánto frena el terreno en esa posición (1.0 = normal, 0.45 = agua).
+func speed_at(global_pos: Vector2) -> float:
+	var atlas := get_cell_atlas_coords(0, cell_at(global_pos))
+	if atlas.x < 0:
+		return 1.0
+	return float(SPEED.get(atlas.x, 1.0))
+
+
+## Si el tile se puede minar, devuelve el ítem que da; si no, "".
+func mineable_at(cell: Vector2i) -> String:
+	return str(MINEABLE.get(char_at_cell(cell), ""))
+
+
+## Celdas marcadas como puerta en el mapa. Las usa door_system.gd.
+func door_cells() -> Array[Vector2i]:
+	return _door_cells.duplicate()
+
+
+## Rectángulo del mapa en celdas. Lo usa roof_system.gd para barrer el mapa.
+func bounds() -> Rect2i:
+	return _bounds
 
 
 func set_char_at_cell(cell: Vector2i, ch: String) -> void:
