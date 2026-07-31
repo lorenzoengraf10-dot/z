@@ -3,7 +3,12 @@ extends Node
 ## F5 guarda, F9 carga.
 ##
 ## Guarda: posición y necesidades del jugador, inventario, barricadas
-## construidas y tiles que cambiaron (árboles talados).
+## construidas, puertas, contenedores ya revisados y tiles que cambiaron
+## (árboles talados, rocas picadas).
+##
+## Ojo: el **perfil** (partidas jugadas y perks desbloqueados) NO va acá. Vive
+## aparte en user://perfil.json y lo maneja run_manager.gd, porque sobrevive a
+## la muerte del personaje y el guardado no.
 ##
 ## Está escrito para no romper nunca: si el archivo no existe, está corrupto o
 ## viene de una versión vieja, avisa y sigue de largo en vez de crashear.
@@ -52,6 +57,14 @@ func save_game() -> bool:
 	var doors = _door_system()
 	if doors != null:
 		data["puertas"] = doors.to_dict()
+
+	var loot = _loot_system()
+	if loot != null:
+		data["contenedores"] = loot.to_dict()
+
+	var map = _map_screen()
+	if map != null:
+		data["mapa"] = map.to_dict()
 
 	data["arma"] = player.equipped_weapon
 
@@ -109,6 +122,16 @@ func load_game() -> bool:
 	if doors != null and typeof(door_data) == TYPE_DICTIONARY:
 		doors.from_dict(door_data)
 
+	var loot = _loot_system()
+	var loot_data: Variant = data.get("contenedores", {})
+	if loot != null and typeof(loot_data) == TYPE_DICTIONARY:
+		loot.from_dict(loot_data)
+
+	var map = _map_screen()
+	var map_data: Variant = data.get("mapa", {})
+	if map != null and typeof(map_data) == TYPE_DICTIONARY:
+		map.from_dict(map_data)
+
 	player.equip(str(data.get("arma", "")))
 
 	save_message.emit("Partida cargada")
@@ -150,3 +173,13 @@ func _build_system():
 # Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _door_system():
 	return get_tree().get_first_node_in_group("door_system")
+
+
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
+func _loot_system():
+	return get_tree().get_first_node_in_group("loot_system")
+
+
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
+func _map_screen():
+	return get_tree().get_first_node_in_group("map_screen")
