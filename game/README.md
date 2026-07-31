@@ -65,7 +65,7 @@ Los perks están en `data/perks.json` y se desbloquean por hitos:
 | Espalda ancha | +3 lugares en la mochila | 7 días sobrevividos |
 | Pisada liviana | Hacés 25% menos de ruido | 25 zombies matados |
 | Explorador | El mapa arranca con los edificios marcados | 30 lugares saqueados |
-| Estómago de hierro | La comida cruda te infecta la mitad | 60 zombies matados |
+| Estómago de hierro | La comida cruda te saca la mitad de salud | 60 zombies matados |
 | Veterano | Empezás con cuchillo y 2 vendajes | 15 días sobrevividos |
 
 Agregar un perk es editar el JSON **y** enchufar su efecto en
@@ -75,15 +75,16 @@ id a un número del jugador).
 ## Sistemas que ya funcionan
 
 - **Sigilo y ruido** (`player.gd`) — caminar / correr / agacharse tienen distinto **radio de ruido**. Talar y atacar también hacen ruido. Es lo que usan zombies y animales para detectarte.
-- **Zombies con IA** (`zombie.gd`) — deambulan, te detectan por **visión** (cono al frente, que se corta con paredes, árboles y barricadas) o por **oído**, te persiguen y te muerden (la mordida infecta). Se los puede matar.
+- **Zombies con IA** (`zombie.gd`) — deambulan, te detectan por **visión** (cono al frente, que se corta con paredes, árboles y barricadas) o por **oído**, te persiguen y te muerden (la mordida casi siempre te hace **sangrar**). Se los puede matar.
 - **Hordas por ruido** (`systems/horde_spawner.gd`) — cuanto más ruido hacés, más "calor" acumulás; al pasar el umbral aparece una horda desde fuera de pantalla. Hay 3 variantes: normal, corredor (rápido y débil) y resistente (lento y duro).
 - **Lobos** (`wolf.gd`) — más rápidos que vos corriendo, **cazan en manada** (el que te ve avisa a los que tenga cerca) y su mordida casi siempre te hace sangrar. Contra ellos correr no alcanza: o los ves venir de lejos, o te encerrás.
 - **Contenedores de loot** (`container.gd` + `systems/loot_system.gd` + `data/loot_tables.json`) — se reparten solos al arrancar, pegados a las paredes de cada edificio y nunca tapando la puerta. Qué sale de cada tipo se edita en el JSON, sin tocar código.
 - **Armas de fuego** — pistola, escopeta y rifle gastan **munición** y hacen muchísimo ruido: disparar te trae una horda casi seguro. El HUD te muestra cuántas balas te quedan.
 - **Sangrado** — necesidad propia, con barra que parpadea en el HUD. No para solo (baja muy de a poco): hay que vendarse con **R**.
 - **Mochila con capacidad** (`components/inventory_component.gd`) — cada unidad ocupa un lugar. El HUD muestra `Mochila 6/8` y avisa cuando algo no entró.
-- **Necesidades** (`components/needs_component.gd`) — salud, hambre, sed, energía, temperatura, infección y **sangrado**, cada una con su efecto.
-- **Recolección** — talar árboles da madera; pescar da pescado y sacia la sed (pero el agua sin hervir infecta un poco).
+- **Necesidades** (`components/needs_component.gd`) — salud, hambre, sed, energía, temperatura y **sangrado**, cada una con su efecto.
+  - *Nota de diseño:* había también una barra de **infección** y se sacó. Hacía lo mismo que el sangrado (drenar salud despacio después de una mordida) pero más lento, y con las dos juntas eran 7 barras que nadie miraba. Lo que hacía quedó repartido: las mordidas sangran más (60% de probabilidad en vez de 45%), y la comida cruda y el agua sin hervir **pegan directo a la salud**.
+- **Recolección** — talar árboles da madera; pescar da pescado y sacia la sed (pero el agua sin hervir te saca 6 de salud: hervirla sigue valiendo la pena).
 - **Caza** (`animal.gd`) — los animales huyen si te oyen; cazarlos deja carne en el piso.
 - **Minería** — con un **pico** podés picar las rocas y las **vetas de mineral** (las manchas naranjas de la zona rocosa al este) para sacar piedra y metal. Sin pico no se puede. Picar hace **más ruido que talar**.
 - **Crafteo** (`systems/crafting.gd` + `data/recipes.json`) — hace falta estar **al lado de una mesa de trabajo**; las recetas de cocina piden además una fogata prendida. Cada receta muestra cuánto tenés de cada material (`Madera 2/3`).
@@ -135,7 +136,9 @@ algo falló en `run_manager.gd`.
 7. Dejar que un zombie te muerda unas cuantas veces hasta que arranque el
    **sangrado**: la barra roja tiene que aparecer y **parpadear**, y la salud
    bajar sostenido. Apretar **R** para vendarte.
-8. Ir hasta un árbol, apretar **E** → madera. Después **E** en el agua → pescar.
+8. Ir hasta un árbol, apretar **E** → madera. Después **E** en el agua → pescar:
+   fijate que **la salud baja un poco** (tomaste agua sucia). Comer el pescado
+   crudo desde **I** también tiene que sacarte salud; cocinarlo, no.
 9. **I** para abrir el inventario: el juego se tiene que **congelar**.
 10. **B** → poner una **mesa de trabajo** (8 madera). **C** al lado → craftear un **pico**.
 11. Picar una **roca** y una **veta naranja** → piedra y metal.

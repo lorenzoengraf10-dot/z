@@ -25,7 +25,7 @@ Objetivo: validar que el loop central es divertido antes de invertir en contenid
 - [x] Necesidades básicas del personaje: hambre y salud (`needs_component.gd` + HUD).
 - [x] Recolección de recursos: comida del piso, **tala de árboles** (madera) y **pesca** (`interactor.gd`, tecla E).
 - [x] Mapa jugable con TileMap real, con colisiones y editable desde `data/level_prototype.txt` (`world.gd`). Arte de tiles todavía placeholder.
-- [x] Pesca básica (tecla E frente al agua; también sacia la sed, con riesgo de infección).
+- [x] Pesca básica (tecla E frente al agua; también sacia la sed, pero el agua sin hervir te saca salud).
 - [x] Construcción de barricadas en cualquier punto del mapa (`build_system.gd`, tecla B).
 - [x] Guardado/carga simple (`save_system.gd`, F5/F9).
 - [ ] **Playtesting interno (vos + amigos) y ajuste de sensación de juego.** ← lo único que falta de la Fase 1
@@ -35,7 +35,7 @@ Objetivo: validar que el loop central es divertido antes de invertir en contenid
 ## Fase 2 — Producción core (2-3 meses)
 - [x] Sistemas completos de crafteo (`crafting.gd` + `data/recipes.json`) y construcción de base (en cualquier ubicación).
 - [x] Caza (`animal.gd`: los animales huyen del ruido) y pesca como fuentes de comida.
-- [x] Necesidades completas: sed, cansancio (energía), temperatura, infección.
+- [x] Necesidades completas: sed, cansancio (energía), temperatura, sangrado.
 - [x] IA de zombies con variedad (normal / corredor / resistente) y **hordas que reaccionan al ruido acumulado** (`horde_spawner.gd`).
 - [x] Mapa más grande (costa al oeste, lago, bosques y pueblo con edificios).
 - [x] **Ciclo día/noche** con oscurecimiento e iluminación 2D (`day_night.gd`), que además baja la temperatura de noche.

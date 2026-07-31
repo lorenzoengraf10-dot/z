@@ -44,6 +44,19 @@ for p in perks:
     if p.get("requisito", {}).get("tipo") not in VALID_REQ:
         errors.append(f"perks[{p['id']}]: requisito desconocido {p.get('requisito')}")
 
+# Campos que ya no lee nadie: si alguien los vuelve a poner (copiando y pegando
+# un item viejo) no van a hacer nada y se va a volver loco buscando por que.
+RETIRADOS = {
+    "infeccion": "la necesidad de infeccion se saco; usar 'dano_salud'",
+    "cura_infeccion": "la necesidad de infeccion se saco; usar 'cura'",
+}
+for iid, idef in items.items():
+    for campo, motivo in RETIRADOS.items():
+        if campo in idef:
+            errors.append(f"items[{iid}]: campo '{campo}' ya no se usa ({motivo})")
+    if "dano_salud" in idef and not idef.get("comestible"):
+        errors.append(f"items[{iid}]: tiene 'dano_salud' pero no es comestible, no se va a aplicar nunca")
+
 # las armas de fuego tienen que apuntar a una municion que exista
 for iid, idef in items.items():
     if idef.get("fuego"):

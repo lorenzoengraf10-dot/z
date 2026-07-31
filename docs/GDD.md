@@ -30,8 +30,9 @@ Un brote zombie colapsó la sociedad. No hay una historia lineal con misión pri
 - Tala, minería/recolección de materiales de crafteo.
 
 ### Supervivencia
-- Necesidades del personaje: hambre, sed, salud, cansancio, temperatura, infección y **sangrado**.
-- El **sangrado** es la amenaza más aguda: no se frena solo y drena salud sostenido. Obliga a llevar vendajes encima, que ocupan lugar en una mochila chica.
+- Necesidades del personaje: salud, hambre, sed, energía, temperatura y **sangrado**.
+- El **sangrado** es la amenaza de largo plazo: no se frena solo y drena salud sostenido. Obliga a llevar vendajes encima, que ocupan lugar en una mochila chica.
+- **Se quitó la infección** (v0.3): hacía lo mismo que el sangrado —drenar salud despacio después de una mordida— pero más lento y con una barra más para leer. Con las dos juntas eran 7 barras y ninguna de las dos se sentía. Su rol quedó repartido: las mordidas sangran más, y la comida cruda y el agua sin hervir pegan directo a la salud, así cocinar y hervir siguen valiendo la pena.
 - Zombies como amenaza constante: patrullan, reaccionan a ruido y visión; el sigilo es tan válido como el combate directo.
 - **Lobos**: rápidos y en manada. Son la amenaza del campo abierto, así como los zombies lo son de los pueblos.
 - **Mochila con espacio limitado**: la decisión constante no es "qué junto" sino "qué dejo".

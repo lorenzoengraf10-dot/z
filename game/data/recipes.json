@@ -122,7 +122,7 @@
       "carne_cocida": 1
     },
     "requiere_fuego": true,
-    "descripcion": "Alimenta más y no te infecta."
+    "descripcion": "Alimenta más y no te cae mal."
   },
   {
     "id": "pescado_cocido",
@@ -148,6 +148,6 @@
       "agua": 1
     },
     "requiere_fuego": true,
-    "descripcion": "Agua segura: sacia la sed sin infectarte."
+    "descripcion": "Agua segura: sacia la sed y no te cae mal."
   }
 ]

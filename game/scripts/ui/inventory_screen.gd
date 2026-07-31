@@ -188,8 +188,10 @@ func _show_detail(id: String) -> void:
 			parts.append("+%d hambre" % int(ItemDB.value_of(id, "hambre")))
 		if ItemDB.value_of(id, "sed") > 0.0:
 			parts.append("+%d sed" % int(ItemDB.value_of(id, "sed")))
-		if ItemDB.value_of(id, "infeccion") > 0.0:
-			parts.append("+%d infección" % int(ItemDB.value_of(id, "infeccion")))
+		if ItemDB.value_of(id, "cura") > 0.0:
+			parts.append("+%d salud" % int(ItemDB.value_of(id, "cura")))
+		if ItemDB.value_of(id, "dano_salud") > 0.0:
+			parts.append("-%d salud (crudo)" % int(ItemDB.value_of(id, "dano_salud")))
 		if not parts.is_empty():
 			text += "\n" + " · ".join(parts)
 	_detail.text = text

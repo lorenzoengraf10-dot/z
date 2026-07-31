@@ -11,7 +11,8 @@
     "comestible": true,
     "hambre": 35,
     "sed": 5,
-    "descripcion": "Crudo. Cocinado alimenta más."
+    "descripcion": "Crudo te cae un poco mal. Cocinado alimenta más.",
+    "dano_salud": 8
   },
   "pescado_cocido": {
     "nombre": "Pescado cocido",
@@ -25,8 +26,8 @@
     "comestible": true,
     "hambre": 45,
     "sed": 0,
-    "infeccion": 12,
-    "descripcion": "Comerla cruda te infecta: mejor cocinarla."
+    "descripcion": "Cruda te cae mal y te saca salud: mejor cocinarla.",
+    "dano_salud": 14
   },
   "carne_cocida": {
     "nombre": "Carne cocida",
@@ -40,7 +41,7 @@
     "comestible": true,
     "hambre": 0,
     "sed": 45,
-    "descripcion": "Segura: sacia la sed sin infectarte."
+    "descripcion": "Segura: sacia la sed y no te cae mal."
   },
   "madera": {
     "nombre": "Madera",
@@ -70,8 +71,7 @@
   "vendaje": {
     "nombre": "Vendaje",
     "comestible": false,
-    "cura": 25,
-    "cura_infeccion": 40,
+    "cura": 30,
     "descripcion": "Corta la hemorragia por completo y cura un poco.",
     "corta_sangrado": 100
   },

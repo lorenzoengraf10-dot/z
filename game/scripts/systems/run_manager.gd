@@ -112,7 +112,7 @@ func _apply_perks(player) -> void:
 	if has_perk("liviano"):
 		player.noise_multiplier = 0.75
 	if has_perk("estomago"):
-		player.needs.raw_infection_multiplier = 0.5
+		player.needs.raw_damage_multiplier = 0.5
 	if has_perk("veterano"):
 		player.inventory.add("cuchillo", 1)
 		player.inventory.add("vendaje", 2)

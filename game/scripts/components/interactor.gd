@@ -5,7 +5,7 @@ extends Node
 ##   puerta → la abrís o la cerrás (cerrada frena a los zombies)
 ##   fogata → la prendés con el minijuego, o le echás leña si ya está prendida
 ##   árbol  → talás y conseguís madera (hace mucho ruido: los zombies te oyen)
-##   agua   → pescás y de paso tomás agua (sacia la sed, pero sin hervir infecta)
+##   agua   → pescás y de paso tomás agua (sacia la sed, pero sin hervir te cae mal)
 ##   roca / veta → picás y conseguís piedra o metal (hace falta un pico)
 ##
 ## Las acciones llevan tiempo y se cancelan si te movés.
@@ -35,7 +35,8 @@ const ORE := "O"
 @export var stone_per_rock := 2
 @export var metal_per_ore := 2
 @export var fish_chance := 0.65
-@export var dirty_water_infection := 5.0
+## Lo que te cuesta de salud tomar agua del lago sin hervirla.
+@export var dirty_water_damage := 6.0
 ## Con la herramienta adecuada las acciones tardan esta fracción del tiempo.
 @export var tool_speedup := 0.55
 
@@ -240,12 +241,12 @@ func _complete() -> void:
 			message = "+%d madera" % wood_per_tree
 		"pescar":
 			_player.needs.set_need(NeedsComponent.SED, _player.needs.max_of(NeedsComponent.SED))
-			_player.needs.infect(dirty_water_infection)
+			_player.needs.damage(dirty_water_damage * _player.needs.raw_damage_multiplier)
 			if randf() < fish_chance:
 				_player.inventory.add("pescado", 1)
-				message = "+1 pescado · tomaste agua (sin hervir)"
+				message = "+1 pescado · tomaste agua sucia (te cayó mal)"
 			else:
-				message = "Se escapó... pero tomaste agua (sin hervir)"
+				message = "Se escapó... y el agua sucia te cayó mal"
 		"minar":
 			var mine_world = _world()
 			if mine_world != null:

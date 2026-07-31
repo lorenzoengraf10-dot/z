@@ -34,7 +34,7 @@ Vista plana de todo lo que el juego necesita, más allá del orden por fases (es
 | Caza | ✅ hecho | Fase 2 |
 | Crafteo | ✅ hecho | Fase 2 |
 | Construcción de base en cualquier lugar | ✅ hecho (barricadas) | Fase 2 |
-| Necesidades (salud, hambre, sed, energía, temperatura, infección) | ✅ hecho | Fase 2 |
+| Necesidades (salud, hambre, sed, energía, temperatura, sangrado) | ✅ hecho | Fase 2 |
 | Ciclo día/noche + iluminación | ✅ hecho | Fase 2 |
 | Fogatas (luz, calor, cocinar) + minijuego de fricción | ✅ hecho | Fase 2 |
 | Guardado/carga | ✅ hecho | Fase 1-2 |

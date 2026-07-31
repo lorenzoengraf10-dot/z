@@ -241,10 +241,6 @@ func apply_damage(amount: float) -> void:
 	needs.damage(amount)
 
 
-func apply_infection(amount: float) -> void:
-	needs.infect(amount)
-
-
 ## La llaman los zombies y los lobos al morderte.
 func apply_bleed(amount: float) -> void:
 	needs.bleed(amount)

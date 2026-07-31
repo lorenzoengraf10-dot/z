@@ -15,7 +15,6 @@ const COLORS := {
 	"sed": Color(0.25, 0.60, 0.88),
 	"energia": Color(0.35, 0.78, 0.36),
 	"temperatura": Color(0.62, 0.82, 0.92),
-	"infeccion": Color(0.62, 0.32, 0.78),
 	"sangrado": Color(0.90, 0.15, 0.18),
 }
 const PHASE_ICONS := {
@@ -30,7 +29,6 @@ const LABELS := {
 	"sed": "Sed",
 	"energia": "Energía",
 	"temperatura": "Temp.",
-	"infeccion": "Infección",
 	"sangrado": "SANGRADO",
 }
 
