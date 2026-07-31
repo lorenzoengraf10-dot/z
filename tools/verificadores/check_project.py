@@ -106,7 +106,34 @@ for f in all_files:
         except Exception as e:
             errors.append(f"{os.path.relpath(f,ROOT)}: JSON invalido: {e}")
 
-# --- 6. autoloads existen ---
+# --- 6. world.gd: add_source() ANTES de add_collision_polygon() ---
+#
+# La trampa exacta que dejo todo el mapa sin colisiones durante varios dias: el
+# TileData copia las capas de fisica del TileSet recien cuando se entera de a
+# que TileSet pertenece, y eso pasa adentro de add_source(). Si la colision se
+# crea antes, add_collision_polygon(0) se va por un ERR_FAIL_INDEX y NO CREA
+# NADA, sin romper el juego: abre igual y se atraviesan las paredes.
+world_gd = os.path.join(ROOT, "scripts", "world.gd")
+if os.path.exists(world_gd):
+    raw = open(world_gd, encoding="utf-8").read()
+    # Ojo: hay que sacar los comentarios primero. El comentario que explica este
+    # mismo bug nombra las dos funciones, y sin limpiarlo el verificador se
+    # miraba a si mismo y daba OK siempre.
+    src = "\n".join(l.split("#")[0] for l in raw.split("\n"))
+    add_source = src.find("add_source(")
+    add_collision = src.find("add_collision_polygon(")
+    if add_collision != -1:
+        if add_source == -1:
+            errors.append("world.gd: hay add_collision_polygon() pero ningun add_source(); "
+                          "los tiles van a quedar sin colision")
+        elif add_source > add_collision:
+            linea = src[:add_collision].count("\n") + 1
+            errors.append(f"world.gd:{linea}: add_collision_polygon() esta ANTES de "
+                          "add_source(). El tile todavia no tiene capas de fisica, la "
+                          "llamada falla en silencio y NINGUN tile del mapa colisiona. "
+                          "Mover ts.add_source() arriba del for que crea los tiles.")
+
+# --- 7. autoloads existen ---
 proj = open(os.path.join(ROOT, "project.godot"), encoding="utf-8").read()
 for name, path in re.findall(r'^(\w+)="\*(res://[^"]+)"', proj, re.M):
     if not os.path.exists(res_to_fs(path)):

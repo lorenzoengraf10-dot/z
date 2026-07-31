@@ -130,6 +130,11 @@ for f in files:
                 break
 
 # 5. Arrays constantes sin tipar usados en un `for` cuyo cuerpo hace `var x := ...`
+#
+# Ojo: `var id := str(goal["id"])` NO es un error, porque str() ya devuelve
+# String y la inferencia funciona igual. Solo molesta cuando el := se come el
+# Variant crudo. Estas son las funciones que "arreglan" el tipo al pasar.
+COERCE = r'(?:str|int|float|bool|StringName|Vector2|Vector2i|Rect2|Rect2i|Color)\s*\('
 for f in files:
     src = open(f, encoding="utf-8").read()
     rel = os.path.relpath(f, ROOT)
@@ -139,10 +144,15 @@ for f in files:
             loop_var = m.group(1)
             rest = src[m.end():]
             block = rest.split("\nfunc ")[0]
-            if re.search(r'\bvar\s+\w+\s*:=[^\n]*\b' + re.escape(loop_var) + r'\b', block):
+            for hit in re.finditer(r'\bvar\s+\w+\s*:=\s*([^\n]*\b' + re.escape(loop_var) + r'\b[^\n]*)',
+                                   block):
+                rhs = hit.group(1)
+                if re.match(r'\s*' + COERCE, rhs):
+                    continue          # str(...) / int(...) ya fijan el tipo
                 line = src[:m.start()].count("\n") + 1
                 errors.append(f"{rel}:{line}: 'for {loop_var} in {c}' con {c} sin tipar -> "
                               f"{loop_var} es Variant y rompe la inferencia; tipar el const")
+                break
 
 # 6. `for X in get_nodes_in_group(...)` / `get_children()` -> X queda tipado como
 #    Node (son Array[Node]). Pedirle un miembro propio del proyecto es error.

@@ -42,8 +42,14 @@ const CONFIG := {
 }
 
 # --- Ritmos (se ajustan después del playtest) ---
-@export var hunger_decay := 0.55       ## hambre perdida por segundo
-@export var thirst_decay := 0.85       ## sed perdida por segundo
+#
+# Referencia para tocarlos: un día de juego dura `day_seconds` de day_night.gd
+# (300 s). Con estos números el hambre te dura ~222 s y la sed ~143 s, así que
+# en un día tenés que comer una vez y tomar agua dos. Se aflojaron un poco
+# respecto de antes porque el mapa pasó a 160×100 y ahora se camina mucho más
+# para llegar a cualquier lado.
+@export var hunger_decay := 0.45       ## hambre perdida por segundo
+@export var thirst_decay := 0.70       ## sed perdida por segundo
 @export var stamina_drain := 14.0      ## energía por segundo corriendo
 @export var stamina_regen := 9.0       ## energía por segundo descansando
 @export var temperature_rate := 1.5    ## qué tan rápido se acerca a la ambiente

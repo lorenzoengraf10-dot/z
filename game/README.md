@@ -10,27 +10,56 @@ Este es el proyecto del juego (motor Godot 4). El diseño y el roadmap completos
 
 ## Controles
 
+El juego es **para PC**: te movés con el teclado y **apuntás con el mouse**.
+Mirás siempre hacia donde está el cursor, sin importar para dónde camines.
+
 | Tecla | Acción |
 |---|---|
 | WASD / Flechas | Mover |
+| **Mouse** | **Apuntar** (el jugador mira siempre al cursor) |
+| **Clic izq** o Espacio | Atacar o disparar con lo que tengas equipado |
 | Shift | Correr (rápido, **mucho ruido**, gasta energía) |
 | Ctrl | Agacharse (lento, **casi sin ruido**) |
-| E | Interactuar: abrir/cerrar puerta · **revisar contenedor** · prender fogata o echarle leña · talar · pescar · **picar roca** |
+| E | Interactuar: abrir/cerrar puerta · revisar contenedor · prender fogata o echarle leña · talar · pescar · picar roca |
 | Q | Comer o beber lo que tengas en la mochila |
-| **R** | **Vendarte** (corta el sangrado; usa vendaje o, si no tenés, un trapo) |
-| Espacio | Atacar con lo que tengas equipado |
-| **I** o Tab | **Inventario** (equipar armas, consumir) — **pausa el juego** |
+| R | Vendarte (corta el sangrado; usa vendaje o, si no tenés, un trapo) |
+| I o Tab | Inventario (equipar armas, consumir) — **pausa el juego** |
 | B | Modo construcción (barricada / fogata / mesa · clic izq: poner, der: sacar) |
 | C | Panel de crafteo |
-| M | **Mapa** (se destapa caminando) — **pausa el juego** |
+| M | Mapa (se destapa caminando) — **pausa el juego** |
+| **H** o F1 | **Ayuda con todos los controles** — **pausa el juego** |
 | F5 / F9 | Guardar / cargar partida |
 
-También hay **botones en pantalla** (arriba a la derecha) para Mapa, Crafteo y Construir, junto al reloj del juego — por si no te acordás las teclas.
+No hace falta acordarse de nada: **H** abre la lista completa dentro del juego,
+y hay botones en pantalla (arriba a la derecha) para Mapa, Crafteo, Construir y
+la ayuda, al lado del reloj.
+
+### No hace falta adivinar qué hace la E
+
+Cuando te acercás a algo usable aparece un **cartelito flotante** sobre el
+objeto: *"E — Revisar armario"*, *"E — Abrir puerta"*, *"E — Talar árbol"*, con
+un recuadro marcando exactamente qué vas a usar. Si te falta la herramienta, te
+lo dice ahí mismo (*"Necesitás un pico"*).
 
 ### Qué pausa y qué no
 
-- **El inventario y el mapa pausan** el juego: podés mirar tranquilo qué llevás y dónde estás.
+- **El inventario, el mapa y la ayuda pausan** el juego.
 - **El minijuego de la fogata NO pausa**: mientras hacés fricción el mundo sigue y los zombies se te pueden venir encima. Solo te quedás quieto (no podés moverte). Si te apuran, **Escape** cancela.
+
+## Cómo leer la pantalla
+
+- **Arriba a la izquierda**: las necesidades, con ícono, barra y porcentaje. La
+  que está por debajo del 25% se resalta y el resto queda apagada, así de un
+  vistazo ves qué te está matando. El **sangrado** parpadea cuando está activo.
+- **Debajo**: el estado de **sigilo** (`○ oculto` / `◒ te escucharon` / `◉ TE
+  VEN`), la mochila con su capacidad y el arma en mano con la munición.
+- **Arriba a la derecha**: el día, la hora, la fase (☀ 🌇 🌙 🌅) y los botones.
+- **Abajo a la derecha**: el **minimapa**, con la misma niebla que el mapa
+  grande. Los enemigos aparecen ahí **solo si ya te detectaron**.
+- **Alrededor tuyo**: un **anillo** con el radio exacto en el que te escuchan.
+  Se agranda al correr y casi desaparece agachado.
+- **Sobre cada enemigo**: nada si está tranquilo, **`?`** amarillo si te escuchó
+  y va hacia tu última posición, **`!`** rojo si te está viendo.
 
 ## El loop de la partida
 
@@ -77,6 +106,11 @@ id a un número del jugador).
 - **Sigilo y ruido** (`player.gd`) — caminar / correr / agacharse tienen distinto **radio de ruido**. Talar y atacar también hacen ruido. Es lo que usan zombies y animales para detectarte.
 - **Zombies con IA** (`zombie.gd`) — deambulan, te detectan por **visión** (cono al frente, que se corta con paredes, árboles y barricadas) o por **oído**, te persiguen y te muerden (la mordida casi siempre te hace **sangrar**). Se los puede matar.
 - **Hordas por ruido** (`systems/horde_spawner.gd`) — cuanto más ruido hacés, más "calor" acumulás; al pasar el umbral aparece una horda desde fuera de pantalla. Hay 3 variantes: normal, corredor (rápido y débil) y resistente (lento y duro).
+- **Paredes que frenan** (`world.gd`) — árboles, paredes de ladrillo, rocas y vetas colisionan de verdad, y cortan la línea de vista de los zombies. Encerrarte en una casa con la puerta cerrada es una defensa real. El mapa además está cerrado por **cuatro paredes invisibles** en el borde, así que no te podés ir al vacío.
+- **Sigilo visible** (`player.gd`, `components/hunter_display.gd`) — el anillo de ruido, el `?`/`!` sobre cada enemigo y el chip del HUD. Antes el sistema de ruido existía pero era invisible y no se podía jugar con él.
+- **Feedback de combate** (`systems/floating_text.gd`, `ui/game_camera.gd`) — números de daño, parpadeo y retroceso del enemigo al golpearlo, barra de vida sobre el que estás peleando, y sacudida de cámara cuando te pegan a vos.
+- **Objetivos del arranque** (`systems/objectives.gd`) — cuatro cosas que te empujan a descubrir los sistemas (saquear, comer, prender fuego, sobrevivir la noche). Se tachan solas y después desaparecen.
+- **Minimapa** (`ui/minimap.gd`) — comparte la niebla con el mapa grande.
 - **Lobos** (`wolf.gd`) — más rápidos que vos corriendo, **cazan en manada** (el que te ve avisa a los que tenga cerca) y su mordida casi siempre te hace sangrar. Contra ellos correr no alcanza: o los ves venir de lejos, o te encerrás.
 - **Contenedores de loot** (`container.gd` + `systems/loot_system.gd` + `data/loot_tables.json`) — se reparten solos al arrancar, pegados a las paredes de cada edificio y nunca tapando la puerta. Qué sale de cada tipo se edita en el JSON, sin tocar código.
 - **Armas de fuego** — pistola, escopeta y rifle gastan **munición** y hacen muchísimo ruido: disparar te trae una horda casi seguro. El HUD te muestra cuántas balas te quedan.
@@ -116,9 +150,20 @@ Todo el arte es **placeholder** a propósito (cuadrados y rombos de colores). La
 
 ## Qué probar primero (checklist de playtest)
 
-**Lo primero de todo:** arrancá el juego dos o tres veces seguidas y fijate que
-**aparecés en un lugar distinto cada vez**. Si siempre caés en el mismo punto,
-algo falló en `run_manager.gd`.
+**Lo primero de todo, que es lo que estaba roto:**
+
+- **Caminá contra una pared de ladrillo.** Tiene que frenarte. Lo mismo contra un
+  árbol y contra una roca. Si los atravesás, mirá el panel *Salida*: tendría que
+  haber un error de `world.gd` diciendo qué tiles quedaron sin colisión.
+- **Mirá una casa desde afuera.** Tenés que ver dónde está la puerta (es lo único
+  del edificio que el techo no tapa) y si está abierta o cerrada. Abrila con **E**
+  parado afuera.
+- **Andá hasta el borde del mapa**, sobre todo nadando por la costa del oeste. No
+  te tenés que poder ir.
+- Arrancá el juego dos o tres veces seguidas y fijate que **aparecés en un lugar
+  distinto cada vez**.
+
+Después, lo de siempre:
 
 1. Abrir el **mapa (M)**: el juego se tiene que congelar y tenés que ver un
    círculo destapado alrededor tuyo, con el punto verde en el medio. Caminar un
@@ -160,6 +205,27 @@ algo falló en `run_manager.gd`.
     ver que arranca otra partida **en otro lugar del mapa**.
 21. Sobrevivir 3 días para desbloquear el primer perk. Al morir, el resumen tiene
     que anunciarlo en amarillo, y la partida siguiente ya tiene que tenerlo puesto.
+
+**De la interfaz y el feel:**
+
+22. Mové el mouse en círculo: el jugador tiene que **mirar siempre al cursor**.
+    Atacá con **clic izquierdo**. Ojo con esto: si el clic no ataca, es que algún
+    `Control` del HUD se lo está comiendo (tiene que ir con `MOUSE_FILTER_IGNORE`,
+    ver `hud.gd`).
+23. Pegale a un zombi: tiene que salir el **número de daño** en amarillo,
+    parpadear en blanco, **retroceder** y aparecerle la barra de vida arriba.
+24. Dejá que te muerda: número **rojo**, parpadeo rojo tuyo y **sacudida de cámara**.
+25. Corré y fijate cómo **crece el anillo de ruido**; agachate y mirá cómo casi
+    desaparece. Acercate a un zombi caminando hasta que le salga el **`?`**, y
+    después ponete en su campo de visión hasta que sea **`!`**. El chip del HUD
+    tiene que ir cambiando junto con eso.
+26. Apretá **H**: se abre la ayuda y el juego se pausa.
+27. Mirá el **minimapa** de abajo a la derecha: se tiene que ir destapando igual
+    que el mapa grande.
+28. Encerrate en una casa con la puerta cerrada y un zombi afuera: **no tiene que
+    entrar ni verte**. Ojo que esto ahora hace que esconderse sea una estrategia
+    muy fuerte; si les parece demasiado, lo hablamos (una opción sería que los
+    zombies rompan las puertas, pero eso ya es una función nueva).
 
 ## Cómo editar el mundo (el mapa de tiles)
 

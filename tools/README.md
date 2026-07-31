@@ -12,10 +12,10 @@ python3 tools/verificadores/run_all.py -v     # con la salida completa
 
 | Verificador | Qué revisa |
 |---|---|
-| `check_project.py` | que todas las rutas `res://` existan, que el `load_steps` de cada `.tscn` coincida con los recursos que declara, y que los JSON parseen |
+| `check_project.py` | que todas las rutas `res://` existan, que el `load_steps` de cada `.tscn` coincida con los recursos que declara, que los JSON parseen, y que en `world.gd` el `add_source()` vaya **antes** del `add_collision_polygon()` (el orden que dejó todo el mapa sin colisiones) |
 | `check_types.py` | los errores de tipado que GDScript tira **al compilar**: `:=` que no puede inferir el tipo, y miembros de `Node2D` usados sobre variables tipadas como `Node` (el caso clásico del `for` sobre `get_nodes_in_group()`) |
 | `check_data.py` | que `loot_tables.json` y `recipes.json` solo nombren ítems que existen, que los perks tengan requisitos válidos y que cada arma de fuego apunte a una munición real |
-| `check_rooms.py` | que cada edificio del mapa tenga piso, paredes y al menos una puerta |
+| `check_rooms.py` | que cada edificio tenga piso, paredes y puerta, que **a cada puerta se pueda llegar desde afuera** (un árbol plantado en la entrada deja la casa inservible) y que **el borde del mapa esté cerrado** |
 | `check_loot.py` | que cada edificio reciba al menos un contenedor (piso pegado a pared y lejos de la puerta) |
 | `check_runspawn.py` | que haya puntos de spawn aleatorio válidos y repartidos por los cuatro cuadrantes del mapa |
 | `check_spawns.py` | que las entidades colocadas en `Main.tscn` no caigan sobre un tile sólido |
@@ -23,6 +23,11 @@ python3 tools/verificadores/run_all.py -v     # con la salida completa
 `check_loot.py` y `check_runspawn.py` aceptan un mapa como argumento
 (`python3 tools/verificadores/check_loot.py otro_mapa.txt`), que es como se
 prueba que el verificador realmente falla cuando el mapa está mal.
+
+Las reglas nuevas se probaron **rompiendo el proyecto a propósito** (reordenando
+las líneas de `world.gd`, plantando un árbol en la entrada de una casa y abriendo
+un agujero en el borde del mapa) y confirmando que el verificador falla. Un
+verificador que nunca falló no sirve de nada: hay que verlo fallar una vez.
 
 **Ojo con lo que NO revisan:** no ejecutan el juego. Que esté todo en verde
 significa que el proyecto debería *abrir*, no que se juegue bien. Eso lo dice el

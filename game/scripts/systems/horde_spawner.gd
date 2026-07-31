@@ -23,14 +23,21 @@ const VARIANTS := {
 	},
 }
 
+# Cuentas para tocar estos números: correr hace 190 de ruido, así que el calor
+# sube 190 * heat_per_noise por segundo. Con 0.030 y umbral 150 son 26 segundos
+# de correr sin parar antes de que te caiga una horda. Antes eran 15, que con el
+# mapa chico estaba bien pero en 160×100 te castigaba por el solo hecho de
+# cruzarlo.
 @export var enabled := true
-@export var heat_per_noise := 0.035   ## cuánto sube el calor por unidad de ruido, por segundo
+@export var heat_per_noise := 0.030   ## cuánto sube el calor por unidad de ruido, por segundo
 @export var heat_decay := 4.0         ## cuánto baja por segundo si no hacés ruido
-@export var heat_threshold := 100.0
+@export var heat_threshold := 150.0
 @export var horde_min := 2
 @export var horde_max := 4
 @export var spawn_distance := 340.0
-@export var max_zombies := 14
+## Subió de 14 a 18: el mapa es mucho más grande y ahora los zombies se quedan
+## encerrados en los edificios en vez de atravesar las paredes.
+@export var max_zombies := 18
 @export var cooldown_seconds := 25.0
 
 signal horde_spawned(count: int)

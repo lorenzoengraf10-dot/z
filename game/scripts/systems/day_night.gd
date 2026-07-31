@@ -12,8 +12,10 @@ extends CanvasModulate
 signal phase_changed(phase: String)
 signal hour_changed(hour: float)
 
-## Cuánto dura un día completo, en segundos reales.
-@export var day_seconds := 240.0
+## Cuánto dura un día completo, en segundos reales. Subió de 240 a 300 con el
+## mapa nuevo: con 4 minutos por día no llegabas a hacer nada entre noche y
+## noche, y todo el juego era correr.
+@export var day_seconds := 300.0
 @export var start_hour := 8.0
 
 @export var day_ambient_temp := 70.0

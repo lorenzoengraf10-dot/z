@@ -56,6 +56,47 @@ for i, cells in enumerate(rooms):
 total_floor = sum(len(c) for c in rooms)
 print(f"total celdas de piso: {total_floor}")
 
+# Cada puerta tiene que tener por donde llegar desde afuera.
+#
+# Mientras nada colisionaba esto no molestaba: entrabas atravesando la pared.
+# Con las paredes frenando de verdad, un arbol plantado justo en la entrada
+# deja el edificio inservible, y no se nota hasta que caminas hasta ahi.
+SOLID = set("T#RO")
+tapadas = []
+for y in range(H):
+    for x in range(W):
+        if at(x, y) != DOOR:
+            continue
+        # El lado de afuera es el vecino que no es piso ni pared.
+        afuera = [(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                  if at(x + dx, y + dy) not in (FLOOR, WALL)]
+        if not afuera:
+            tapadas.append(f"la puerta ({x},{y}) esta rodeada de pared y piso: no da a ningun lado")
+        elif all(at(cx, cy) in SOLID for cx, cy in afuera):
+            que = ", ".join(f"{at(cx, cy)!r} en ({cx},{cy})" for cx, cy in afuera)
+            tapadas.append(f"la puerta ({x},{y}) esta tapada desde afuera por {que}")
+print(f"puertas revisadas: {sum(1 for y in range(H) for x in range(W) if at(x, y) == DOOR)}")
+problems += tapadas
+
+# El borde del mapa no puede ser caminable.
+#
+# El anillo de arboles se dibujaba antes que la costa y la costa se lo comia:
+# el borde oeste entero era agua caminable y te ibas nadando al vacio.
+borde = []
+for x in range(W):
+    for y in (0, H - 1):
+        if at(x, y) not in SOLID and at(x, y) != "~":
+            borde.append((x, y, at(x, y)))
+for y in range(H):
+    for x in (0, W - 1):
+        if at(x, y) not in SOLID and at(x, y) != "~":
+            borde.append((x, y, at(x, y)))
+if borde:
+    problems.append(f"el borde del mapa esta abierto en {len(borde)} celdas, "
+                    f"por ejemplo {borde[:4]}")
+else:
+    print("borde del mapa: cerrado")
+
 if problems:
     print("\nPROBLEMAS:")
     for p in problems:
