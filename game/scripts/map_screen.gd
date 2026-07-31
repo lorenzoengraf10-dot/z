@@ -105,6 +105,9 @@ func close() -> void:
 
 
 func _other_screen_open() -> bool:
+	var hud = get_tree().get_first_node_in_group("hud")
+	if hud != null and hud.help_open():
+		return true
 	for group in ["fire_minigame", "inventory_screen", "run_summary"]:
 		var screen = get_tree().get_first_node_in_group(group)
 		if screen == null:

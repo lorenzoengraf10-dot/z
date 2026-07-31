@@ -378,6 +378,12 @@ func _toggle_help() -> void:
 	get_tree().paused = _help_panel.visible
 
 
+## La consultan el mapa y el inventario para no abrirse encima de la ayuda: si
+## se pisan, el que cierre primero despausa el juego con el otro todavía arriba.
+func help_open() -> bool:
+	return _help_panel != null and _help_panel.visible
+
+
 func _other_screen_open() -> bool:
 	for group in ["inventory_screen", "map_screen", "run_summary"]:
 		var screen = get_tree().get_first_node_in_group(group)

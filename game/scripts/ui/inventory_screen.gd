@@ -107,6 +107,10 @@ func open() -> void:
 	var summary = get_tree().get_first_node_in_group("run_summary")
 	if summary != null and summary.visible:
 		return
+	# Ni encima de la ayuda: las dos pausan y se pisarían al cerrarse.
+	var hud = get_tree().get_first_node_in_group("hud")
+	if hud != null and hud.help_open():
+		return
 	visible = true
 	get_tree().paused = true
 	_refresh()

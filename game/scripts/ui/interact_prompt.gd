@@ -69,7 +69,10 @@ func _refresh() -> void:
 
 	_label.text = text if _blocked else "E — %s" % text
 	_label.modulate = blocked_tint if _blocked else tint
-	_label.position = _target_position + Vector2(-80, -30)
+	# to_local(): _target_position viene en coordenadas de mundo y el Label se
+	# posiciona relativo a este nodo. Hoy da igual porque el nodo esta en el
+	# origen, pero el dia que alguien lo mueva dejaria de andar.
+	_label.position = to_local(_target_position) + Vector2(-80, -30)
 	_label.visible = true
 	queue_redraw()
 
@@ -86,7 +89,7 @@ func _draw() -> void:
 	if not _has_target:
 		return
 	# Recuadro sobre la celda/objeto que vas a usar.
-	var rect := Rect2(_target_position - Vector2(9, 9), Vector2(18, 18))
+	var rect := Rect2(to_local(_target_position) - Vector2(9, 9), Vector2(18, 18))
 	draw_rect(rect, blocked_tint if _blocked else tint, false, 1.5)
 
 

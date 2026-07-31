@@ -60,8 +60,9 @@ func show_at(world_position: Vector2, text: String, tint: Color) -> void:
 	label.modulate = tint
 	label.size = Vector2(60, 16)
 
-	# El Label ancla arriba a la izquierda: lo corremos para centrarlo.
-	var origin := world_position + Vector2(-30, -18)
+	# El Label ancla arriba a la izquierda: lo corremos para centrarlo. Y va
+	# por to_local() porque world_position viene en coordenadas de mundo.
+	var origin := to_local(world_position) + Vector2(-30, -18)
 	origin.x += randf_range(-spread, spread)
 	label.position = origin
 	add_child(label)
