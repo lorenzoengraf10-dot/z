@@ -25,6 +25,7 @@ const ORE := "O"
 ## son objetos del mundo y no cuadrados de la grilla.
 @export var campfire_reach := 30.0
 @export var door_reach := 26.0
+@export var container_reach := 28.0
 @export var chop_seconds := 1.8
 @export var fish_seconds := 3.5
 @export var mine_seconds := 2.6
@@ -42,6 +43,8 @@ var _kind := ""
 var _elapsed := 0.0
 var _duration := 0.0
 var _cell := Vector2i.ZERO
+## Contenedor que estamos revisando (null si la accion no es esa).
+var _container = null
 var _anchor := Vector2.ZERO
 
 # Sin tipar a propósito: accedemos a propiedades del jugador (inventory, needs,
@@ -90,6 +93,14 @@ func try_interact() -> void:
 		_use_campfire(campfire)
 		return
 
+	var container = _nearby_container()
+	if container != null:
+		if container.looted:
+			action_ended.emit("Ya revisaste eso")
+		else:
+			_begin_container(container)
+		return
+
 	var world = _world()
 	if world == null:
 		return
@@ -125,6 +136,23 @@ func _has_tool(kind: String) -> bool:
 		if ItemDB.tool_kind(str(key)) == kind:
 			return true
 	return false
+
+
+## Contenedor más cercano dentro del alcance, o null.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
+func _nearby_container():
+	var system = get_tree().get_first_node_in_group("loot_system")
+	if system == null:
+		return null
+	return system.nearest(_player.global_position, container_reach)
+
+
+## Arranca a revisar un contenedor. Guardamos cuál es para vaciarlo al terminar.
+func _begin_container(container) -> void:
+	_container = container
+	_begin("revisar", "Revisando %s..." % container.display_name(),
+			container.search_seconds, Vector2i.ZERO)
+	_player.action_noise = container.search_noise
 
 
 ## Puerta más cercana dentro del alcance, o null.
@@ -196,10 +224,14 @@ func _begin(kind: String, label: String, duration: float, cell: Vector2i) -> voi
 func _complete() -> void:
 	var kind := _kind
 	var cell := _cell
+	# Nos guardamos el contenedor ANTES de _reset(), que lo limpia.
+	var container = _container
 	_reset()
 
 	var message := ""
 	match kind:
+		"revisar":
+			message = _finish_container(container)
 		"talar":
 			var world = _world()
 			if world != null:
@@ -231,6 +263,7 @@ func _complete() -> void:
 
 func _reset() -> void:
 	_kind = ""
+	_container = null
 	_elapsed = 0.0
 	_duration = 0.0
 	_player.action_noise = 0.0
@@ -241,3 +274,31 @@ func _reset() -> void:
 # Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _world():
 	return get_tree().get_first_node_in_group("world")
+
+
+## Vacía el contenedor y mete lo que entre en la mochila. Devuelve el mensaje
+## para el HUD.
+func _finish_container(container) -> String:
+	if container == null or not is_instance_valid(container):
+		return "Se te fue de las manos"
+
+	var loot: Dictionary = container.take_loot()
+	if loot.is_empty():
+		return "Estaba vacío"
+
+	var got: Array[String] = []
+	var left_behind := false
+	for id in loot.keys():
+		var wanted := int(loot[id])
+		var taken: int = _player.inventory.add(str(id), wanted)
+		if taken > 0:
+			got.append("%d %s" % [taken, ItemDB.display_name(str(id))])
+		if taken < wanted:
+			left_behind = true
+
+	if got.is_empty():
+		return "Encontraste cosas pero no te entra nada"
+	var text := "Encontraste: " + ", ".join(got)
+	if left_behind:
+		text += " (algo no te entró)"
+	return text
