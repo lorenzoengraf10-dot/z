@@ -45,6 +45,15 @@ func is_weapon(id: String) -> bool:
 	return bool(definition(id).get("arma", false))
 
 
+func is_firearm(id: String) -> bool:
+	return bool(definition(id).get("fuego", false))
+
+
+## Qué munición usa un arma de fuego ("" si no es de fuego).
+func ammo_of(id: String) -> String:
+	return str(definition(id).get("municion", ""))
+
+
 func describe(id: String) -> String:
 	return str(definition(id).get("descripcion", ""))
 

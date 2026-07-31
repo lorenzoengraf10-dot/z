@@ -24,6 +24,7 @@ const ACTIONS := {
 	"crouch": [KEY_CTRL],
 	"interact": [KEY_E],
 	"eat": [KEY_Q],
+	"bandage": [KEY_R],
 	"attack": [KEY_SPACE],
 	"build_mode": [KEY_B],
 	"crafting": [KEY_C],

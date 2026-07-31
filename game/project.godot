@@ -15,6 +15,7 @@ config/features=PackedStringArray("4.2", "GL Compatibility")
 
 InputSetup="*res://scripts/autoload/input_setup.gd"
 ItemDB="*res://scripts/autoload/item_db.gd"
+LootDB="*res://scripts/autoload/loot_db.gd"
 AudioManager="*res://scripts/systems/audio_manager.gd"
 SaveSystem="*res://scripts/systems/save_system.gd"
 

@@ -72,14 +72,14 @@
     "comestible": false,
     "cura": 25,
     "cura_infeccion": 40,
-    "descripcion": "Cura salud y baja la infección."
+    "descripcion": "Corta la hemorragia por completo y cura un poco.",
+    "corta_sangrado": 100
   },
   "mechero": {
     "nombre": "Mechero",
     "comestible": false,
     "descripcion": "Prender fuego se vuelve mucho más fácil: no hay que acertar el timing."
   },
-
   "cuchillo": {
     "nombre": "Cuchillo",
     "comestible": false,
@@ -131,5 +131,74 @@
     "ruido": 150,
     "espera": 0.75,
     "descripcion": "Necesario para picar roca y vetas de mineral."
+  },
+  "trapo": {
+    "nombre": "Trapo",
+    "comestible": false,
+    "corta_sangrado": 60,
+    "descripcion": "Sirve para frenar una hemorragia, aunque no del todo."
+  },
+  "mochila_chica": {
+    "nombre": "Mochila chica",
+    "comestible": false,
+    "capacidad": 6,
+    "descripcion": "Te deja cargar bastante más cosas."
+  },
+  "mochila_grande": {
+    "nombre": "Mochila grande",
+    "comestible": false,
+    "capacidad": 12,
+    "descripcion": "La mejor que vas a encontrar. Ocupa espacio, pero vale la pena."
+  },
+  "pistola": {
+    "nombre": "Pistola",
+    "comestible": false,
+    "arma": true,
+    "fuego": true,
+    "municion": "balas_9mm",
+    "dano": 48,
+    "alcance": 260,
+    "ruido": 420,
+    "espera": 0.55,
+    "descripcion": "Mata rápido, pero el disparo se escucha en medio mapa."
+  },
+  "escopeta": {
+    "nombre": "Escopeta",
+    "comestible": false,
+    "arma": true,
+    "fuego": true,
+    "municion": "cartuchos",
+    "dano": 95,
+    "alcance": 150,
+    "ruido": 560,
+    "espera": 1.1,
+    "descripcion": "Devastadora de cerca. Y ruidosísima."
+  },
+  "rifle": {
+    "nombre": "Rifle",
+    "comestible": false,
+    "arma": true,
+    "fuego": true,
+    "municion": "balas_762",
+    "dano": 80,
+    "alcance": 420,
+    "ruido": 620,
+    "espera": 1.4,
+    "descripcion": "Llega lejísimos. Te va a traer a todos los zombies encima."
+  },
+  "balas_9mm": {
+    "nombre": "Balas 9mm",
+    "comestible": false,
+    "descripcion": "Munición de pistola."
+  },
+  "cartuchos": {
+    "nombre": "Cartuchos",
+    "comestible": false,
+    "descripcion": "Munición de escopeta."
+  },
+  "balas_762": {
+    "nombre": "Balas 7.62",
+    "comestible": false,
+    "descripcion": "Munición de rifle."
   }
 }

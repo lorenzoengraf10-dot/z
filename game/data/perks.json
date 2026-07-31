@@ -1,0 +1,38 @@
+[
+  {
+    "id": "sangre_fria",
+    "nombre": "Sangre fría",
+    "descripcion": "Sangrás un 40% más lento.",
+    "requisito": { "tipo": "dias", "valor": 3 }
+  },
+  {
+    "id": "espalda_ancha",
+    "nombre": "Espalda ancha",
+    "descripcion": "+3 lugares en la mochila desde el arranque.",
+    "requisito": { "tipo": "dias", "valor": 7 }
+  },
+  {
+    "id": "liviano",
+    "nombre": "Pisada liviana",
+    "descripcion": "Hacés un 25% menos de ruido al moverte.",
+    "requisito": { "tipo": "zombies", "valor": 25 }
+  },
+  {
+    "id": "explorador",
+    "nombre": "Explorador",
+    "descripcion": "Empezás sabiendo dónde están los edificios del mapa.",
+    "requisito": { "tipo": "contenedores", "valor": 30 }
+  },
+  {
+    "id": "estomago",
+    "nombre": "Estómago de hierro",
+    "descripcion": "La comida cruda te infecta la mitad.",
+    "requisito": { "tipo": "zombies", "valor": 60 }
+  },
+  {
+    "id": "veterano",
+    "nombre": "Veterano",
+    "descripcion": "Empezás con un cuchillo y dos vendajes.",
+    "requisito": { "tipo": "dias", "valor": 15 }
+  }
+]
