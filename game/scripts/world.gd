@@ -3,10 +3,13 @@ extends TileMap
 ## el TileSet se arma por código (en vez de un recurso .tres) y el mapa se pinta
 ## leyendo un archivo de texto editable (data/level_prototype.txt).
 ##
-## Tiles del atlas placeholder (una fila de 5, 16x16 c/u):
+## Tiles del atlas placeholder (una fila de 9, 16x16 c/u):
 ##   0 pasto | 1 camino | 2 agua | 3 arbol | 4 pared
-## Las tiles sólidas (agua, arbol, pared) colisionan en la capa 1 → frenan al
-## jugador/zombie y tapan la visión del zombie (que hace raycast contra esa capa).
+##   5 piso  | 6 roca   | 7 veta | 8 puerta
+## Las tiles sólidas (árbol, pared, roca, veta) colisionan en la capa 1 → frenan
+## al jugador/zombie y tapan la visión del zombie (que hace raycast contra esa
+## capa). El agua y la puerta NO: al agua se entra (lento) y la puerta la bloquea
+## el nodo Door cuando está cerrada.
 ##
 ## Nota: en Godot 4.3+ el nodo TileMap figura como deprecado (lo reemplaza
 ## TileMapLayer), pero sigue funcionando. Se usa TileMap a propósito para que el
@@ -66,6 +69,7 @@ func _ready() -> void:
 		_tile_to_char[CHAR_TO_TILE[ch]] = ch
 	tile_set = _build_tileset()
 	_paint_level()
+	_build_boundary()
 
 
 func _build_tileset() -> TileSet:
@@ -79,6 +83,19 @@ func _build_tileset() -> TileSet:
 	var src := TileSetAtlasSource.new()
 	src.texture = load(TILES_TEXTURE) as Texture2D
 	src.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
+
+	# ⚠ EL ORDEN DE ESTAS LÍNEAS IMPORTA Y NO SE ADIVINA LEYENDO EL CÓDIGO.
+	#
+	# El source va al TileSet ANTES de crear los tiles. Cada TileData copia las
+	# capas de física del TileSet recién cuando se entera de a qué TileSet
+	# pertenece, y eso pasa adentro de add_source(). Si creás la colisión antes,
+	# el tile todavía tiene CERO capas de física y add_collision_polygon(0) se va
+	# por un ERR_FAIL_INDEX: tira error al panel Salida y no crea nada.
+	#
+	# Con eso, NINGÚN tile del mapa colisiona: ni paredes, ni árboles, ni rocas.
+	# Fue exactamente el bug de "las paredes no frenan a nadie". Si alguien
+	# reordena esto, check_project.py lo caza.
+	ts.add_source(src, SOURCE_ID)
 
 	var half := TILE_SIZE / 2.0
 	var square := PackedVector2Array([
@@ -94,8 +111,28 @@ func _build_tileset() -> TileSet:
 			data.add_collision_polygon(0)
 			data.set_collision_polygon_points(0, 0, square)
 
-	ts.add_source(src, SOURCE_ID)
+	_verify_collisions(src)
 	return ts
+
+
+## Comprueba que los tiles sólidos hayan quedado realmente con colisión.
+##
+## Existe porque el bug de arriba falla EN SILENCIO: el juego abre igual, se ve
+## igual, y recién te das cuenta cuando cruzás una pared caminando. Mejor que
+## avise al arrancar.
+func _verify_collisions(src: TileSetAtlasSource) -> void:
+	var sin_colision: Array[String] = []
+	for tile_index in SOLID.keys():
+		var data := src.get_tile_data(Vector2i(int(tile_index), 0), 0)
+		if data == null or data.get_collision_polygons_count(0) == 0:
+			sin_colision.append("%s (tile %d)" % [_tile_to_char.get(tile_index, "?"), tile_index])
+
+	if sin_colision.is_empty():
+		print("world.gd: %d tiles sólidos con colisión OK" % SOLID.size())
+		return
+	push_error("world.gd: estos tiles quedaron SIN colisión y se van a poder " +
+			"atravesar: %s — revisá el orden de add_source() en _build_tileset()"
+			% ", ".join(sin_colision))
 
 
 func _paint_level() -> void:
@@ -141,6 +178,59 @@ func _load_level_lines() -> PackedStringArray:
 		if ln.length() > 0:
 			result.append(ln)
 	return result
+
+
+## Paredes invisibles pegadas al borde del mapa.
+##
+## El mapa ya tiene un anillo de árboles, pero cualquier retoque puede abrirlo:
+## le pasó a la costa oeste, que se dibujaba DESPUÉS del anillo y se lo comía
+## entero, así que se podía salir nadando al vacío. Esto lo cierra por código,
+## pase lo que pase con el dibujo.
+##
+## Frena a todo lo que enmascare la capa 1: jugador, zombies, lobos y animales.
+func _build_boundary() -> void:
+	if _bounds.size.x <= 0 or _bounds.size.y <= 0:
+		return
+
+	var body := StaticBody2D.new()
+	body.name = "Boundary"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	add_child(body)
+
+	var thick := float(TILE_SIZE) * 2.0
+	var origin := Vector2(_bounds.position) * float(TILE_SIZE)
+	var span := Vector2(_bounds.size) * float(TILE_SIZE)
+
+	# Cada pared se pasa de largo en las esquinas, para no dejar rendijas.
+	var walls := [
+		{  # arriba
+			"pos": Vector2(origin.x + span.x * 0.5, origin.y - thick * 0.5),
+			"size": Vector2(span.x + thick * 2.0, thick),
+		},
+		{  # abajo
+			"pos": Vector2(origin.x + span.x * 0.5, origin.y + span.y + thick * 0.5),
+			"size": Vector2(span.x + thick * 2.0, thick),
+		},
+		{  # izquierda
+			"pos": Vector2(origin.x - thick * 0.5, origin.y + span.y * 0.5),
+			"size": Vector2(thick, span.y + thick * 2.0),
+		},
+		{  # derecha
+			"pos": Vector2(origin.x + span.x + thick * 0.5, origin.y + span.y * 0.5),
+			"size": Vector2(thick, span.y + thick * 2.0),
+		},
+	]
+
+	for wall in walls:
+		var wall_size: Vector2 = wall["size"]
+		var wall_pos: Vector2 = wall["pos"]
+		var shape := RectangleShape2D.new()
+		shape.size = wall_size
+		var collider := CollisionShape2D.new()
+		collider.shape = shape
+		collider.position = wall_pos
+		body.add_child(collider)
 
 
 # --- Consulta y modificación de tiles ---

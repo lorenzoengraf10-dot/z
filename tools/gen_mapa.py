@@ -39,13 +39,9 @@ def blob(cy, cx, ry_, rx_, ch, density, only_on=(".",)):
                     g[y][x] = ch
 
 
-# --- Borde de arboles (el limite del mapa) ---
-for x in range(W):
-    for y in (0, 1, H - 2, H - 1):
-        g[y][x] = "T"
-for y in range(H):
-    for x in (0, 1, W - 2, W - 1):
-        g[y][x] = "T"
+# El anillo de arboles del borde se dibuja AL FINAL del archivo, no aca: si se
+# dibuja antes, la costa lo pisa y el mapa queda abierto por el oeste (era el
+# bug de "te salis del mapa nadando").
 
 # --- Costa al oeste, con borde irregular ---
 for y in range(H):
@@ -159,13 +155,50 @@ building(56, 56, 8, 14, "W")
 # --- Granja al sudeste ---
 building(84, 106, 8, 13, "N")
 building(84, 124, 6, 10, "N")
-building(94, 112, 5, 9, "N")
+# Ojo: no puede bajar mas, o el anillo de arboles del borde (filas 98-99) le
+# come la pared de abajo y el edificio queda abierto.
+building(92, 112, 5, 9, "S")
 
 # --- Puesto aislado al noreste, lejos de todo ---
 building(8, 138, 6, 9, "S")
 
 # --- Cabana suelta al sur del lago ---
 building(88, 46, 5, 8, "E")
+
+
+# --- Despejar la entrada de cada puerta -------------------------------------
+# Los bosques se dibujan antes que los edificios, asi que a veces queda un arbol
+# (o una veta) justo en la celda de afuera de una puerta. Mientras nada
+# colisionaba no molestaba; con las paredes frenando de verdad, esa casa queda
+# sin entrada. Despejamos dos celdas hacia afuera para que se pueda llegar.
+despejadas = 0
+for y in range(H):
+    for x in range(W):
+        if g[y][x] != "D":
+            continue
+        # El lado de afuera es el vecino que no es piso ni pared.
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            if g[y + dy][x + dx] in ",#":
+                continue
+            for paso in (1, 2):
+                ny, nx = y + dy * paso, x + dx * paso
+                if 2 <= ny < H - 2 and 2 <= nx < W - 2 and g[ny][nx] in SOLID:
+                    g[ny][nx] = "."
+                    despejadas += 1
+
+
+# --- Anillo de arboles del borde (ULTIMO, para que nada lo pise) -------------
+# Donde el borde da al mar lo dejamos agua: un paredon de arboles en el medio
+# del oceano queda feo. Lo que cierra el mapa ahi es la pared invisible que arma
+# world.gd (_build_boundary), que no depende del dibujo.
+for x in range(W):
+    for y in (0, 1, H - 2, H - 1):
+        if g[y][x] != "~":
+            g[y][x] = "T"
+for y in range(H):
+    for x in (0, 1, W - 2, W - 1):
+        if g[y][x] != "~":
+            g[y][x] = "T"
 
 lines = ["".join(r) for r in g]
 out = os.path.join(
@@ -260,6 +293,31 @@ for i, room in enumerate(rooms):
     for (x, y) in room:
         for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
             check(g[ny][nx] in "#,D", f"{tag}: piso abierto al exterior en ({nx},{ny})")
+
+# 3.b Cada puerta tiene que tener por donde llegar desde afuera
+print(f"celdas despejadas frente a las puertas: {despejadas}")
+tapadas = []
+for y in range(H):
+    for x in range(W):
+        if g[y][x] != "D":
+            continue
+        afuera = [(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                  if g[y + dy][x + dx] not in ",#"]
+        if not afuera or all(g[cy][cx] in SOLID for cx, cy in afuera):
+            tapadas.append((x, y))
+check(not tapadas, f"puertas sin acceso desde afuera: {tapadas}")
+
+# 3.c El borde del mapa no puede ser caminable (solido o agua, nada mas)
+borde_abierto = []
+for x in range(W):
+    for y in (0, H - 1):
+        if g[y][x] not in SOLID and g[y][x] != "~":
+            borde_abierto.append((x, y, g[y][x]))
+for y in range(H):
+    for x in (0, W - 1):
+        if g[y][x] not in SOLID and g[y][x] != "~":
+            borde_abierto.append((x, y, g[y][x]))
+check(not borde_abierto, f"el borde del mapa esta abierto en {borde_abierto[:6]}")
 
 # 4. Puntos de spawn validos (mismo criterio que run_manager._is_good_spawn)
 margin = 4

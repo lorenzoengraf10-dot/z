@@ -8,6 +8,14 @@ extends Node2D
 ## Desde afuera ves el techo tapando todo el edificio; al entrar, ese techo se
 ## oculta y ves el interior.
 ##
+## **La puerta NO se tapa.** Antes sí, y el resultado era que desde afuera el
+## edificio era un rectángulo liso donde no se sabía por dónde entrar. Dejando
+## el hueco se ve el nodo Door de verdad, que además ya se dibuja distinto según
+## esté abierta o cerrada: de un vistazo sabés dónde está la puerta y cómo está.
+##
+## Las paredes van de un color más oscuro que el interior, así el edificio tiene
+## un borde y se lee como una construcción y no como una mancha.
+##
 ## Se probó detectarlo con un flood fill desde el borde del mapa (todo lo
 ## caminable que no se alcanza desde afuera = interior), pero eso también toma
 ## los claros del bosque cerrados por árboles: en el mapa actual daba 501 celdas
@@ -20,7 +28,9 @@ const WALL := "#"
 const DOOR := "D"
 
 ## Color del techo visto desde afuera.
-@export var roof_color := Color(0.30, 0.26, 0.24)
+@export var roof_color := Color(0.34, 0.29, 0.26)
+## Color del borde (las paredes). Más oscuro, para que el edificio tenga forma.
+@export var roof_edge_color := Color(0.22, 0.18, 0.16)
 
 var _rooms: Array[Node2D] = []
 ## "x,y" -> índice de habitación (incluye interiores y sus puertas)
@@ -106,32 +116,40 @@ func _make_room(cells: Array[Vector2i], world) -> void:
 	add_child(room)
 	_rooms.append(room)
 
-	# El techo cubre el interior y también las paredes/puertas que lo rodean.
-	var covered := {}
+	# El techo cubre el interior y las paredes. La puerta queda **destapada** a
+	# propósito: es lo único que te dice desde afuera por dónde se entra.
+	var covered := {}   ## "x,y" -> {"celda": Vector2i, "color": Color}
 	for cell in cells:
 		_cell_room[_key(cell)] = index
-		covered[_key(cell)] = cell
+		covered[_key(cell)] = {"celda": cell, "color": roof_color}
 		for offset in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.UP, Vector2i.DOWN,
 				Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]:
 			var neighbour: Vector2i = cell + offset
+			var key := _key(neighbour)
 			var ch: String = world.char_at_cell(neighbour)
-			if ch == WALL or ch == DOOR:
-				covered[_key(neighbour)] = neighbour
+			if ch == WALL:
+				# Una pared no pisa un techo interior ya puesto: en las esquinas
+				# los vecinos diagonales pueden ser piso de la misma habitación.
+				if not covered.has(key):
+					covered[key] = {"celda": neighbour, "color": roof_edge_color}
+			elif ch == DOOR:
 				# Pararte en la puerta ya cuenta como estar adentro: si no, el
 				# techo parpadea justo al cruzarla.
-				if ch == DOOR:
-					_cell_room[_key(neighbour)] = index
+				_cell_room[key] = index
 
 	for key in covered.keys():
-		room.add_child(_roof_tile(world.center_of(covered[key])))
+		var data: Dictionary = covered[key]
+		var cell: Vector2i = data["celda"]
+		var tint: Color = data["color"]
+		room.add_child(_roof_tile(world.center_of(cell), tint))
 
 
-func _roof_tile(center: Vector2) -> Polygon2D:
+func _roof_tile(center: Vector2, tint: Color) -> Polygon2D:
 	var tile := Polygon2D.new()
 	tile.polygon = PackedVector2Array([
 		Vector2(-8, -8), Vector2(8, -8), Vector2(8, 8), Vector2(-8, 8),
 	])
-	tile.color = roof_color
+	tile.color = tint
 	tile.position = center
 	return tile
 
