@@ -29,15 +29,27 @@ var facing := Vector2.RIGHT
 var last_known_position := Vector2.ZERO
 var health := 0.0
 
+## Cuánto dura la barra de vida en pantalla después de que le pegues.
+@export var health_bar_seconds := 3.0
+## Fuerza del retroceso cuando lo golpean.
+@export var knockback_force := 90.0
+
+var _hit_flash := 0.0
+var _health_bar_timer := 0.0
+var _knockback := Vector2.ZERO
+
 var _roam_target := Vector2.ZERO
 var _roam_timer := 0.0
 var _time_since_seen := 999.0
 var _attack_timer := 0.0
 
+@onready var _visual: Node2D = $Visual
+
 
 func _ready() -> void:
 	add_to_group("wolf")
 	add_to_group("damageable")
+	add_to_group("hunter")
 	health = max_health
 	_pick_roam_target()
 
@@ -45,6 +57,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_attack_timer -= delta
 	_time_since_seen += delta
+	_update_feedback(delta)
 
 	var prey = _detect_player()
 	if prey != null:
@@ -114,7 +127,7 @@ func _do_roam(delta: float) -> void:
 		velocity = dir * roam_speed
 	else:
 		velocity = Vector2.ZERO
-	move_and_slide()
+	_move_with_knockback()
 
 
 func _pick_roam_target() -> void:
@@ -138,12 +151,12 @@ func _do_chase(prey) -> void:
 		velocity = dir * chase_speed
 	else:
 		velocity = Vector2.ZERO
-	move_and_slide()
+	_move_with_knockback()
 
 
 func _do_attack(prey) -> void:
 	velocity = Vector2.ZERO
-	move_and_slide()
+	_move_with_knockback()
 	if prey == null:
 		state = State.CHASE
 		return
@@ -163,6 +176,13 @@ func _do_attack(prey) -> void:
 
 func take_damage(amount: float) -> void:
 	health -= amount
+	_hit_flash = 1.0
+	_health_bar_timer = health_bar_seconds
+
+	var textos = get_tree().get_first_node_in_group("floating_text")
+	if textos != null:
+		textos.damage(global_position, amount, false)
+
 	if health <= 0.0:
 		var run = get_tree().get_first_node_in_group("run_manager")
 		if run != null:
@@ -176,3 +196,45 @@ func take_damage(amount: float) -> void:
 		_time_since_seen = 0.0
 		state = State.CHASE
 		_call_pack()
+
+
+# --- Lo que le pide hunter_display.gd (y el HUD, y el minimapa) ---
+#
+# Estos tres métodos son el contrato de "enemigo que te caza". Un enemigo nuevo
+# que los implemente y se meta en el grupo "hunter" ya aparece con barra de
+# vida, ícono de alerta y punto en el minimapa, sin tocar nada más.
+
+## 0 = tranquilo · 1 = te escuchó y va para allá · 2 = te está viendo.
+func alert_level() -> int:
+	if state == State.ROAM:
+		return 0
+	return 2 if _time_since_seen < 0.6 else 1
+
+
+func health_ratio() -> float:
+	return 0.0 if max_health <= 0.0 else health / max_health
+
+
+func show_health_bar() -> bool:
+	return _health_bar_timer > 0.0
+
+
+## Empujón corto al recibir un golpe: es lo que hace que pegar se sienta.
+func knockback(direction: Vector2) -> void:
+	_knockback = direction.normalized() * knockback_force
+
+
+## Apaga el parpadeo blanco y el retroceso. La llama _physics_process().
+func _update_feedback(delta: float) -> void:
+	_health_bar_timer = maxf(0.0, _health_bar_timer - delta)
+	if _hit_flash > 0.0:
+		_hit_flash = maxf(0.0, _hit_flash - delta * 4.0)
+		_visual.modulate = Color.WHITE.lerp(Color(3.0, 3.0, 3.0), _hit_flash)
+	_knockback = _knockback.move_toward(Vector2.ZERO, knockback_force * 4.0 * delta)
+	_visual.rotation = facing.angle()
+
+
+## move_and_slide() sumándole el empujón del último golpe recibido.
+func _move_with_knockback() -> void:
+	velocity += _knockback
+	move_and_slide()

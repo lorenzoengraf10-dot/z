@@ -30,17 +30,28 @@ var facing := Vector2.DOWN
 var last_known_position := Vector2.ZERO
 var health := 0.0
 
+## Cuánto dura la barra de vida en pantalla después de que le pegues.
+@export var health_bar_seconds := 3.0
+## Fuerza del retroceso cuando lo golpean.
+@export var knockback_force := 90.0
+
+var _hit_flash := 0.0
+var _health_bar_timer := 0.0
+var _knockback := Vector2.ZERO
+
 var _wander_target := Vector2.ZERO
 var _wander_timer := 0.0
 var _time_since_seen := 999.0
 var _attack_timer := 0.0
 
 @onready var _vision_ray: RayCast2D = $VisionRay
+@onready var _visual: Node2D = $Visual
 
 
 func _ready() -> void:
 	add_to_group("zombie")
 	add_to_group("damageable")
+	add_to_group("hunter")
 	health = max_health
 	_pick_wander_target()
 
@@ -48,6 +59,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_attack_timer -= delta
 	_time_since_seen += delta
+	_update_feedback(delta)
 
 	var player = _detect_player()
 	if player != null:
@@ -113,7 +125,7 @@ func _do_wander(delta: float) -> void:
 		velocity = dir * wander_speed
 	else:
 		velocity = Vector2.ZERO
-	move_and_slide()
+	_move_with_knockback()
 
 
 func _pick_wander_target() -> void:
@@ -138,12 +150,12 @@ func _do_chase(_delta: float, player) -> void:
 		velocity = dir * chase_speed
 	else:
 		velocity = Vector2.ZERO
-	move_and_slide()
+	_move_with_knockback()
 
 
 func _do_attack(player) -> void:
 	velocity = Vector2.ZERO
-	move_and_slide()
+	_move_with_knockback()
 	if player == null:
 		state = State.CHASE
 		return
@@ -164,6 +176,13 @@ func _do_attack(player) -> void:
 ## La llama el ataque del jugador.
 func take_damage(amount: float) -> void:
 	health -= amount
+	_hit_flash = 1.0
+	_health_bar_timer = health_bar_seconds
+
+	var textos = get_tree().get_first_node_in_group("floating_text")
+	if textos != null:
+		textos.damage(global_position, amount, false)
+
 	if health <= 0.0:
 		# Le avisamos al run_manager para el resumen de la partida.
 		var run = get_tree().get_first_node_in_group("run_manager")
@@ -177,3 +196,56 @@ func take_damage(amount: float) -> void:
 		last_known_position = (players[0] as Node2D).global_position
 		_time_since_seen = 0.0
 		state = State.CHASE
+
+
+# --- Lo que le pide hunter_display.gd (y el HUD, y el minimapa) ---
+#
+# Estos tres métodos son el contrato de "enemigo que te caza". Un enemigo nuevo
+# que los implemente y se meta en el grupo "hunter" ya aparece con barra de
+# vida, ícono de alerta y punto en el minimapa, sin tocar nada más.
+
+## Pinta al zombi según la variante. La llama horde_spawner.gd al crearlo.
+func set_tint(color: Color) -> void:
+	var body := _visual.get_node_or_null("Body") as Polygon2D
+	if body != null:
+		body.color = color
+	for part in ["ArmL", "ArmR"]:
+		var limb := _visual.get_node_or_null(part) as Polygon2D
+		if limb != null:
+			limb.color = color.darkened(0.25)
+
+
+## 0 = tranquilo · 1 = te escuchó y va para allá · 2 = te está viendo.
+func alert_level() -> int:
+	if state == State.WANDER:
+		return 0
+	return 2 if _time_since_seen < 0.6 else 1
+
+
+func health_ratio() -> float:
+	return 0.0 if max_health <= 0.0 else health / max_health
+
+
+func show_health_bar() -> bool:
+	return _health_bar_timer > 0.0
+
+
+## Empujón corto al recibir un golpe: es lo que hace que pegar se sienta.
+func knockback(direction: Vector2) -> void:
+	_knockback = direction.normalized() * knockback_force
+
+
+## Apaga el parpadeo blanco y el retroceso. La llama _physics_process().
+func _update_feedback(delta: float) -> void:
+	_health_bar_timer = maxf(0.0, _health_bar_timer - delta)
+	if _hit_flash > 0.0:
+		_hit_flash = maxf(0.0, _hit_flash - delta * 4.0)
+		_visual.modulate = Color.WHITE.lerp(Color(3.0, 3.0, 3.0), _hit_flash)
+	_knockback = _knockback.move_toward(Vector2.ZERO, knockback_force * 4.0 * delta)
+	_visual.rotation = facing.angle()
+
+
+## move_and_slide() sumándole el empujón del último golpe recibido.
+func _move_with_knockback() -> void:
+	velocity += _knockback
+	move_and_slide()

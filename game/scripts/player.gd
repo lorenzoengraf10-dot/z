@@ -1,7 +1,13 @@
 extends CharacterBody2D
-## Jugador. Movimiento top-down con tres modos que afectan velocidad y ruido:
-## agachado (lento, silencioso), caminar (normal) y correr (rápido, ruidoso).
-## El "radio de ruido" es lo que los zombies usan para oírte aunque no te vean.
+## Jugador. **Se mueve con el teclado y apunta con el mouse** (el juego es para
+## PC): mirás siempre hacia el cursor, sin importar para dónde camines. Eso es
+## lo que hace que valga la pena tener armas de fuego con alcance.
+##
+## Movimiento top-down con tres modos que afectan velocidad y ruido: agachado
+## (lento, silencioso), caminar (normal) y correr (rápido, ruidoso). El "radio
+## de ruido" es lo que los zombies usan para oírte aunque no te vean, y se
+## dibuja como un anillo alrededor tuyo para que la mecánica se entienda sin
+## tener que explicarla.
 ##
 ## El ruido sale de tres fuentes y siempre gana la más fuerte:
 ##   - moverse (según el modo)
@@ -37,11 +43,19 @@ var equipped_weapon := ""
 ## Lo baja el perk "Pisada liviana" (1.0 = normal, 0.75 = hacés menos ruido).
 var noise_multiplier := 1.0
 
+## Qué tan visible es el anillo de ruido (0 = no se dibuja).
+@export var noise_ring_alpha := 0.16
+
 var _move_noise := 0.0
 var _burst_noise := 0.0
 var _burst_timer := 0.0
 var _attack_timer := 0.0
+var _hurt_flash := 0.0
 var _world_cache = null
+var _camera_cache = null
+
+@onready var _visual: Polygon2D = $Visual
+@onready var _facing_mark: Polygon2D = $Facing
 
 @onready var needs: NeedsComponent = $NeedsComponent
 @onready var inventory: InventoryComponent = $InventoryComponent
@@ -51,6 +65,40 @@ var _world_cache = null
 func _ready() -> void:
 	add_to_group("player")
 	needs.died.connect(_on_died)
+	# El anillo de ruido se dibuja acá mismo, en coordenadas locales.
+	z_index = 1
+
+
+func _process(delta: float) -> void:
+	# Apuntás siempre al cursor. Con una pantalla modal abierta se congela para
+	# donde estabas mirando.
+	if not input_blocked and not needs.is_dead():
+		var to_mouse := get_global_mouse_position() - global_position
+		if to_mouse.length() > 4.0:
+			facing = to_mouse.normalized()
+			_facing_mark.rotation = facing.angle() - PI * 0.5
+
+	if _hurt_flash > 0.0:
+		_hurt_flash = maxf(0.0, _hurt_flash - delta * 3.0)
+		_visual.modulate = Color(1, 1, 1).lerp(Color(2.2, 0.5, 0.5), _hurt_flash)
+
+	queue_redraw()
+
+
+## Anillo con el radio exacto en el que te escuchan. Se agranda al correr y casi
+## desaparece agachado: es la forma más directa de enseñar el sigilo.
+func _draw() -> void:
+	if noise_ring_alpha <= 0.0:
+		return
+	var radius := get_noise_radius()
+	if radius <= 1.0:
+		return
+	var loud := clampf(radius / run_noise, 0.0, 1.0)
+	var tint := Color(1.0, 0.85, 0.4).lerp(Color(1.0, 0.35, 0.3), loud)
+	tint.a = noise_ring_alpha
+	draw_circle(Vector2.ZERO, radius, tint)
+	tint.a = minf(1.0, noise_ring_alpha * 3.0)
+	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, tint, 1.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -88,8 +136,9 @@ func _physics_process(delta: float) -> void:
 
 	needs.exertion = 1.0 if running else 0.0
 
+	# Ojo: `facing` NO sale de acá. Lo maneja _process() según dónde esté el
+	# cursor, así podés caminar para un lado mirando para el otro.
 	if moving:
-		facing = input_dir.normalized()
 		if crouching:
 			_move_noise = crouch_noise
 		elif running:
@@ -229,6 +278,9 @@ func _try_attack() -> void:
 			continue
 		if target.has_method("take_damage"):
 			target.take_damage(damage)
+			# Retroceso corto: se ve que el golpe llegó.
+			if target.has_method("knockback"):
+				target.knockback(to_target.normalized())
 			hits += 1
 
 	if hits == 0:
@@ -239,6 +291,18 @@ func _try_attack() -> void:
 
 func apply_damage(amount: float) -> void:
 	needs.damage(amount)
+	_hurt_flash = 1.0
+
+	var textos = get_tree().get_first_node_in_group("floating_text")
+	if textos != null:
+		textos.damage(global_position, amount, true)
+
+	if _camera_cache == null or not is_instance_valid(_camera_cache):
+		_camera_cache = get_tree().get_first_node_in_group("game_camera")
+	if _camera_cache != null:
+		# Cuanto más fuerte el golpe, más se sacude (un mordisco de zombie es
+		# ~8 de daño; uno de lobo, ~14).
+		_camera_cache.shake(clampf(amount / 20.0, 0.25, 1.0))
 
 
 ## La llaman los zombies y los lobos al morderte.

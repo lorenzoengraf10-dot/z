@@ -130,10 +130,11 @@ func _spawn_one(position_global: Vector2, variant: String) -> void:
 	add_child(z)
 	z.global_position = position_global
 
-	# Color distinto por variante, para distinguirlas mientras el arte es placeholder.
-	var visual := z.get_node_or_null("Visual") as Polygon2D
-	if visual != null:
-		visual.color = stats["color"]
+	# Color distinto por variante, para distinguirlas mientras el arte es
+	# placeholder. Se lo pedimos al zombi en vez de meterle mano a sus nodos:
+	# así el día que Visual cambie de forma, esto no se rompe.
+	var tint: Color = stats["color"]
+	z.set_tint(tint)
 
 
 # Sin tipar: usamos player.get_noise_radius(), que no existe en Node2D.
