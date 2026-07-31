@@ -8,6 +8,53 @@ Este es el proyecto del juego (motor Godot 4). El diseño y el roadmap completos
 2. Abrir Godot → **Import** → elegir `game/project.godot`.
 3. Apretar **F5** (o el botón de play) para correr el juego.
 
+## Cómo bajar los cambios nuevos (sin rehacer nada)
+
+**Bajar el ZIP de vuelta cada vez no hace falta y encima es peor**: te da una
+carpeta nueva, tenés que volver a importar el proyecto en Godot, y si vos
+tocaste algo se pierde.
+
+La forma correcta es tener **una sola carpeta** que se actualiza sola.
+
+### Con GitHub Desktop (lo más simple, y es lo que recomiendo)
+
+Se hace **una vez**:
+
+1. Instalar [GitHub Desktop](https://desktop.github.com) (gratis, Windows y Mac).
+2. **File → Clone repository** → pestaña **URL** → pegar la dirección del repo.
+3. Elegir dónde guardarlo. Esa carpeta pasa a ser **el** proyecto: importala en
+   Godot desde ahí y no toques más la vieja.
+
+Y de ahí en adelante, cada vez que suba algo:
+
+- Abrir GitHub Desktop → botón **Fetch origin** → si hay algo nuevo se
+  convierte en **Pull origin** → clic. Listo, tardá 2 segundos.
+- Volvés a Godot y apretás F5. **Ya está actualizado**, no hay que reimportar
+  nada.
+
+### Con la consola (si preferís)
+
+```bash
+cd carpeta-del-proyecto
+git pull origin main
+```
+
+### Dos cosas que conviene saber
+
+- **No se pierden las partidas guardadas.** Godot las guarda **fuera** de la
+  carpeta del proyecto (en `%APPDATA%\Godot\app_userdata\` en Windows), así que
+  actualizar no te borra ni la partida ni los perks que desbloqueaste.
+- **Cerrá Godot antes de actualizar** y volvé a abrirlo después. No es
+  obligatorio, pero si Godot está abierto mientras cambian los archivos a veces
+  se marea y hay que reiniciarlo igual.
+- Si tocaste archivos vos y el `pull` se queja, **no borres nada**: avisá y lo
+  vemos. Casi siempre es un archivo que los dos cambiamos y se arregla en un
+  minuto.
+
+Para el **pixel art** es el mismo camino al revés: ustedes ponen los PNG en la
+carpeta, GitHub Desktop los muestra como cambios, escriben una línea de qué
+hicieron y **Push origin**. Ver `../docs/ARTE_SPEC.md`.
+
 ## Controles
 
 El juego es **para PC**: te movés con el teclado y **apuntás con el mouse**.
