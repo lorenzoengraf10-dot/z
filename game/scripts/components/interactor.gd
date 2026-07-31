@@ -74,40 +74,107 @@ func is_busy() -> bool:
 	return _kind != ""
 
 
-## La llama el jugador cuando apretás E.
+## Mira qué haría la **E** ahora mismo, SIN hacer nada.
+##
+## La usa el cartelito flotante del HUD. Está separada de try_interact() a
+## propósito y las dos llaman a este mismo código: si el cartel y la acción se
+## calcularan por separado, tarde o temprano dirían cosas distintas.
+##
+## Devuelve {} si no hay nada, o:
+##   {"tipo", "texto", "posicion", "objetivo"}
+## donde "objetivo" es el nodo (puerta, fogata, contenedor) o null si es un tile.
+func peek() -> Dictionary:
+	# Lo que tenés al lado gana sobre el tile de enfrente: una puerta pegada al
+	# cuerpo es más urgente que el pasto que estás mirando.
+	var door = _nearby_door()
+	if door != null:
+		return {
+			"tipo": "puerta",
+			"texto": "Cerrar puerta" if not door.is_open else "Abrir puerta",
+			"posicion": door.global_position,
+			"objetivo": door,
+		}
+
+	var campfire = _nearby_campfire()
+	if campfire != null:
+		return {
+			"tipo": "fogata",
+			"texto": "Echarle leña" if campfire.is_lit() else "Prender fuego",
+			"posicion": campfire.global_position,
+			"objetivo": campfire,
+		}
+
+	var container = _nearby_container()
+	if container != null:
+		return {
+			"tipo": "contenedor",
+			"texto": "Ya lo revisaste" if container.looted else "Revisar %s" % container.display_name(),
+			"posicion": container.global_position,
+			"objetivo": container,
+		}
+
+	var world = _world()
+	if world == null:
+		return {}
+
+	var target: Vector2 = _player.global_position + _player.facing * reach
+	var cell: Vector2i = world.cell_at(target)
+	var texto := ""
+	match world.char_at_cell(cell):
+		TREE:
+			texto = "Talar árbol"
+		WATER:
+			texto = "Pescar"
+		ROCK:
+			texto = "Picar piedra" if _has_tool("mineria") else "Necesitás un pico"
+		ORE:
+			texto = "Picar veta" if _has_tool("mineria") else "Necesitás un pico"
+		_:
+			return {}
+
+	return {
+		"tipo": "tile",
+		"texto": texto,
+		"posicion": world.center_of(cell),
+		"objetivo": null,
+	}
+
+
+## La llama el jugador cuando apretás E. Actúa sobre lo que devuelve peek().
 func try_interact() -> void:
 	if is_busy():
 		_reset()
 		action_ended.emit("Acción cancelada")
 		return
 
-	# Lo que tenés al lado gana sobre el tile de enfrente: una puerta pegada al
-	# cuerpo es más urgente que el pasto que estás mirando.
-	var door = _nearby_door()
-	if door != null:
-		door.toggle()
-		action_ended.emit("Puerta %s" % door.status_text())
+	var found := peek()
+	if found.is_empty():
+		action_ended.emit("Nada para hacer acá")
 		return
 
-	var campfire = _nearby_campfire()
-	if campfire != null:
-		_use_campfire(campfire)
-		return
+	var target = found.get("objetivo")
+	match str(found.get("tipo", "")):
+		"puerta":
+			target.toggle()
+			action_ended.emit("Puerta %s" % target.status_text())
+		"fogata":
+			_use_campfire(target)
+		"contenedor":
+			if target.looted:
+				action_ended.emit("Ya revisaste eso")
+			else:
+				_begin_container(target)
+		"tile":
+			_begin_tile(found)
 
-	var container = _nearby_container()
-	if container != null:
-		if container.looted:
-			action_ended.emit("Ya revisaste eso")
-		else:
-			_begin_container(container)
-		return
 
+## Arranca la acción que corresponda al tile que estás mirando.
+func _begin_tile(found: Dictionary) -> void:
 	var world = _world()
 	if world == null:
 		return
-
-	var target: Vector2 = _player.global_position + _player.facing * reach
-	var cell: Vector2i = world.cell_at(target)
+	var position: Vector2 = found["posicion"]
+	var cell: Vector2i = world.cell_at(position)
 	match world.char_at_cell(cell):
 		TREE:
 			_begin("talar", "Talando árbol...", _timed(chop_seconds, "tala"), cell)
@@ -115,8 +182,6 @@ func try_interact() -> void:
 			_begin("pescar", "Pescando...", fish_seconds, cell)
 		ROCK, ORE:
 			_try_mine(cell)
-		_:
-			action_ended.emit("Nada para hacer acá")
 
 
 ## Empezar a picar exige un pico en la mochila.

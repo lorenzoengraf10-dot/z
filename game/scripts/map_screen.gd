@@ -138,6 +138,19 @@ func _reveal_around_player() -> void:
 			_seen["%d,%d" % [center.x + dx, center.y + dy]] = true
 
 
+## Las usa el minimapa del HUD: así lo explorado y los colores son los mismos en
+## las dos pantallas, y no hay dos verdades sobre qué destapaste.
+func is_seen(cell: Vector2i) -> bool:
+	return _seen.has("%d,%d" % [cell.x, cell.y])
+
+
+func color_for(ch: String, seen: bool = true) -> Color:
+	if not seen:
+		return UNKNOWN
+	var tint: Color = COLORS.get(ch, UNKNOWN)
+	return tint
+
+
 func explored_ratio() -> float:
 	if _bounds.size.x <= 0 or _bounds.size.y <= 0:
 		return 0.0

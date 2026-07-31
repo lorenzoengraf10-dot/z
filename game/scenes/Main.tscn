@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=26 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/world.gd" id="2"]
@@ -22,6 +22,9 @@
 [ext_resource type="Script" path="res://scripts/systems/loot_system.gd" id="20"]
 [ext_resource type="Script" path="res://scripts/systems/run_manager.gd" id="21"]
 [ext_resource type="PackedScene" path="res://scenes/ui/RunSummary.tscn" id="22"]
+[ext_resource type="Script" path="res://scripts/ui/game_camera.gd" id="23"]
+[ext_resource type="PackedScene" path="res://scenes/ui/Minimap.tscn" id="24"]
+[ext_resource type="Script" path="res://scripts/ui/interact_prompt.gd" id="25"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -59,7 +62,8 @@ script = ExtResource("10")
 [node name="Player" parent="." instance=ExtResource("3")]
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
-zoom = Vector2(2, 2)
+zoom = Vector2(1.6, 1.6)
+script = ExtResource("23")
 
 [node name="Zombie" parent="." instance=ExtResource("4")]
 position = Vector2(-320, -448)
@@ -127,15 +131,10 @@ script = ExtResource("11")
 
 [node name="FireMinigame" parent="." instance=ExtResource("13")]
 
+[node name="InteractPrompt" type="Node2D" parent="."]
+script = ExtResource("25")
+
+[node name="Minimap" parent="." instance=ExtResource("24")]
+
 [node name="RunSummary" parent="." instance=ExtResource("22")]
 
-[node name="UI" type="CanvasLayer" parent="."]
-
-[node name="Instructions" type="Label" parent="UI"]
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 12.0
-offset_top = -28.0
-offset_right = 1140.0
-offset_bottom = -6.0
-text = "WASD mover · Shift correr · Ctrl agachar · E interactuar · Q comer · R vendarse · Espacio atacar · I inventario · B construir · C craftear · M mapa · F5/F9 guardar"

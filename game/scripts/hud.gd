@@ -1,21 +1,35 @@
 extends CanvasLayer
-## HUD: barras de necesidades, inventario, barra de progreso de la acción en
-## curso (talar/pescar) y una línea de mensajes.
+## HUD del juego.
 ##
-## Toda la interfaz se arma por código: así agregar una necesidad nueva en
+## Arriba a la izquierda van las necesidades, en una fila: **ícono + barra +
+## porcentaje**. La que está en rojo se resalta y el resto queda apagada, así de
+## un vistazo ves qué te está matando sin tener que leer seis barras iguales.
+##
+## Debajo: mochila, arma en mano y el estado de **sigilo** (si te escuchan o te
+## ven). El reloj y los botones van arriba a la derecha, y los controles enteros
+## viven en el panel de ayuda (tecla H).
+##
+## Toda la interfaz se arma por código: agregar una necesidad nueva en
 ## NeedsComponent la hace aparecer sola acá, sin tocar ninguna escena.
+##
+## ⚠ Todo Control que no sea un botón va con MOUSE_FILTER_IGNORE. Se apunta con
+## el mouse, y un contenedor con el filtro por defecto (STOP) se come el clic y
+## te deja sin poder atacar.
 
-const BAR_WIDTH := 190
-const BAR_HEIGHT := 14
+const BAR_WIDTH := 62
+const BAR_HEIGHT := 5
+const ICON_SIZE := 15
 const MESSAGE_SECONDS := 3.0
+## Por debajo de esto (en porcentaje) la necesidad se considera crítica.
+const CRITICAL := 25.0
 
 const COLORS := {
-	"salud": Color(0.83, 0.24, 0.24),
-	"hambre": Color(0.88, 0.63, 0.14),
-	"sed": Color(0.25, 0.60, 0.88),
-	"energia": Color(0.35, 0.78, 0.36),
-	"temperatura": Color(0.62, 0.82, 0.92),
-	"sangrado": Color(0.90, 0.15, 0.18),
+	"salud": Color(0.86, 0.28, 0.28),
+	"hambre": Color(0.90, 0.66, 0.20),
+	"sed": Color(0.30, 0.64, 0.90),
+	"energia": Color(0.40, 0.80, 0.40),
+	"temperatura": Color(0.66, 0.84, 0.94),
+	"sangrado": Color(0.92, 0.16, 0.20),
 }
 const PHASE_ICONS := {
 	"Amanecer": "🌅",
@@ -28,18 +42,25 @@ const LABELS := {
 	"hambre": "Hambre",
 	"sed": "Sed",
 	"energia": "Energía",
-	"temperatura": "Temp.",
-	"sangrado": "SANGRADO",
+	"temperatura": "Temperatura",
+	"sangrado": "Sangrado",
 }
 
-var _bars: Dictionary = {}
+var _bars: Dictionary = {}      ## id -> ProgressBar
+var _icons: Dictionary = {}     ## id -> NeedIcon
+var _percents: Dictionary = {}  ## id -> Label
+var _chips: Dictionary = {}     ## id -> Control (la columna entera)
+
 var _inventory_label: Label
+var _weapon_label: Label
+var _stealth_label: Label
 var _message_label: Label
 var _action_box: VBoxContainer
 var _action_label: Label
 var _action_bar: ProgressBar
 var _clock_label: Label
-var _weapon_label: Label
+var _help_panel: PanelContainer
+
 var _message_timer := 0.0
 var _blink := 0.0
 var _day_night = null
@@ -48,9 +69,14 @@ var _run = null
 
 
 func _ready() -> void:
+	add_to_group("hud")
 	layer = 2
-	_build_ui()
+	# Tiene que responder con el juego pausado: la ayuda se abre y se cierra ahí.
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_build_needs()
+	_build_status()
 	_build_toolbar()
+	_build_help()
 	# Esperamos un frame para que el jugador y los sistemas ya estén en el árbol.
 	await get_tree().process_frame
 	_connect_signals()
@@ -65,17 +91,10 @@ func _process(delta: float) -> void:
 			_message_label.text = ""
 
 	if _player_ref != null and is_instance_valid(_player_ref):
-		var weapon: Dictionary = _player_ref.weapon_stats()
-		var text := "En mano: %s  (daño %d · alcance %d)" % [
-			str(weapon["nombre"]), int(weapon["dano"]), int(weapon["alcance"]),
-		]
-		# Las de fuego valen lo que la munición que te queda.
-		if bool(weapon["fuego"]):
-			var ammo := str(weapon["municion"])
-			text += "  ·  %s: %d" % [ItemDB.display_name(ammo), _player_ref.inventory.count(ammo)]
-		_weapon_label.text = text
+		_update_weapon()
+		_update_stealth()
 
-	_blink_bleed_bar(delta)
+	_blink_bleed(delta)
 
 	if _day_night != null and is_instance_valid(_day_night):
 		var phase := str(_day_night.phase_name())
@@ -84,87 +103,120 @@ func _process(delta: float) -> void:
 		]
 
 
-## "Día 4 · " si hay run_manager; vacío si no (por si abrís la escena sola).
-func _day_prefix() -> String:
-	if _run == null or not is_instance_valid(_run):
-		return ""
-	return "Día %d · " % (int(_run.stats.get("dias", 0)) + 1)
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("help"):
+		_toggle_help()
+		get_viewport().set_input_as_handled()
+	elif _help_panel.visible and event.is_action_pressed("ui_cancel"):
+		_toggle_help()
+		get_viewport().set_input_as_handled()
 
 
-## La barra de sangrado parpadea: es la que te mata si la ignorás.
-func _blink_bleed_bar(delta: float) -> void:
-	var bar: ProgressBar = _bars.get(NeedsComponent.SANGRADO)
-	if bar == null:
-		return
-	if bar.value <= 0.0:
-		bar.modulate = Color.WHITE
-		return
-	_blink = fmod(_blink + delta * 4.0, TAU)
-	bar.modulate = Color(1, 1, 1, 0.55 + 0.45 * absf(sin(_blink)))
+# --- Construcción de la interfaz ---
+
+## Un Control que no molesta al mouse. Todo lo que no sea botón pasa por acá.
+func _passthrough(control: Control) -> Control:
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return control
 
 
-func _build_ui() -> void:
-	var root := MarginContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.add_theme_constant_override("margin_left", 12)
-	root.add_theme_constant_override("margin_top", 10)
-	root.add_theme_constant_override("margin_right", 12)
-	root.add_theme_constant_override("margin_bottom", 10)
-	add_child(root)
+## Fila de necesidades: ícono + barra + porcentaje, una al lado de la otra.
+func _build_needs() -> void:
+	var row := HBoxContainer.new()
+	_passthrough(row)
+	row.add_theme_constant_override("separation", 14)
+	row.position = Vector2(14, 10)
+	add_child(row)
 
-	var column := VBoxContainer.new()
-	column.alignment = BoxContainer.ALIGNMENT_BEGIN
-	root.add_child(column)
-
-	# Barras de necesidades
 	for id in NeedsComponent.ORDER:
-		var row := HBoxContainer.new()
-		column.add_child(row)
+		var tint: Color = COLORS.get(id, Color.WHITE)
 
-		var name_label := Label.new()
-		name_label.text = str(LABELS.get(id, id))
-		name_label.custom_minimum_size = Vector2(78, 0)
-		row.add_child(name_label)
+		var chip := VBoxContainer.new()
+		_passthrough(chip)
+		chip.add_theme_constant_override("separation", 2)
+		row.add_child(chip)
+
+		var head := HBoxContainer.new()
+		_passthrough(head)
+		head.add_theme_constant_override("separation", 5)
+		chip.add_child(head)
+
+		var icon := NeedIcon.new().setup(str(id), tint)
+		icon.custom_minimum_size = Vector2(ICON_SIZE, ICON_SIZE)
+		head.add_child(icon)
+		_icons[id] = icon
+
+		var percent := Label.new()
+		_passthrough(percent)
+		percent.add_theme_font_size_override("font_size", 13)
+		percent.text = "100%"
+		percent.tooltip_text = str(LABELS.get(id, id))
+		head.add_child(percent)
+		_percents[id] = percent
 
 		var bar := ProgressBar.new()
+		_passthrough(bar)
 		bar.custom_minimum_size = Vector2(BAR_WIDTH, BAR_HEIGHT)
 		bar.max_value = 100.0
 		bar.value = 100.0
 		bar.show_percentage = false
 		var fill := StyleBoxFlat.new()
-		fill.bg_color = COLORS.get(id, Color.WHITE)
+		fill.bg_color = tint
 		bar.add_theme_stylebox_override("fill", fill)
-		row.add_child(bar)
+		var back := StyleBoxFlat.new()
+		back.bg_color = Color(0, 0, 0, 0.45)
+		bar.add_theme_stylebox_override("background", back)
+		chip.add_child(bar)
 		_bars[id] = bar
 
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 8)
-	column.add_child(spacer)
+		_chips[id] = chip
+
+
+## Debajo de las necesidades: mochila, arma y sigilo.
+func _build_status() -> void:
+	var column := VBoxContainer.new()
+	_passthrough(column)
+	column.position = Vector2(14, 62)
+	column.add_theme_constant_override("separation", 1)
+	add_child(column)
+
+	_stealth_label = Label.new()
+	_passthrough(_stealth_label)
+	_stealth_label.add_theme_font_size_override("font_size", 14)
+	column.add_child(_stealth_label)
 
 	_inventory_label = Label.new()
+	_passthrough(_inventory_label)
+	_inventory_label.add_theme_font_size_override("font_size", 13)
 	_inventory_label.text = "Mochila: vacía"
 	column.add_child(_inventory_label)
 
 	_weapon_label = Label.new()
-	_weapon_label.text = ""
+	_passthrough(_weapon_label)
+	_weapon_label.add_theme_font_size_override("font_size", 13)
 	column.add_child(_weapon_label)
 
-	# Barra de acción (talar / pescar)
+	# Barra de acción (talar / pescar / revisar)
 	_action_box = VBoxContainer.new()
+	_passthrough(_action_box)
 	_action_box.visible = false
 	column.add_child(_action_box)
 
 	_action_label = Label.new()
+	_passthrough(_action_label)
+	_action_label.add_theme_font_size_override("font_size", 13)
 	_action_box.add_child(_action_label)
 
 	_action_bar = ProgressBar.new()
-	_action_bar.custom_minimum_size = Vector2(BAR_WIDTH, 10)
+	_passthrough(_action_bar)
+	_action_bar.custom_minimum_size = Vector2(150, 8)
 	_action_bar.max_value = 1.0
 	_action_bar.show_percentage = false
 	_action_box.add_child(_action_bar)
 
 	# Línea de mensajes: centrada abajo, anclada para que siga a la ventana.
 	_message_label = Label.new()
+	_passthrough(_message_label)
 	_message_label.add_theme_font_size_override("font_size", 16)
 	_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message_label.anchor_left = 0.5
@@ -173,15 +225,31 @@ func _build_ui() -> void:
 	_message_label.anchor_bottom = 1.0
 	_message_label.offset_left = -350
 	_message_label.offset_right = 350
-	_message_label.offset_top = -64
-	_message_label.offset_bottom = -40
+	_message_label.offset_top = -70
+	_message_label.offset_bottom = -46
 	add_child(_message_label)
+
+	# Recordatorio de la ayuda, chiquito abajo a la izquierda.
+	var hint := Label.new()
+	_passthrough(hint)
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.modulate = Color(0.7, 0.72, 0.68)
+	hint.text = "H — controles"
+	hint.anchor_top = 1.0
+	hint.anchor_bottom = 1.0
+	hint.offset_left = 14.0
+	hint.offset_top = -26.0
+	hint.offset_right = 200.0
+	hint.offset_bottom = -6.0
+	add_child(hint)
 
 
 ## Barra de arriba a la derecha: reloj + botones para abrir mapa, crafteo y
 ## construcción sin depender de acordarse de las teclas.
 func _build_toolbar() -> void:
 	var column := VBoxContainer.new()
+	# Este SÍ deja pasar el mouse a los botones hijos, pero no se come el clic.
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.anchor_left = 1.0
 	column.anchor_right = 1.0
 	column.offset_left = -350.0
@@ -192,18 +260,21 @@ func _build_toolbar() -> void:
 	add_child(column)
 
 	_clock_label = Label.new()
+	_passthrough(_clock_label)
 	_clock_label.add_theme_font_size_override("font_size", 17)
 	_clock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_clock_label.text = ""
 	column.add_child(_clock_label)
 
 	var bar := HBoxContainer.new()
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.alignment = BoxContainer.ALIGNMENT_END
 	column.add_child(bar)
 
 	bar.add_child(_make_button("Mapa (M)", _toggle_map))
 	bar.add_child(_make_button("Crafteo (C)", _toggle_crafting))
 	bar.add_child(_make_button("Construir (B)", _toggle_build))
+	bar.add_child(_make_button("?", _toggle_help))
 
 
 func _make_button(text: String, action: Callable) -> Button:
@@ -216,23 +287,163 @@ func _make_button(text: String, action: Callable) -> Button:
 	return button
 
 
-func _toggle_map() -> void:
-	var map = get_tree().get_first_node_in_group("map_screen")
-	if map != null and map.has_method("toggle"):
-		map.toggle()
+# --- Panel de ayuda (tecla H) ---
+
+const HELP := [
+	["Moverte", [
+		["WASD / flechas", "caminar"],
+		["Shift", "correr (gasta energía y hacés mucho ruido)"],
+		["Ctrl", "agacharte (lento, pero casi no te escuchan)"],
+	]],
+	["Pelear", [
+		["Mouse", "apuntás siempre hacia donde está el cursor"],
+		["Clic izquierdo / Espacio", "atacar o disparar"],
+		["R", "vendarte (corta el sangrado)"],
+	]],
+	["Usar el mundo", [
+		["E", "puerta · contenedor · fogata · talar · pescar · picar"],
+		["Q", "comer o beber lo primero que tengas"],
+		["B", "construir · C craftear (hace falta mesa de trabajo)"],
+	]],
+	["Pantallas", [
+		["I o Tab", "mochila"],
+		["M", "mapa (se destapa caminando)"],
+		["H o F1", "esta ayuda"],
+		["F5 / F9", "guardar / cargar"],
+	]],
+]
 
 
-func _toggle_crafting() -> void:
-	var crafting = get_tree().get_first_node_in_group("crafting")
-	if crafting != null and crafting.has_method("toggle"):
-		crafting.toggle()
+func _build_help() -> void:
+	_help_panel = PanelContainer.new()
+	_help_panel.anchor_left = 0.5
+	_help_panel.anchor_right = 0.5
+	_help_panel.anchor_top = 0.5
+	_help_panel.anchor_bottom = 0.5
+	_help_panel.offset_left = -300
+	_help_panel.offset_right = 300
+	_help_panel.offset_top = -230
+	_help_panel.offset_bottom = 230
+	_help_panel.visible = false
+	add_child(_help_panel)
+
+	var margin := MarginContainer.new()
+	_passthrough(margin)
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 20)
+	_help_panel.add_child(margin)
+
+	var column := VBoxContainer.new()
+	_passthrough(column)
+	column.add_theme_constant_override("separation", 6)
+	margin.add_child(column)
+
+	var title := Label.new()
+	_passthrough(title)
+	title.text = "CONTROLES"
+	title.add_theme_font_size_override("font_size", 20)
+	column.add_child(title)
+
+	for section in HELP:
+		column.add_child(HSeparator.new())
+
+		var header := Label.new()
+		_passthrough(header)
+		header.text = str(section[0])
+		header.add_theme_font_size_override("font_size", 14)
+		header.modulate = Color(1.0, 0.85, 0.45)
+		column.add_child(header)
+
+		for entry in section[1]:
+			var line := Label.new()
+			_passthrough(line)
+			line.add_theme_font_size_override("font_size", 13)
+			line.text = "   %s  —  %s" % [str(entry[0]), str(entry[1])]
+			column.add_child(line)
+
+	column.add_child(HSeparator.new())
+	var close := Label.new()
+	_passthrough(close)
+	close.add_theme_font_size_override("font_size", 12)
+	close.modulate = Color(0.7, 0.72, 0.68)
+	close.text = "H o Esc para cerrar  ·  el juego está en pausa"
+	column.add_child(close)
 
 
-func _toggle_build() -> void:
-	var build = get_tree().get_first_node_in_group("build_system")
-	if build != null and build.has_method("toggle"):
-		build.toggle()
+func _toggle_help() -> void:
+	# No abrimos encima de otra pantalla modal: se pisarían la pausa.
+	if not _help_panel.visible and _other_screen_open():
+		return
+	_help_panel.visible = not _help_panel.visible
+	get_tree().paused = _help_panel.visible
 
+
+func _other_screen_open() -> bool:
+	for group in ["inventory_screen", "map_screen", "run_summary"]:
+		var screen = get_tree().get_first_node_in_group(group)
+		if screen != null and screen.visible:
+			return true
+	var fire = get_tree().get_first_node_in_group("fire_minigame")
+	return fire != null and fire.is_open()
+
+
+# --- Actualización ---
+
+## "Día 4 · " si hay run_manager; vacío si no (por si abrís la escena sola).
+func _day_prefix() -> String:
+	if _run == null or not is_instance_valid(_run):
+		return ""
+	return "Día %d · " % (int(_run.stats.get("dias", 0)) + 1)
+
+
+func _update_weapon() -> void:
+	var weapon: Dictionary = _player_ref.weapon_stats()
+	var text := "En mano: %s  (daño %d · alcance %d)" % [
+		str(weapon["nombre"]), int(weapon["dano"]), int(weapon["alcance"]),
+	]
+	# Las de fuego valen lo que la munición que te queda.
+	if bool(weapon["fuego"]):
+		var ammo := str(weapon["municion"])
+		text += "  ·  %s: %d" % [ItemDB.display_name(ammo), _player_ref.inventory.count(ammo)]
+	_weapon_label.text = text
+
+
+## Chip de sigilo: lo más importante para entender por qué te encuentran.
+func _update_stealth() -> void:
+	var seeing := 0
+	var hearing := 0
+	for node in get_tree().get_nodes_in_group("hunter"):
+		var hunter = node
+		if not hunter.has_method("alert_level"):
+			continue
+		match int(hunter.alert_level()):
+			2: seeing += 1
+			1: hearing += 1
+
+	if seeing > 0:
+		_stealth_label.text = "◉ TE VEN (%d)" % seeing
+		_stealth_label.modulate = Color(1.0, 0.35, 0.30)
+	elif hearing > 0:
+		_stealth_label.text = "◒ te escucharon (%d)" % hearing
+		_stealth_label.modulate = Color(1.0, 0.82, 0.35)
+	else:
+		_stealth_label.text = "○ oculto"
+		_stealth_label.modulate = Color(0.55, 0.75, 0.55)
+
+
+## La barra de sangrado parpadea: es la que te mata si la ignorás.
+func _blink_bleed(delta: float) -> void:
+	var chip: Control = _chips.get(NeedsComponent.SANGRADO)
+	var bar: ProgressBar = _bars.get(NeedsComponent.SANGRADO)
+	if chip == null or bar == null:
+		return
+	if bar.value <= 0.0:
+		return
+	_blink = fmod(_blink + delta * 4.0, TAU)
+	chip.modulate = Color(1, 1, 1, 0.6 + 0.4 * absf(sin(_blink)))
+
+
+# --- Señales ---
 
 func _connect_signals() -> void:
 	var player := get_tree().get_first_node_in_group("player")
@@ -283,6 +494,23 @@ func _on_need_changed(id: String, current: float, maximum: float) -> void:
 	bar.max_value = maximum
 	bar.value = current
 
+	var ratio := 0.0 if maximum <= 0.0 else current / maximum
+	var label: Label = _percents.get(id)
+	if label != null:
+		label.text = "%d%%" % int(round(ratio * 100.0))
+
+	# El sangrado es al revés: 0 es lo bueno. Las demás, mientras más alto mejor.
+	var inverted := id == NeedsComponent.SANGRADO
+	var critical := ratio * 100.0 > 0.0 if inverted else ratio * 100.0 <= CRITICAL
+
+	var chip: Control = _chips.get(id)
+	if chip != null:
+		chip.modulate = Color.WHITE if critical else Color(1, 1, 1, 0.62)
+	var icon: NeedIcon = _icons.get(id)
+	if icon != null:
+		var tint: Color = COLORS.get(id, Color.WHITE)
+		icon.set_tint(tint if critical else tint.darkened(0.15))
+
 
 func _on_inventory_changed(items: Dictionary) -> void:
 	var header := "Mochila"
@@ -314,6 +542,11 @@ func _on_action_ended(message: String) -> void:
 		_on_message(message)
 
 
+func _on_message(text: String) -> void:
+	_message_label.text = text
+	_message_timer = MESSAGE_SECONDS
+
+
 func _on_inventory_full(item: String) -> void:
 	_on_message("¡Mochila llena! Necesitás una mochila más grande (%s)" % ItemDB.display_name(item))
 
@@ -322,6 +555,21 @@ func _on_horde(count: int) -> void:
 	_on_message("¡Escuchaste ruido... vienen %d zombies!" % count)
 
 
-func _on_message(text: String) -> void:
-	_message_label.text = text
-	_message_timer = MESSAGE_SECONDS
+# --- Botones de la barra ---
+
+func _toggle_map() -> void:
+	var map = get_tree().get_first_node_in_group("map_screen")
+	if map != null and map.has_method("toggle"):
+		map.toggle()
+
+
+func _toggle_crafting() -> void:
+	var crafting = get_tree().get_first_node_in_group("crafting")
+	if crafting != null and crafting.has_method("toggle"):
+		crafting.toggle()
+
+
+func _toggle_build() -> void:
+	var build = get_tree().get_first_node_in_group("build_system")
+	if build != null and build.has_method("toggle"):
+		build.toggle()
