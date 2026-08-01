@@ -130,6 +130,25 @@ func _swap_firearm(id: String) -> void:
 	_inventory.remove(id, 1)
 	firearm = id
 	active = FIREARM
+	_pull_ammo_from_inventory()
+
+
+## Al equipar un arma de fuego, se lleva al casillero la munición de esa arma
+## que ya venías cargando en la mochila.
+##
+## Sin esto pasaba lo más común del juego: encontrás 3 balas 9mm ANTES que la
+## pistola (add_ammo() devuelve 0 porque todavía no tenés el arma, así que van
+## a la mochila), después encontrás la pistola, la equipás... y al disparar
+## dice "Sin balas 9mm" con las 3 balas guardadas en la espalda.
+func _pull_ammo_from_inventory() -> void:
+	var ammo_id := ItemDB.ammo_of(firearm)
+	if ammo_id == "":
+		return
+	var en_mochila := _inventory.count(ammo_id)
+	if en_mochila <= 0:
+		return
+	if _inventory.remove(ammo_id, en_mochila):
+		ammo += en_mochila
 
 
 ## Devuelve la munición que quede a la mochila (o al piso si no entra) y
@@ -145,14 +164,21 @@ func _return_ammo_and_clear() -> void:
 	ammo = 0
 
 
-## Devuelve `id` a la mochila; lo que no entre se tira al piso con el mismo
-## patrón que player.drop() — nunca desaparece nada.
+## Devuelve `id` a la mochila; lo que no entre se tira al piso. Nunca
+## desaparece nada: desequipar con la mochila llena tiene que dejar el arma a
+## tus pies, no borrarla.
+##
+## ⚠ Va DIRECTO a `_inventory.add()`, no a `player.give_or_drop()`, aunque
+## parezcan lo mismo. give_or_drop() pasa por receive(), y receive() le ofrece
+## la munición primero a este mismo casillero: al vaciarlo, las balas volverían
+## a entrar acá justo antes de que `ammo = 0` las borre. O sea que usar el
+## atajo "prolijo" haría desaparecer toda la munición al guardar el arma.
 func _return_to_inventory(id: String, amount: int) -> void:
 	var taken := _inventory.add(id, amount)
 	if taken < amount:
+		# Sin tipar: drop_to_ground() es del jugador y no existe en Node.
 		var player = get_parent()
-		if player.has_method("_spawn_pickup"):
-			player._spawn_pickup(id, amount - taken)
+		player.drop_to_ground(id, amount - taken)
 
 
 func to_dict() -> Dictionary:

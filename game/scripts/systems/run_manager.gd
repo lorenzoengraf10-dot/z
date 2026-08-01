@@ -114,8 +114,8 @@ func _apply_perks(player) -> void:
 	if has_perk("estomago"):
 		player.needs.raw_damage_multiplier = 0.5
 	if has_perk("veterano"):
-		player.inventory.add("cuchillo", 1)
-		player.inventory.add("vendaje", 2)
+		player.give_or_drop("cuchillo", 1)
+		player.give_or_drop("vendaje", 2)
 	# "explorador" no toca al jugador: lo lee map_screen.gd para destapar los
 	# edificios del mapa desde el arranque.
 

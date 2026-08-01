@@ -246,7 +246,11 @@ func _craft(index: int) -> void:
 	var made: Array[String] = []
 	for id in makes.keys():
 		var amount := int(makes[id])
-		player.inventory.add(str(id), amount)
+		# give_or_drop() y no inventory.add(): los materiales ya se cobraron
+		# arriba, así que si lo fabricado no entra tiene que caer al piso, no
+		# evaporarse. Hoy toda receta gasta más lugares de los que produce, pero
+		# alcanza con una receta nueva que dé 2 de algo para que se pierda.
+		player.give_or_drop(str(id), amount)
 		made.append("%d %s" % [amount, ItemDB.display_name(str(id))])
 
 	craft_message.emit("Fabricaste: " + ", ".join(made))

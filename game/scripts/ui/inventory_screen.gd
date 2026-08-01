@@ -214,16 +214,16 @@ func _refresh() -> void:
 		row.mouse_entered.connect(_on_row_hovered.bind(id))
 		wrapper.add_child(row)
 
-		# Nunca se tira lo que tenés equipado directo: hay que desequiparlo
-		# primero (clic en la fila), así no te quedás sin arma sin querer.
-		if not (ItemDB.is_weapon(id) and (player.arms.melee == id or player.arms.firearm == id)):
-			var drop_btn := Button.new()
-			drop_btn.text = "Tirar"
-			drop_btn.custom_minimum_size = Vector2(52, ROW_HEIGHT)
-			drop_btn.focus_mode = Control.FOCUS_NONE
-			drop_btn.tooltip_text = "Tirar 1  ·  Ctrl+clic tira todo (%d)" % amount
-			drop_btn.pressed.connect(_on_drop_pressed.bind(id))
-			wrapper.add_child(drop_btn)
+		# Todo lo que está en esta lista se puede tirar. Lo equipado no aparece
+		# acá: ArmsComponent ya lo sacó de la mochila y vive en las dos filas de
+		# arriba, así que para tirar un arma primero hay que guardarla.
+		var drop_btn := Button.new()
+		drop_btn.text = "Tirar"
+		drop_btn.custom_minimum_size = Vector2(52, ROW_HEIGHT)
+		drop_btn.focus_mode = Control.FOCUS_NONE
+		drop_btn.tooltip_text = "Tirar 1  ·  Ctrl+clic tira todo (%d)" % amount
+		drop_btn.pressed.connect(_on_drop_pressed.bind(id))
+		wrapper.add_child(drop_btn)
 
 		_list.add_child(wrapper)
 		_rows.append(wrapper)

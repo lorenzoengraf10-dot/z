@@ -177,6 +177,12 @@ id a un número del jugador).
   igual que el agua) pero **siguen tapando la visión de los zombies**: usan una
   segunda capa de física que solo mira el `VisionRay`, no los cuerpos. Meterte
   detrás de uno sigue siendo un escondite real.
+- **El terreno frena a todos por igual** (`world.gd` · `SPEED`) — el agua (0.45)
+  y el monte (0.55) te frenan a vos, **y también a zombies, lobos y animales**.
+  Es lo que hace que meterse entre los árboles o cruzar el lago escapando sirva
+  de algo: si frenara solo al jugador, el bosque sería una trampa mortal en vez
+  de un escondite. Cada script que se mueve multiplica su velocidad por
+  `world.speed_at()`, y hay un verificador que lo controla (`check_project.py`).
 - **Sigilo visible** (`player.gd`, `components/hunter_display.gd`) — la barra de ruido arriba de la cabeza, el `?`/`!` sobre cada enemigo y el chip del HUD. Antes el sistema de ruido existía pero era invisible y no se podía jugar con él.
 - **Feedback de combate** (`systems/floating_text.gd`, `ui/game_camera.gd`) — números de daño, parpadeo y retroceso del enemigo al golpearlo, barra de vida sobre el que estás peleando, y sacudida de cámara cuando te pegan a vos.
 - **Objetivos del arranque** (`systems/objectives.gd`) — cuatro cosas que te empujan a descubrir los sistemas (saquear, comer, prender fuego, sobrevivir la noche). Se tachan solas y después desaparecen.
@@ -186,13 +192,22 @@ id a un número del jugador).
 - **Armas de fuego** — pistola, escopeta y rifle gastan **munición** y hacen muchísimo ruido: disparar te trae una horda casi seguro. El HUD te muestra cuántas balas te quedan.
 - **Sangrado** — necesidad propia, con barra que parpadea en el HUD. No para solo (baja muy de a poco): hay que vendarse con **R**.
 - **Mochila con capacidad** (`components/inventory_component.gd`) — cada unidad ocupa un lugar, ahora **12** lugares en vez de 8. El HUD muestra `Mochila 6/12` y avisa cuando algo no entró. Desde **I** también se puede **tirar** cualquier objeto (aparece en el piso como un `Pickup`), incluso con la mochila llena.
-- **Armas y munición aparte** (`components/arms_component.gd`) — 3 casilleros propios (cuerpo a cuerpo, arma de fuego, munición de esa arma) que **no gastan lugar de la mochila**. Lo que no está equipado sí ocupa mochila. **F** cambia cuál de las dos armas equipadas es la que "pega" (`arms.switch_hand()`); munición de un arma distinta a la equipada no entra en el casillero, va a la mochila común.
+- **Armas y munición aparte** (`components/arms_component.gd`) — 3 casilleros propios (cuerpo a cuerpo, arma de fuego, munición de esa arma) que **no gastan lugar de la mochila**. Lo que no está equipado sí ocupa mochila. **F** cambia cuál de las dos armas equipadas es la que "pega" (`arms.switch_hand()`); munición de un arma distinta a la equipada no entra en el casillero, va a la mochila común. Al **equipar** un arma de fuego se lleva al casillero la munición de esa arma que ya tuvieras suelta en la mochila (encontrar las balas antes que el arma es el caso normal), y al **guardarla** las devuelve.
 - **Almacenamiento** (`container.gd`, `ui/StorageScreen.tscn`) — se puede construir un **cofre** (modo **B**) y, una vez que un **armario** ya fue saqueado, se puede reutilizar para guardar cosas: **E** abre una pantalla de poner/sacar en vez de perderlo para siempre.
 - **Necesidades** (`components/needs_component.gd`) — salud, hambre, sed, energía, temperatura y **sangrado**, cada una con su efecto.
   - *Nota de diseño:* había también una barra de **infección** y se sacó. Hacía lo mismo que el sangrado (drenar salud despacio después de una mordida) pero más lento, y con las dos juntas eran 7 barras que nadie miraba. Lo que hacía quedó repartido: las mordidas sangran más (60% de probabilidad en vez de 45%), y la comida cruda y el agua sin hervir **pegan directo a la salud**.
+- **Nada desaparece por tener la mochila llena** — es la queja más fuerte del
+  testeo y hay dos respuestas distintas según el caso. Lo que **puede esperar**
+  (un árbol, una roca, una veta, un pickup del suelo, el botín de un mueble) no
+  se entrega y **se queda donde estaba**, así volvés cuando hagas lugar. Lo que
+  **ya se cobró** y no puede devolver el vuelto (lo que crafteás, el refund de
+  desarmar algo, lo que te regala un perk, un arma que guardás) cae **al piso a
+  tus pies** vía `player.give_or_drop()`. Hay un verificador que salta si algún
+  `inventory.add()` vuelve a tirar su resultado (`check_types.py`).
 - **Recolección** — talar un árbol, picar una roca o picar una veta abren el
   **minijuego de 3 clicks** (`ui/click_minigame.gd`); acertar los 3 da madera,
-  piedra o metal. **Tomar agua** (**T**) y **pescar** (**E** parado en el agua)
+  piedra o metal. Si no te entra en la mochila, **el árbol/roca/veta no se
+  toca**: sigue ahí para cuando hagas lugar. **Tomar agua** (**T**) y **pescar** (**E** parado en el agua)
   son dos acciones separadas: tomar agua directo del lago te saca 6 de salud
   (es agua sucia) salvo que la lleves en un **recipiente** y la **hiervas** en
   la fogata (`agua_sucia` + madera → `agua`); pescar **no** sacia la sed, solo
@@ -363,6 +378,34 @@ Después, lo de siempre:
 38. Metete al agua y probá **T** (tomar) y **E** (pescar) por separado sin tener
     caña: pescar tiene que avisar que te falta la caña; tomar agua tiene que
     funcionar igual.
+
+**Lo que se arregló después (repaso del lote — mirar esto con atención):**
+
+39. **Llená la mochila hasta `12/12` y talá un árbol.** Tiene que decir *"No te
+    entra madera: la mochila está llena"* y **el árbol tiene que seguir ahí**.
+    Antes el árbol desaparecía del mapa para siempre, no recibías nada, y el
+    cartel igual anunciaba "+3 madera". Repetir con una **roca**, una **veta**
+    y **pescando**.
+40. **Encontrá balas antes que el arma.** Guardá balas 9mm sin tener pistola
+    (van a la mochila), después conseguí la **pistola** y equipala: las balas
+    tienen que **pasar solas al casillero** y el HUD mostrarlas. Antes te decía
+    "Sin balas 9mm" con las balas en la espalda. Guardá el arma y fijate que
+    vuelven a la mochila.
+41. **Corré al monte con un lobo atrás.** Ahora al lobo **también** lo frena el
+    monte, así que meterse entre los árboles tiene que servir para algo. Lo
+    mismo cruzando el **agua**. Si el lobo te alcanza igual de rápido adentro
+    del monte que en el pasto, algo se rompió.
+42. **Errale a propósito muchas veces seguidas** en el minijuego de 3 clicks: la
+    aguja acelera, pero tiene **techo** — nunca puede volverse imposible.
+43. Tomá agua del lago **con** y **sin** recipiente: sin recipiente tiene que
+    saciarte lo mismo que tomarte un `agua_sucia` guardada (ni más ni menos),
+    así craftear el recipiente nunca te deja peor.
+44. Mirá un **armario ya saqueado**: no tiene que verse gris "muerto" como
+    antes, porque ahora sirve de guardado. Si le guardaste algo adentro, se
+    tiene que notar de afuera sin abrirlo.
+45. **Desarmá una barricada con la mochila llena** (**B** → clic derecho): la
+    madera del reembolso tiene que **caer al piso**, no evaporarse. Lo mismo al
+    craftear algo sin lugar.
 
 ## Cómo editar el mundo (el mapa de tiles)
 

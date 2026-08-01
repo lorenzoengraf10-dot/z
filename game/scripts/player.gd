@@ -375,6 +375,35 @@ func receive(item: String, amount: int) -> int:
 	return taken
 
 
+## Te da `amount` de `item` sin que se pierda NADA: lo que entra en la mochila
+## va a la mochila, y lo que no entra queda tirado a tus pies.
+##
+## Es la forma segura de entregarle cosas al jugador desde sistemas que ya
+## gastaron algo a cambio y no pueden "devolver el vuelto": lo que craftea
+## (crafting.gd), lo que devuelve desarmar una construcción (build_system.gd) y
+## lo que regala un perk al arrancar (run_manager.gd). Todos esos hacían
+## `inventory.add()` a secas y, con la mochila llena, el objeto desaparecía en
+## silencio después de haberte cobrado los materiales.
+##
+## Para lo que SÍ puede esperar (un árbol, una roca, un pickup del suelo) no se
+## usa esto: ahí conviene no entregar nada y dejar la cosa donde estaba, así el
+## jugador vuelve cuando hace lugar. Ver interactor.gd::_give_from_tile().
+func give_or_drop(item: String, amount: int) -> void:
+	if amount <= 0:
+		return
+	var taken := receive(item, amount)
+	if taken < amount:
+		drop_to_ground(item, amount - taken)
+
+
+## Deja `amount` de `item` tirado a tus pies, sin pasar por la mochila ni por
+## los casilleros de ArmsComponent. Es el escape de último recurso para que
+## nunca se pierda nada; la usa give_or_drop() y también ArmsComponent al
+## guardar un arma con la mochila llena.
+func drop_to_ground(item: String, amount: int) -> void:
+	_spawn_pickup(item, amount)
+
+
 ## Tira `amount` del ítem `id` al piso, en tu posición. La llama la pantalla de
 ## inventario (I). Devuelve true si había para tirar.
 func drop(item: String, amount: int = 1) -> bool:

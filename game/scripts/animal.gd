@@ -23,6 +23,7 @@ var _target := Vector2.ZERO
 var _timer := 0.0
 var _flee_dir := Vector2.RIGHT
 var _flee_left := 0.0
+var _world_cache = null
 
 
 func _ready() -> void:
@@ -76,7 +77,23 @@ func _graze(delta: float) -> void:
 		_pick_target()
 	var dir := _target - global_position
 	velocity = dir.normalized() * graze_speed if dir.length() > 4.0 else Vector2.ZERO
+	velocity *= _terrain_speed()
 	move_and_slide()
+
+
+## Cuánto lo frena el suelo que está pisando (1.0 normal, menos en agua/monte).
+##
+## Los animales también, no solo los enemigos: si un conejo cruzara el lago a
+## toda velocidad mientras vos nadás a menos de la mitad, cazar se volvería
+## imposible de un modo que no se entiende mirando la pantalla.
+## Mismo patrón de caché que player.gd::terrain_speed_multiplier().
+# Sin tipar el caché: usamos speed_at(), que es propio de world.gd.
+func _terrain_speed() -> float:
+	if _world_cache == null or not is_instance_valid(_world_cache):
+		_world_cache = get_tree().get_first_node_in_group("world")
+	if _world_cache == null:
+		return 1.0
+	return _world_cache.speed_at(global_position)
 
 
 func _pick_target() -> void:
@@ -87,7 +104,7 @@ func _pick_target() -> void:
 
 func _flee(delta: float) -> void:
 	_flee_left -= delta
-	velocity = _flee_dir * flee_speed
+	velocity = _flee_dir * flee_speed * _terrain_speed()
 	move_and_slide()
 	# Si choca contra algo, prueba otra dirección en vez de quedarse trabado.
 	if get_slide_collision_count() > 0:

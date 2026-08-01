@@ -16,6 +16,13 @@ const ROUND_SIZES := [0.20, 0.15, 0.10]
 ## Con la herramienta correcta la aguja va más lenta: más fácil de acertar.
 @export var easier_speed_mult := 0.7
 @export var speed_up_on_miss := 0.4
+## Techo de la aceleración por fallar, como múltiplo de la velocidad inicial.
+##
+## Sin tope, cada fallo sumaba 0.4 rad/s para siempre: a los ~15 errores la
+## aguja era imposible de acertar y, como este minijuego no tiene forma de
+## perder, la única salida era Escape (que cancela la acción entera). Ahora
+## fallar sigue costando, pero siempre queda jugable.
+@export var max_speed_mult := 2.0
 @export var radius := 90.0
 
 var _round := 0
@@ -23,6 +30,8 @@ var _needle := 0.0
 var _green_start := 0.0
 var _green_size := 0.0
 var _speed := 3.4
+## Velocidad con la que arrancó esta ronda: de acá sale el techo de _speed.
+var _base_speed := 3.4
 var _misses := 0
 var _wait_release := true
 var _done := false
@@ -40,7 +49,8 @@ func start(label_text: String, easier: bool = false) -> void:
 	_label_text = label_text
 	_round = 0
 	_misses = 0
-	_speed = needle_speed * (easier_speed_mult if easier else 1.0)
+	_base_speed = needle_speed * (easier_speed_mult if easier else 1.0)
+	_speed = _base_speed
 	_wait_release = true
 	_done = false
 	_close_timer = 0.0
@@ -80,7 +90,7 @@ func _try_click() -> void:
 			_randomize_green()
 	else:
 		_misses += 1
-		_speed += speed_up_on_miss
+		_speed = minf(_speed + speed_up_on_miss, _base_speed * max_speed_mult)
 		_randomize_green()
 	_update_text()
 

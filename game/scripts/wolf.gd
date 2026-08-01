@@ -42,6 +42,7 @@ var _roam_target := Vector2.ZERO
 var _roam_timer := 0.0
 var _time_since_seen := 999.0
 var _attack_timer := 0.0
+var _world_cache = null
 
 @onready var _visual: Node2D = $Visual
 @onready var _art: SpriteDirectional = $SpriteDirectional
@@ -242,7 +243,25 @@ func _update_feedback(delta: float) -> void:
 		_visual.rotation = facing.angle()
 
 
-## move_and_slide() sumándole el empujón del último golpe recibido.
+## move_and_slide() sumándole el empujón del último golpe recibido, y frenando
+## por el terreno igual que al jugador.
+##
+## Acá pesa todavía más que en el zombie: el lobo ya corre más rápido que vos
+## corriendo (150 contra 170, y encima cazan en manada). Si el monte te frenara
+## solo a vos, meterse entre los árboles con un lobo atrás sería muerte segura.
+##
+## El empujón del golpe NO se frena: es un impulso, no una caminata.
 func _move_with_knockback() -> void:
-	velocity += _knockback
+	velocity = velocity * _terrain_speed() + _knockback
 	move_and_slide()
+
+
+## Cuánto lo frena el suelo que está pisando (1.0 normal, menos en agua/monte).
+## Mismo patrón de caché que player.gd::terrain_speed_multiplier().
+# Sin tipar el caché: usamos speed_at(), que es propio de world.gd.
+func _terrain_speed() -> float:
+	if _world_cache == null or not is_instance_valid(_world_cache):
+		_world_cache = get_tree().get_first_node_in_group("world")
+	if _world_cache == null:
+		return 1.0
+	return _world_cache.speed_at(global_position)

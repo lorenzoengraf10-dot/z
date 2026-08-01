@@ -151,6 +151,10 @@ func _refresh() -> void:
 	if player == null or _container == null or not is_instance_valid(_container):
 		return
 
+	# Que el mueble se repinte al toque: de afuera se tiene que notar si quedó
+	# algo adentro, sin tener que volver a abrirlo.
+	_container.refresh_visuals()
+
 	_fill_side(_stored_list, _stored_rows, _container.stored, _on_take_pressed)
 	_fill_side(_bag_list, _bag_rows, player.inventory.items, _on_store_pressed)
 

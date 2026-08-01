@@ -188,7 +188,34 @@ if os.path.exists(zombie_tscn):
                           "16 (arboles) — el zombie va a ver a traves de los arboles. "
                           "Tiene que ser un numero con el bit 16 prendido (ej. 17 = 1|16).")
 
-# --- 9. autoloads existen ---
+# --- 9. todo lo que camina por el mapa respeta speed_at() ---
+#
+# world.gd tiene una tabla SPEED que frena por tile (agua 0.45, arbol 0.55),
+# pero frenar es cosa de cada script que se mueve: hay que multiplicar por
+# world.speed_at() a mano. Durante un tiempo lo hacia SOLO player.gd, y eso
+# daba vuelta el diseño sin que se note leyendo el codigo: vos cruzabas el
+# monte al 55% y el zombie que te perseguia iba al 100%, asi que meterse entre
+# los arboles escapando (que es PARA LO QUE ESTAN) era suicidio. Lo mismo con
+# el agua. No se ve en pantalla, no lo marca ningun otro verificador, y solo
+# aparece si alguien lo cronometra jugando.
+CAMINANTES = ["player.gd", "zombie.gd", "wolf.gd", "animal.gd"]
+for nombre in CAMINANTES:
+    ruta = os.path.join(ROOT, "scripts", nombre)
+    if not os.path.exists(ruta):
+        errors.append(f"check_project: no encontre scripts/{nombre} (se renombro?); "
+                      "esta en la lista de los que tienen que frenar por terreno")
+        continue
+    src = open(ruta, encoding="utf-8").read()
+    # Sin comentarios: este mismo bloque nombra speed_at() y no queremos que un
+    # comentario alcance para dar OK (misma trampa que las reglas 6 y 7).
+    src = "\n".join(l.split("#")[0] for l in src.split("\n"))
+    if "speed_at(" not in src:
+        errors.append(f"scripts/{nombre}: no llama a speed_at(), asi que el terreno no lo "
+                      "frena. Si solo el jugador frena en el agua/monte, escaparse por ahi "
+                      "pasa a ser peor que no hacerlo. Multiplicar la velocidad por "
+                      "world.speed_at(global_position) antes de move_and_slide().")
+
+# --- 10. autoloads existen ---
 proj = open(os.path.join(ROOT, "project.godot"), encoding="utf-8").read()
 for name, path in re.findall(r'^(\w+)="\*(res://[^"]+)"', proj, re.M):
     if not os.path.exists(res_to_fs(path)):

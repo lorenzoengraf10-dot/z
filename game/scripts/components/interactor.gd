@@ -217,7 +217,11 @@ func try_drink() -> void:
 			action_ended.emit("No te entra el agua sucia (mochila llena)")
 		return
 
-	_player.needs.set_need(NeedsComponent.SED, _player.needs.max_of(NeedsComponent.SED))
+	# Da lo MISMO que tomarse un "agua_sucia" guardada, ni más ni menos. Antes
+	# esto llenaba la sed al 100% por los mismos 6 de daño, con lo cual craftear
+	# el recipiente te dejaba peor que no tenerlo: el recipiente sirve para
+	# guardar el agua y hervirla, no para hidratar menos.
+	_player.needs.change(NeedsComponent.SED, ItemDB.value_of("agua_sucia", "sed"))
 	_player.needs.damage(dirty_water_damage * _player.needs.raw_damage_multiplier)
 	action_ended.emit("Tomaste agua directo del lago (sucia, te cayó mal)")
 
@@ -266,11 +270,16 @@ func _try_fish(cell: Vector2i) -> void:
 
 
 func _on_fishing_finished(caught: bool) -> void:
-	if caught:
-		_player.inventory.add("pescado", 1)
+	if not caught:
+		action_ended.emit("Se te escapó")
+		return
+	# Ojo con el valor de retorno: si la mochila está llena el pescado NO entra,
+	# y antes se anunciaba igual (ver _give_from_tile() para la versión larga
+	# de esta misma trampa).
+	if _player.receive("pescado", 1) > 0:
 		action_ended.emit("+1 pescado")
 	else:
-		action_ended.emit("Se te escapó")
+		action_ended.emit("Lo pescaste pero no te entra: mochila llena")
 
 
 ## True si algún zombie te vio, o si hay alguno a `fish_danger_cells` celdas
@@ -319,18 +328,42 @@ func _on_click_minigame_finished(success: bool, kind: String, cell: Vector2i) ->
 
 	match kind:
 		"talar":
-			world.set_char_at_cell(cell, GRASS)
-			_player.inventory.add("madera", wood_per_tree)
-			action_ended.emit("+%d madera" % wood_per_tree)
+			_give_from_tile(cell, "madera", wood_per_tree)
 		"minar":
 			var drop: String = world.mineable_at(cell)
 			if drop == "":
 				action_ended.emit("Ahí ya no queda nada")
 				return
 			var amount := metal_per_ore if drop == "metal" else stone_per_rock
-			world.set_char_at_cell(cell, GRASS)
-			_player.inventory.add(drop, amount)
-			action_ended.emit("+%d %s" % [amount, ItemDB.display_name(drop)])
+			_give_from_tile(cell, drop, amount)
+
+
+## Entrega el botín de un tile y **recién ahí** lo borra del mapa.
+##
+## El orden importa muchísimo. Antes era al revés: se borraba el tile y después
+## se llamaba a inventory.add() sin mirar lo que devolvía. Con la mochila llena
+## el árbol (o la roca, o la veta) desaparecía **para siempre**, no recibías
+## nada, y el cartel igual anunciaba "+3 madera". Es la misma queja del testeo
+## que ya se había arreglado en pickup.gd y en _finish_container(), pero por
+## este camino seguía viva.
+##
+## Se usa receive() y no inventory.add() para que la munición siga yendo al
+## casillero de ArmsComponent sin gastar mochila.
+func _give_from_tile(cell: Vector2i, id: String, amount: int) -> void:
+	var taken: int = _player.receive(id, amount)
+	if taken <= 0:
+		# El tile queda intacto: volvés cuando hagas lugar.
+		action_ended.emit("No te entra %s: la mochila está llena" % ItemDB.display_name(id))
+		return
+
+	var world = _world()
+	if world != null:
+		world.set_char_at_cell(cell, GRASS)
+
+	if taken < amount:
+		action_ended.emit("+%d %s (no entró el resto)" % [taken, ItemDB.display_name(id)])
+	else:
+		action_ended.emit("+%d %s" % [taken, ItemDB.display_name(id)])
 
 
 func _has_tool(kind: String) -> bool:
@@ -375,7 +408,6 @@ func _open_storage(container) -> void:
 		action_ended.emit("No se pudo abrir el almacenamiento")
 		return
 	screen.open_for(container)
-	action_ended.emit("")
 
 
 ## Puerta más cercana dentro del alcance, o null.

@@ -190,6 +190,32 @@ for f in files:
                 errors.append(f"{rel}:{line}: '{arr}.append(load(...))' mete un Resource en un "
                               f"Array tipado -> falta el cast 'as <Tipo>'")
 
+# 8. inventory.add() / player.receive() como sentencia suelta, tirando lo que
+#    devuelven.
+#
+#    No es un error de tipado, pero es el mismo tipo de bug: falla EN SILENCIO
+#    y no hay forma de verlo sin jugar. Las dos devuelven CUANTO ENTRO de
+#    verdad, que con la mochila llena puede ser 0 o menos de lo pedido.
+#
+#    La trampa exacta que paso: interactor.gd borraba el arbol del mapa y
+#    despues hacia `inventory.add("madera", 3)` sin mirar el resultado. Con la
+#    mochila llena el arbol desaparecia PARA SIEMPRE, no recibias nada, y el
+#    cartel igual anunciaba "+3 madera". Lo mismo con la roca, la veta y el
+#    pescado. Si el valor no se usa, hay que decirlo a proposito con una
+#    variable (ej. `var entro := ...`), no dejarlo colgado.
+SIN_MIRAR = re.compile(r'^\s*[\w.]*\b(?:inventory\.add|receive)\(', re.M)
+for f in files:
+    src = open(f, encoding="utf-8").read()
+    rel = os.path.relpath(f, ROOT)
+    for i, line in enumerate(src.split("\n")):
+        if line.strip().startswith("#"):
+            continue
+        if SIN_MIRAR.match(line):
+            errors.append(f"{rel}:{i+1}: '{line.strip()}' tira lo que devuelve. "
+                          "add()/receive() devuelven CUANTO ENTRO: con la mochila llena "
+                          "puede ser 0 y el jugador pierde el objeto sin enterarse. "
+                          "Guardarlo en una variable y avisar si no entro todo.")
+
 print("=== POSIBLES ERRORES DE TIPADO ===")
 print("\n".join(errors) if errors else "(ninguno)")
 sys.exit(1 if errors else 0)

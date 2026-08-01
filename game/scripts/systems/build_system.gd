@@ -310,7 +310,9 @@ func _try_remove(cell: Vector2i) -> void:
 	# Devolvemos la mitad de lo que costó (redondeando para abajo, mínimo 1).
 	var refund := maxi(1, int(floor(_cost_of(type_id) * REFUND_RATIO)))
 	if player != null:
-		player.inventory.add(COST_ITEM, refund)
+		# Al piso si no entra: la construcción ya se desarmó, no hay forma de
+		# devolver el vuelto de otra manera.
+		player.give_or_drop(COST_ITEM, refund)
 	build_message.emit("Desarmaste %s (+%d madera)" % [_name_of(type_id), refund])
 
 

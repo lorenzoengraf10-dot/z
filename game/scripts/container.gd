@@ -67,6 +67,16 @@ func add_leftover(id: String, amount: int) -> void:
 	if amount <= 0:
 		return
 	stored[id] = int(stored.get(id, 0)) + amount
+	refresh_visuals()
+
+
+## Repinta el mueble según cómo esté ahora. La llama ui/storage_screen.gd cada
+## vez que movés algo, para que se note de afuera si quedó algo adentro sin
+## tener que volver a abrirlo.
+func refresh_visuals() -> void:
+	if _body == null or _lid == null:
+		return   # todavía no pasó por _ready(): ya se va a pintar solo ahí
+	_apply_visuals()
 
 
 func _apply_visuals() -> void:
@@ -80,9 +90,17 @@ func _apply_visuals() -> void:
 		return
 
 	if looted:
-		# Vacío: se ve abierto y apagado, para no volver a caminar hasta él.
-		_body.color = Color(0.28, 0.24, 0.20)
-		_lid.color = Color(0.22, 0.19, 0.16)
+		# Vacío pero NO muerto: se ve abierto (ya lo saqueaste) y algo apagado,
+		# pero sigue teniendo color de mueble usable, porque ahora sirve de
+		# guardado. El gris de antes era la señal universal de "no vuelvas acá",
+		# y justo estos 93 muebles son los que queremos que se vuelvan a usar.
+		# Si ADEMÁS tiene algo guardado adentro, se ve casi como uno sin saquear.
+		if stored.is_empty():
+			_body.color = Color(0.40, 0.33, 0.24)
+			_lid.color = Color(0.31, 0.25, 0.18)
+		else:
+			_body.color = Color(0.50, 0.40, 0.26)
+			_lid.color = Color(0.39, 0.31, 0.20)
 		_lid.position = Vector2(0, -7)
 		return
 

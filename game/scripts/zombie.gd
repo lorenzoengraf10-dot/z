@@ -48,6 +48,7 @@ var _wander_target := Vector2.ZERO
 var _wander_timer := 0.0
 var _time_since_seen := 999.0
 var _attack_timer := 0.0
+var _world_cache = null
 
 @onready var _vision_ray: RayCast2D = $VisionRay
 @onready var _visual: Node2D = $Visual
@@ -267,7 +268,27 @@ func _update_feedback(delta: float) -> void:
 		_visual.rotation = facing.angle()
 
 
-## move_and_slide() sumándole el empujón del último golpe recibido.
+## move_and_slide() sumándole el empujón del último golpe recibido, y frenando
+## por el terreno igual que al jugador.
+##
+## Lo del terreno importa desde que el árbol dejó de ser sólido. Si solo el
+## jugador se frenara en el monte (0.55) y el zombie siguiera a full, meterse
+## entre los árboles escapando pasaría de escondite a suicidio. Lo mismo vale
+## para el agua (0.45), que arrastraba esta asimetría desde antes: hasta ahora
+## nadar para escapar no servía de nada.
+##
+## El empujón del golpe NO se frena: es un impulso, no una caminata.
 func _move_with_knockback() -> void:
-	velocity += _knockback
+	velocity = velocity * _terrain_speed() + _knockback
 	move_and_slide()
+
+
+## Cuánto lo frena el suelo que está pisando (1.0 normal, menos en agua/monte).
+## Mismo patrón de caché que player.gd::terrain_speed_multiplier().
+# Sin tipar el caché: usamos speed_at(), que es propio de world.gd.
+func _terrain_speed() -> float:
+	if _world_cache == null or not is_instance_valid(_world_cache):
+		_world_cache = get_tree().get_first_node_in_group("world")
+	if _world_cache == null:
+		return 1.0
+	return _world_cache.speed_at(global_position)
