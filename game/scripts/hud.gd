@@ -15,6 +15,19 @@ extends CanvasLayer
 ## ⚠ Todo Control que no sea un botón va con MOUSE_FILTER_IGNORE. Se apunta con
 ## el mouse, y un contenedor con el filtro por defecto (STOP) se come el clic y
 ## te deja sin poder atacar.
+##
+## ⚠⚠ **PASS tampoco sirve**, aunque suene a que "deja pasar". Ya se intentó dos
+## veces, la última para habilitar tooltips en las barras, y las dos rompieron
+## el ataque. El motivo: al buscar quién recibe el mouse, Godot saltea SOLO los
+## Control con IGNORE. Uno con PASS igual queda como `gui.mouse_focus`, y ahí el
+## viewport llama a set_input_as_handled(): el clic nunca llega a
+## `_unhandled_input`, que es donde player.gd escucha "attack". PASS deja pasar
+## el evento a los Control de arriba, no al juego.
+##
+## Nada de `tooltip_text` acá: `tooltip_text` no hace nada con IGNORE, y ponerle
+## PASS para que funcione es exactamente el bug. Si algún día hacen falta,
+## dibujarlos a mano con un hit-test en _process(). Hay un verificador que
+## controla esto (check_project.py).
 
 const BAR_WIDTH := 62
 const BAR_HEIGHT := 5
@@ -176,10 +189,13 @@ func _build_health_row(column: VBoxContainer) -> void:
 	var tint: Color = COLORS.get(id, Color.WHITE)
 
 	var row := HBoxContainer.new()
-	# PASS (no IGNORE): deja que el tooltip aparezca al pasar el mouse, pero
-	# sigue sin comerse el clic — un STOP acá rompería el ataque.
-	row.mouse_filter = Control.MOUSE_FILTER_PASS
-	row.tooltip_text = str(LABELS.get(id, id))
+	# IGNORE, sin tooltip. Ver la advertencia de arriba de todo: PASS tampoco
+	# sirve. Godot solo saltea los Control con IGNORE al buscar quién recibe el
+	# mouse, así que uno con PASS igual queda como mouse_focus y el viewport
+	# marca el clic como atendido — nunca llega a _unhandled_input, que es donde
+	# el jugador escucha "attack". O sea: con el cursor sobre este panel no
+	# podrías pegar.
+	_passthrough(row)
 	row.add_theme_constant_override("separation", 8)
 	column.add_child(row)
 	_chips[id] = row
@@ -236,10 +252,9 @@ func _build_small_needs_row(column: VBoxContainer) -> void:
 		row.add_child(chip)
 
 		var head := HBoxContainer.new()
-		# PASS (no IGNORE): habilita el tooltip con el nombre de la necesidad
-		# sin comerse el clic del ataque (eso rompería con STOP).
-		head.mouse_filter = Control.MOUSE_FILTER_PASS
-		head.tooltip_text = str(LABELS.get(id, id))
+		# IGNORE, sin tooltip: mismo motivo que en la fila de la vida. Para saber
+		# qué es cada barra está la ayuda (tecla H), que no cuesta nada.
+		_passthrough(head)
 		head.add_theme_constant_override("separation", 5)
 		chip.add_child(head)
 

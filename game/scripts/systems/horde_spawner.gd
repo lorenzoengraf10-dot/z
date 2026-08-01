@@ -56,6 +56,8 @@ const VARIANTS := {
 ## encerrados en los edificios en vez de atravesar las paredes.
 @export var max_zombies := 18
 @export var cooldown_seconds := 25.0
+## Espera corta cuando el calor llegó al umbral pero no había dónde spawnear.
+const RETRY_SECONDS := 3.0
 
 signal horde_spawned(count: int)
 
@@ -89,16 +91,27 @@ func _process(delta: float) -> void:
 		heat = maxf(0.0, heat - heat_decay * delta)
 
 	if heat >= heat_threshold and _cooldown <= 0.0:
-		heat = 0.0
-		_cooldown = cooldown_seconds
-		_spawn_horde(player)
+		# El calor se limpia SOLO si de verdad apareció alguien. _spawn_horde()
+		# tiene dos salidas que no crean nada: que ya haya `max_zombies` vivos, y
+		# que no encuentre una celda libre cerca (pasa contra el borde del mapa o
+		# encerrado en un edificio). Antes se limpiaba igual, así que justo
+		# cuando el mapa estaba lleno de zombies hacer ruido salía gratis y encima
+		# te regalaba los 25 s de cooldown.
+		if _spawn_horde(player) > 0:
+			heat = 0.0
+			_cooldown = cooldown_seconds
+		else:
+			# Reintento corto: el calor queda cargado esperando que se libere
+			# lugar, pero no probamos una vez por frame.
+			_cooldown = RETRY_SECONDS
 
 
-func _spawn_horde(player) -> void:
+## Devuelve cuántos zombies llegó a crear (0 = no había lugar, ver _process()).
+func _spawn_horde(player) -> int:
 	var alive := get_tree().get_nodes_in_group("zombie").size()
 	var room := max_zombies - alive
 	if room <= 0:
-		return
+		return 0
 
 	var count := mini(randi_range(horde_min, horde_max), room)
 	var spawned := 0
@@ -111,6 +124,7 @@ func _spawn_horde(player) -> void:
 
 	if spawned > 0:
 		horde_spawned.emit(spawned)
+	return spawned
 
 
 func _random_variant() -> String:
@@ -171,7 +185,12 @@ func _spawn_one(position_global: Vector2, variant: String) -> void:
 	# al de respaldo (art.active_sprite_name() se llena en _ready(), que ya
 	# corrió). Si es el propio, que no lo tiña: ya se distingue solo.
 	if art != null:
-		z.uses_dedicated_art = art.active_sprite_name() == override
+		# Ojo: contra override["sprite"] (un String), NO contra `override`, que
+		# es el diccionario entero {"sprite":..., "fps":...}. Comparar un String
+		# con un Dictionary da siempre false y no rompe nada: el zombi seguía
+		# saliendo tintado por encima de su propio dibujo, justo lo que el
+		# comentario de acá arriba dice que hay que evitar.
+		z.uses_dedicated_art = art.active_sprite_name() == str(override["sprite"])
 
 	# Color distinto por variante, para distinguirlas mientras el arte es
 	# placeholder o compartido. Se lo pedimos al zombi en vez de meterle mano a

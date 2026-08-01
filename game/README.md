@@ -406,6 +406,14 @@ Después, lo de siempre:
 45. **Desarmá una barricada con la mochila llena** (**B** → clic derecho): la
     madera del reembolso tiene que **caer al piso**, no evaporarse. Lo mismo al
     craftear algo sin lugar.
+46. **Poné el cursor justo encima del panel de vida** (arriba a la izquierda) y
+    apretá **clic izquierdo**: tiene que **atacar igual**. Es el ítem 22 otra
+    vez, pero mirándolo a propósito: el HUD ya se comió el clic dos veces, y la
+    segunda fue por ponerle tooltips a las barras. Si algún día no ataca, mirá
+    los `mouse_filter` de `hud.gd` (hay un verificador que lo controla).
+47. Buscá un **zombi resistente** (el lento, duro y que pega fuerte): tiene que
+    verse con **su propio dibujo**, sin un tinte violeta encima. Si se ve
+    violeta, el spawner no está reconociendo que la variante tiene arte propio.
 
 ## Cómo editar el mundo (el mapa de tiles)
 

@@ -215,7 +215,42 @@ for nombre in CAMINANTES:
                       "pasa a ser peor que no hacerlo. Multiplicar la velocidad por "
                       "world.speed_at(global_position) antes de move_and_slide().")
 
-# --- 10. autoloads existen ---
+# --- 10. ningun Control del HUD se come el clic del ataque ---
+#
+# Tercer intento de este mismo bug en el proyecto. Se apunta con el mouse y se
+# ataca con clic izquierdo, y el ataque se resuelve en player.gd::
+# _unhandled_input(). Cualquier Control del HUD que reciba el mouse hace que el
+# viewport marque el evento como atendido, y el clic NUNCA llega hasta ahi: con
+# el cursor sobre el HUD te quedas sin poder pegar.
+#
+# La trampa fina: MOUSE_FILTER_PASS parece seguro por el nombre, pero NO lo es.
+# Al buscar quien recibe el mouse Godot saltea solo los IGNORE; uno con PASS
+# igual queda como gui.mouse_focus. PASS deja pasar el evento a los Control de
+# arriba, no al juego. La ultima vez entro por querer habilitar tooltips (que
+# no andan con IGNORE, justamente porque el Control no recibe el mouse).
+#
+# Los Button son la excepcion: estan para clickearlos.
+hud_gd = os.path.join(ROOT, "scripts", "hud.gd")
+if os.path.exists(hud_gd):
+    raw = open(hud_gd, encoding="utf-8").read()
+    # Sin comentarios: este archivo explica el bug nombrando las constantes, y
+    # sin limpiarlos el verificador se mira a si mismo (misma trampa que 6 y 7).
+    src = "\n".join(l.split("#")[0] for l in raw.split("\n"))
+    for m in re.finditer(r'MOUSE_FILTER_(PASS|STOP)', src):
+        linea = src[:m.start()].count("\n") + 1
+        errors.append(f"hud.gd:{linea}: MOUSE_FILTER_{m.group(1)} en el HUD se come el clic "
+                      "izquierdo y te deja sin atacar mientras el cursor este encima. "
+                      "Va MOUSE_FILTER_IGNORE (usar _passthrough()). PASS tampoco sirve: "
+                      "Godot solo saltea los IGNORE al repartir el mouse.")
+    # tooltip_text es la puerta de entrada: no hace nada con IGNORE, asi que
+    # quien lo pone termina cambiando el filtro para que "funcione".
+    for m in re.finditer(r'\.tooltip_text\s*=', src):
+        linea = src[:m.start()].count("\n") + 1
+        errors.append(f"hud.gd:{linea}: tooltip_text no anda con MOUSE_FILTER_IGNORE, y "
+                      "cambiar el filtro para que ande rompe el ataque. Si hace falta un "
+                      "tooltip, dibujarlo a mano con un hit-test en _process().")
+
+# --- 11. autoloads existen ---
 proj = open(os.path.join(ROOT, "project.godot"), encoding="utf-8").read()
 for name, path in re.findall(r'^(\w+)="\*(res://[^"]+)"', proj, re.M):
     if not os.path.exists(res_to_fs(path)):

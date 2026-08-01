@@ -21,6 +21,11 @@ const WATER := "~"
 const GRASS := "."
 const ROCK := "R"
 const ORE := "O"
+## El ítem que representa el agua del lago sin hervir. Está acá y no suelto en
+## el medio de try_drink() porque ItemDB.value_of() de un id que no existe
+## devuelve 0.0 sin avisar: si alguien lo renombra en items.json, tomar agua
+## dejaría de hidratar en silencio.
+const DIRTY_WATER := "agua_sucia"
 
 @export var reach := 18.0
 ## Las fogatas y puertas se agarran desde un poco más lejos que un tile, porque
@@ -210,7 +215,7 @@ func try_drink() -> void:
 		return
 
 	if _player.inventory.has("recipiente"):
-		var added: int = _player.receive("agua_sucia", 1)
+		var added: int = _player.receive(DIRTY_WATER, 1)
 		if added > 0:
 			action_ended.emit("Llenaste el recipiente con agua sucia")
 		else:
@@ -221,7 +226,7 @@ func try_drink() -> void:
 	# esto llenaba la sed al 100% por los mismos 6 de daño, con lo cual craftear
 	# el recipiente te dejaba peor que no tenerlo: el recipiente sirve para
 	# guardar el agua y hervirla, no para hidratar menos.
-	_player.needs.change(NeedsComponent.SED, ItemDB.value_of("agua_sucia", "sed"))
+	_player.needs.change(NeedsComponent.SED, ItemDB.value_of(DIRTY_WATER, "sed"))
 	_player.needs.damage(dirty_water_damage * _player.needs.raw_damage_multiplier)
 	action_ended.emit("Tomaste agua directo del lago (sucia, te cayó mal)")
 
