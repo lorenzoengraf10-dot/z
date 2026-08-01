@@ -2,7 +2,10 @@ GIMP Palette
 Name: Cuarentena
 Columns: 8
 # Paleta del proyecto. En Aseprite: menu de la paleta -> Load Palette.
-# NO dibujar con colores de afuera de esta lista.
+#
+# La paleta CRECE: si te hace falta un color que no esta, usalo y despues
+# corre  python3 tools/actualizar_paleta.py  para que lo tengan todos.
+# Este archivo se genera solo, no lo edites a mano.
 #
  18  16  15	Negro
  36  31  29	Sombra
@@ -36,3 +39,19 @@ Columns: 8
 230 207 106	Amarillo
  56  38  74	Violeta oscuro
  92  68 112	Violeta
+251 187  83	Naranja brillante
+112 246 116	Verde claro 2
+210 132 240	Violeta claro
+166 193 166	Verde 2
+191   3   3	Rojo 2
+ 57  56 142	Azul
+142  50  50	Rojo 3
+ 37  36 116	Azul oscuro
+ 51 112  44	Verde oscuro 2
+102 111  95	Gris oscuro 2
+103  59  18	Naranja oscuro
+ 20  19  77	Azul oscuro 2
+ 77  60  19	Naranja oscuro 2
+ 64  48   9	Naranja muy oscuro
+  5  49   0	Verde muy oscuro 2
+  0   0   0	Negro 2

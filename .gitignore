@@ -8,5 +8,6 @@ export_presets.cfg
 .DS_Store
 Thumbs.db
 
-# Lo que deja tools/prueba_atlas.py para mirar el atlas
+# Lo que dejan las herramientas de tools/ para mirar el arte
 atlas_resultado.png
+animacion_*.png

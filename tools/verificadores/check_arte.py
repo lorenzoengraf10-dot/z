@@ -67,10 +67,15 @@ def nombres_de_variantes_con_arte_propio():
     if not os.path.exists(path):
         return []
     src = open(path, encoding="utf-8").read()
-    bloque = re.search(r'const SPRITE_OVERRIDE\s*:=\s*\{(.*?)\}', src, re.S)
-    if not bloque:
+    # Se busca la clave "sprite" y no cualquier string: cada variante es un
+    # diccionario con mas cosas adentro (el fps, por ejemplo) y agarrar todos
+    # los strings traeria basura.
+    inicio = src.find("const SPRITE_OVERRIDE")
+    if inicio == -1:
         return []
-    return re.findall(r':\s*"([^"]+)"', bloque.group(1))
+    fin = src.find("\n}", inicio)
+    bloque = src[inicio:fin if fin != -1 else len(src)]
+    return re.findall(r'"sprite"\s*:\s*"([^"]+)"', bloque)
 
 
 TILES = nombres_de_tiles()
@@ -166,6 +171,9 @@ def cargar_paleta():
 
 PALETA = cargar_paleta()
 
+## Colores vistos que todavía no están en la paleta: {(r,g,b): primer archivo}.
+fuera_de_paleta = {}
+
 
 def revisar(path, esperado, necesita_alpha):
     """Revisa un PNG. `esperado` es el lado en pixeles."""
@@ -188,12 +196,12 @@ def revisar(path, esperado, necesita_alpha):
         errors.append(f"{rel}: no tiene transparencia — en el juego se va a ver "
                       "un cuadrado de fondo alrededor del personaje")
 
+    # La paleta CRECE (ver docs/ARTE_SPEC.md): un color nuevo no es un error,
+    # es algo para adoptar. Se juntan todos y se avisa una sola vez al final,
+    # con el comando para sumarlos.
     if PALETA and colores:
-        fuera = colores - PALETA
-        if fuera:
-            muestra = ", ".join("#%02x%02x%02x" % c for c in sorted(fuera)[:4])
-            warns.append(f"{rel}: {len(fuera)} color(es) fuera de la paleta ({muestra}"
-                         f"{'...' if len(fuera) > 4 else ''})")
+        for c in colores - PALETA:
+            fuera_de_paleta.setdefault(c, rel)
 
 
 # ------------------------------------------------------------------- recorrido
@@ -285,6 +293,13 @@ if faltan_tiles or faltan_sprites:
         print("   tiles:   " + ", ".join(faltan_tiles))
     if faltan_sprites:
         print("   sprites: " + ", ".join(faltan_sprites))
+
+if fuera_de_paleta:
+    print(f"\n-- {len(fuera_de_paleta)} color(es) todavia no estan en la paleta --")
+    for c, donde in sorted(fuera_de_paleta.items(), key=lambda kv: kv[1]):
+        print("   #%02x%02x%02x  (%s)" % (c[0], c[1], c[2], donde))
+    print("   Si son a proposito, sumalos con:  python3 tools/actualizar_paleta.py")
+    print("   Si no los pusiste vos, revisa si se colo un color sin querer.")
 
 if warns:
     print("\n=== AVISOS ===")

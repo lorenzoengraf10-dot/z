@@ -31,10 +31,14 @@ const MAX_FRAMES := 24
 @export var sprite_name_fallback := ""
 ## Cuadros por segundo de las animaciones.
 @export var fps := 8.0
-## El personaje se dibuja con los pies en la fila 24 de un cuadro de 32, y el
-## juego apoya esa fila sobre la celda. Por eso el sprite va corrido 8 px para
-## arriba: 24 (los pies) - 16 (el centro del cuadro) = 8.
-@export var foot_offset := 8.0
+## El personaje se dibuja con los pies en la fila 28 de un cuadro de 32, y el
+## juego apoya esa fila sobre la celda. Por eso el sprite va corrido 12 px para
+## arriba: 28 (los pies) - 16 (el centro del cuadro) = 12.
+##
+## Era 8 (fila 24) hasta que llegó el primer dibujo de verdad: lo hicieron con
+## los pies casi al borde de abajo. Como todavía no había ningún otro arte, se
+## cambió la regla en vez del dibujo (ver docs/ARTE_SPEC.md).
+@export var foot_offset := 12.0
 ## Los nodos que hacen de placeholder mientras no haya sprite. Son varios
 ## porque el jugador, por ejemplo, tiene el cuerpo y la flecha de dirección
 ## como dos Polygon2D separados.
@@ -109,20 +113,24 @@ func set_facing(direction: Vector2) -> void:
 		return
 
 	var wanted := ""
+	var espejado := false
 	# Gana el eje que más pesa: mirando en diagonal, manda el horizontal, que es
 	# el que mejor se lee en un top-down.
 	if absf(direction.x) >= absf(direction.y):
 		wanted = "lado"
-		_sprite.flip_h = direction.x < 0.0
+		espejado = direction.x < 0.0
 	elif direction.y < 0.0:
 		wanted = "arriba"
-		_sprite.flip_h = false
 	else:
 		wanted = "abajo"
-		_sprite.flip_h = false
 
+	# ⚠ El espejado se aplica DESPUÉS de comprobar que la animación exista.
+	# Si no, un personaje al que todavía le falta "lado" seguía mostrando la
+	# vista de frente pero espejada al caminar para la izquierda, y con brazos
+	# asimétricos (el zombi pesado) eso se ve.
 	if not _sprite.sprite_frames.has_animation(wanted):
 		return
+	_sprite.flip_h = espejado
 	if wanted == _current:
 		return
 	_current = wanted

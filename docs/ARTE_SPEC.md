@@ -61,25 +61,34 @@ pincel con opacidad. Lápiz duro, un píxel a la vez.
 ## Dónde apoya el personaje (el detalle que arruina todo si se define tarde)
 
 Un personaje de 32×32 se dibuja **centrado en horizontal** y con **los pies en
-la fila 24** (contando desde arriba, empezando en 0).
+la fila 28** (contando desde arriba, empezando en 0).
 
 ```
       fila 0  ┌────────────────┐
               │                │   ← el cuerpo va acá arriba:
-              │      ▄▄▄▄      │     24 píxeles de alto
+              │      ▄▄▄▄      │     28 píxeles de alto
               │     ▐████▌     │
               │      ▐██▌      │
-     fila 24  ├──────▀▀▀▀──────┤   ← LOS PIES VAN ACÁ
-              │                │   ← los últimos 8 píxeles quedan
-     fila 31  └────────────────┘     libres (sombra, o vacío)
+     fila 28  ├──────▀▀▀▀──────┤   ← LOS PIES VAN ACÁ
+     fila 31  └────────────────┘   ← quedan 3 filas de sobra
                      ↑
               centrado en horizontal (columna 16)
 ```
 
-**Por qué importa:** el juego apoya esa fila 24 sobre la celda donde está
+**Por qué importa:** el juego apoya esa fila 28 sobre la celda donde está
 parado el personaje. Si dibujás los pies más abajo o más arriba, el personaje
 va a verse flotando o hundido en el piso, y hay que rehacer **todos** los
 dibujos para corregirlo. Es un minuto ahora y una tarde después.
+
+> **Ojo, esto cambió.** Antes eran los pies en la fila 24. Cuando llegó el
+> primer dibujo de verdad (el zombi pesado) estaba hecho con los pies casi al
+> borde de abajo, y como todavía no había ningún otro personaje hecho, se
+> cambió la regla en vez del dibujo. Si alguno tiene algo empezado con la
+> medida vieja, lo baja 4 píxeles y listo. En el código esto es
+> `foot_offset = 12` (28 − 16) en `sprite_directional.gd`.
+>
+> Quedan solo **3 filas de sobra abajo**, así que en una animación cuidá que
+> ninguna pose se pase de la fila 31 — se corta.
 
 ---
 
@@ -130,6 +139,37 @@ sprites/jugador/abajo_3.png
 - Se pueden mezclar: el jugador animado y el lobo quieto, sin problema.
 - Los números tienen que ir **seguidos**. Si hay `_1` y `_3` pero falta `_2`, la
   animación se corta en el 1 — el verificador avisa de eso.
+- **Repetir un cuadro está bien.** En una caminata se pasa por la misma pose al
+  ir y al volver, así que `_1` y `_3` pueden ser el mismo dibujo. El zombi
+  pesado son 8 cuadros hechos con 5 dibujos.
+
+#### La velocidad (fps)
+
+Un ciclo completo dura **`cuadros ÷ fps`** segundos. La cuenta importa porque
+al agregar cuadros la animación se hace más lenta si no se toca el fps:
+
+| Cuadros | fps | Ciclo | Se siente |
+|---|---|---|---|
+| 2 | 6 | 333 ms | un paso normal |
+| 4 | 12 | 333 ms | igual pero más suave |
+| 8 | 12 | 666 ms | pesado, arrastrado |
+| 8 | 24 | 333 ms | un paso normal, muy suave |
+
+El fps de cada personaje se toca **sin programar**: se abre su escena en Godot,
+se selecciona el nodo `SpriteDirectional` y se cambia el campo **Fps** en el
+Inspector. Las variantes de zombi lo tienen en `SPRITE_OVERRIDE`
+(`scripts/systems/horde_spawner.gd`), porque las tres comparten una escena sola.
+
+#### Antes de dar por terminada una animación
+
+```bash
+python3 tools/prueba_animacion.py zombi_resistente abajo
+```
+
+Deja un PNG con los cuadros en fila y ampliados, y avisa de las cosas que **no
+se ven mirando un cuadro suelto**: un píxel que se escapó, un cuadro que quedó
+corrido, un hueco en la numeración. En movimiento eso se ve como un parpadeo o
+un tirón y es dificilísimo darse cuenta de cuál de los cuadros es.
 
 ---
 
@@ -142,32 +182,57 @@ distintos y unificarlo después no es retocar: es rehacer.
 la izquierda), tocar el menú de las tres rayitas → **Load Palette** → elegir
 `game/assets/paleta.gpl`.
 
-En LibreSprite y GIMP es igual: los dos leen `.gpl`.
+En LibreSprite y GIMP es igual: los dos leen `.gpl`. En **Piskel** se cargan los
+colores a mano desde el hex, o se abre el `paleta.png` como referencia al lado.
+
+### La paleta CRECE — no es una jaula
+
+Al principio era una lista cerrada. Ya no: si te hace falta un color que no
+está **usalo igual**, y después corré esto para que lo tengan los tres:
+
+```bash
+python3 tools/actualizar_paleta.py
+```
+
+Recorre todo el arte, encuentra los colores nuevos y los suma a la paleta. **No
+toca ningún dibujo.** Después, avisale al resto que vuelvan a cargar la paleta.
+
+Lo único que sigue importando es **elegir de la lista cuando ya hay algo que
+sirve**. Si el juego ya tiene un marrón de madera, usá ese en vez de inventar
+uno parecido pero distinto: tres marrones casi iguales es lo que hace que un
+juego se vea sucio. El verificador te muestra los colores nuevos que aparecieron
+para que veas si eran a propósito o se coló uno sin querer.
 
 ![paleta](../game/assets/paleta.png)
 
+<!-- PALETA:INICIO (generado por tools/actualizar_paleta.py) -->
 | Color | Hex | | Color | Hex |
 |---|---|---|---|---|
-| Negro | `#12100f` | | Agua profunda | `#16273d` |
-| Sombra | `#241f1d` | | Agua | `#24405c` |
-| Gris oscuro | `#3b3733` | | Agua clara | `#3a6480` |
-| Gris | `#5c5751` | | Cielo | `#6f97a8` |
-| Gris claro | `#857f77` | | Ladrillo oscuro | `#4a2c25` |
-| Hueso | `#bab3a6` | | Ladrillo | `#70423a` |
-| Blanco sucio | `#e6e0d2` | | Ladrillo claro | `#9c6455` |
-| Verde muy oscuro | `#1b2b18` | | Sangre | `#6e1414` |
-| Verde oscuro | `#2c4423` | | Rojo | `#a82a24` |
-| Verde | `#44622f` | | Rojo claro | `#d4544a` |
-| Verde claro | `#6b8a3e` | | Oxido | `#8a5220` |
-| Tierra oscura | `#2e2318` | | Naranja | `#c8802c` |
-| Tierra | `#4d3826` | | Fuego | `#e8a83c` |
-| Madera | `#6f4f2f` | | Amarillo | `#e6cf6a` |
-| Madera clara | `#9c7346` | | Violeta oscuro | `#38264a` |
-| Arena | `#c2a066` | | Violeta | `#5c4470` |
-
-Si de verdad hace falta un color que no está, **avisen antes de usarlo** y lo
-agregamos a la paleta para todos. El verificador avisa cuando aparece un color
-de afuera, así no se cuela sin que nadie se entere.
+| Negro | `#12100f` | | Rojo | `#a82a24` |
+| Sombra | `#241f1d` | | Rojo claro | `#d4544a` |
+| Gris oscuro | `#3b3733` | | Oxido | `#8a5220` |
+| Gris | `#5c5751` | | Naranja | `#c8802c` |
+| Gris claro | `#857f77` | | Fuego | `#e8a83c` |
+| Hueso | `#bab3a6` | | Amarillo | `#e6cf6a` |
+| Blanco sucio | `#e6e0d2` | | Violeta oscuro | `#38264a` |
+| Verde muy oscuro | `#1b2b18` | | Violeta | `#5c4470` |
+| Verde oscuro | `#2c4423` | | Naranja brillante | `#fbbb53` |
+| Verde | `#44622f` | | Verde claro 2 | `#70f674` |
+| Verde claro | `#6b8a3e` | | Violeta claro | `#d284f0` |
+| Tierra oscura | `#2e2318` | | Verde 2 | `#a6c1a6` |
+| Tierra | `#4d3826` | | Rojo 2 | `#bf0303` |
+| Madera | `#6f4f2f` | | Azul | `#39388e` |
+| Madera clara | `#9c7346` | | Rojo 3 | `#8e3232` |
+| Arena | `#c2a066` | | Azul oscuro | `#252474` |
+| Agua profunda | `#16273d` | | Verde oscuro 2 | `#33702c` |
+| Agua | `#24405c` | | Gris oscuro 2 | `#666f5f` |
+| Agua clara | `#3a6480` | | Naranja oscuro | `#673b12` |
+| Cielo | `#6f97a8` | | Azul oscuro 2 | `#14134d` |
+| Ladrillo oscuro | `#4a2c25` | | Naranja oscuro 2 | `#4d3c13` |
+| Ladrillo | `#70423a` | | Naranja muy oscuro | `#403009` |
+| Ladrillo claro | `#9c6455` | | Verde muy oscuro 2 | `#053100` |
+| Sangre | `#6e1414` | | Negro 2 | `#000000` |
+<!-- PALETA:FIN -->
 
 ---
 
@@ -206,7 +271,8 @@ tinte, así que se puede ir agregando art de a una variante sin romper nada.
 Para agregar otra variante con dibujo propio, sumarla a `SPRITE_OVERRIDE` en
 `scripts/systems/horde_spawner.gd`.
 
-- [ ] `sprites/zombi_resistente/` — abajo, arriba, lado (el zombi grande)
+- [x] `sprites/zombi_resistente/abajo` — **el zombi pesado, 8 cuadros** ✅
+- [ ] `sprites/zombi_resistente/` — falta `arriba` y `lado`
 
 **Los tiles no llevan transparencia** (son cuadrados llenos). Los **personajes
 sí**: fondo transparente, siempre.

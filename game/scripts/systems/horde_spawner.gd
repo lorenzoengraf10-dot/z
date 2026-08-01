@@ -12,8 +12,16 @@ const ZOMBIE_SCENE := "res://scenes/Zombie.tscn"
 ## cualquier otro personaje (ver docs/ARTE_SPEC.md). Mientras esa carpeta no
 ## tenga PNG, la variante sigue mostrando el dibujo base tintado, como hasta
 ## ahora: no hay que esperar a tener el arte para agregarla acá.
+##
+## El "fps" va acá y no en Zombie.tscn porque la escena la comparten las tres
+## variantes y cada dibujo tiene su propia cantidad de cuadros.
+##
+## Para elegir el fps: un ciclo completo dura `cuadros / fps` segundos.
+## El zombi pesado tiene 8 cuadros, así que a 12 fps el ciclo son 666 ms — el
+## doble de lento que un paso normal, que es justo lo que se busca para el
+## zombi lento y pesado. Si lo quieren más arrastrado, bajen el número.
 const SPRITE_OVERRIDE := {
-	"resistente": "zombi_resistente",
+	"resistente": {"sprite": "zombi_resistente", "fps": 12.0},
 }
 
 ## Variantes. El spawner sobreescribe los @export del zombie al crearlo.
@@ -143,13 +151,14 @@ func _spawn_one(position_global: Vector2, variant: String) -> void:
 	# Si esta variante tiene su propio dibujo (SPRITE_OVERRIDE), hay que
 	# pedírselo al SpriteDirectional ANTES de add_child(): _ready() carga los
 	# PNG apenas el nodo entra al árbol, así que después ya es tarde.
-	var override: String = SPRITE_OVERRIDE.get(variant, "")
+	var override: Dictionary = SPRITE_OVERRIDE.get(variant, {})
 	var art: SpriteDirectional = null
-	if override != "":
+	if not override.is_empty():
 		art = z.get_node_or_null("SpriteDirectional") as SpriteDirectional
 		if art != null:
-			art.sprite_name = override
+			art.sprite_name = str(override["sprite"])
 			art.sprite_name_fallback = "zombi"
+			art.fps = float(override["fps"])
 
 	z.chase_speed = float(stats["chase_speed"])
 	z.wander_speed = float(stats["wander_speed"])
