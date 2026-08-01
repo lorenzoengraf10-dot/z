@@ -56,6 +56,25 @@ for i, cells in enumerate(rooms):
 total_floor = sum(len(c) for c in rooms)
 print(f"total celdas de piso: {total_floor}")
 
+# Que dos edificios no se pisen. Encontrado a mano en el mapa 160x100: dos
+# casas quedaron tan pegadas que sus paredes se mezclaban (una perdía un
+# tramo de pared, la otra le dictaba el suyo encima) — un jugador de afuera
+# lo vio como "las casas se superponen". La caja de cada edificio es su piso
+# +1 celda de margen (el anillo de pared); si dos cajas se tocan, es la misma
+# trampa.
+cajas = []
+for i, cells in enumerate(rooms):
+    xs = [c[0] for c in cells]
+    ys = [c[1] for c in cells]
+    cajas.append((i, min(xs) - 1, max(xs) + 1, min(ys) - 1, max(ys) + 1))
+for i in range(len(cajas)):
+    for j in range(i + 1, len(cajas)):
+        _, ax0, ax1, ay0, ay1 = cajas[i]
+        _, bx0, bx1, by0, by1 = cajas[j]
+        if ax0 <= bx1 and bx0 <= ax1 and ay0 <= by1 and by0 <= ay1:
+            problems.append(f"los edificios #{i} y #{j} se superponen "
+                            f"(cajas x{ax0}-{ax1} y{ay0}-{ay1} / x{bx0}-{bx1} y{by0}-{by1})")
+
 # Cada puerta tiene que tener por donde llegar desde afuera.
 #
 # Mientras nada colisionaba esto no molestaba: entrabas atravesando la pared.

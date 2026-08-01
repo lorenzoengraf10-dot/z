@@ -13,7 +13,9 @@ signal changed(items: Dictionary)
 signal full(item: String)
 
 ## Lugares con los que arrancás, sin ninguna mochila.
-@export var base_capacity := 8
+## Era 8; el testeo externo lo marcó como demasiado ahogado — sobre todo antes
+## de encontrar la primera mochila.
+@export var base_capacity := 12
 
 var items: Dictionary = {}
 ## Lo suma el perk "Espalda ancha".

@@ -29,8 +29,18 @@ const BUILDABLES := [
 		"id": "mesa",
 		"nombre": "Mesa de trabajo",
 		"escena": "res://scenes/Workbench.tscn",
-		"costo": 8,
+		# Era 8 (3 árboles enteros) y es la puerta de entrada a 8 de las 11
+		# recetas: el testeo la marcó como el cuello de botella más caro del
+		# arranque. -15% ~ 6.8, redondeado para abajo a 6.
+		"costo": 6,
 		"color": Color(0.65, 0.5, 0.25, 0.5),
+	},
+	{
+		"id": "cofre",
+		"nombre": "Cofre",
+		"escena": "res://scenes/Chest.tscn",
+		"costo": 5,
+		"color": Color(0.5, 0.35, 0.15, 0.5),
 	},
 ]
 
@@ -283,13 +293,22 @@ func _try_remove(cell: Vector2i) -> void:
 	var record: Dictionary = _placed[key]
 	var node = record.get("nodo")
 	var type_id := str(record.get("tipo", "barricada"))
+	var player = _player()
+
+	# Un cofre con cosas adentro no se desarma así nomás: se perdería todo lo
+	# guardado junto con el mueble. Hay que vaciarlo primero (E lo abre).
+	if type_id == "cofre" and is_instance_valid(node):
+		var stored: Dictionary = node.get("stored")
+		if not stored.is_empty():
+			build_message.emit("Vaciá el cofre antes de desarmarlo (E para abrirlo)")
+			return
+
 	_placed.erase(key)
 	if is_instance_valid(node):
 		node.queue_free()
 
 	# Devolvemos la mitad de lo que costó (redondeando para abajo, mínimo 1).
 	var refund := maxi(1, int(floor(_cost_of(type_id) * REFUND_RATIO)))
-	var player = _player()
 	if player != null:
 		player.inventory.add(COST_ITEM, refund)
 	build_message.emit("Desarmaste %s (+%d madera)" % [_name_of(type_id), refund])

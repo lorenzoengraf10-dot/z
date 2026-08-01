@@ -12,8 +12,10 @@ extends Node
 ##   Shift           correr (gasta energía, hace mucho ruido)
 ##   Ctrl            agacharse (lento y silencioso)
 ##   E               interactuar (puerta / contenedor / talar / pescar / picar)
+##   T               tomar agua del lago (o llenar el recipiente, si tenés uno)
 ##   Q               comer o beber lo que tengas
 ##   R               vendarte
+##   F               cambiar de mano (cuerpo a cuerpo <-> arma de fuego)
 ##   B               modo construcción
 ##   C               crafteo
 ##   I / Tab         inventario
@@ -29,8 +31,10 @@ const ACTIONS := {
 	"run": [KEY_SHIFT],
 	"crouch": [KEY_CTRL],
 	"interact": [KEY_E],
+	"drink_water": [KEY_T],
 	"eat": [KEY_Q],
 	"bandage": [KEY_R],
+	"switch_weapon": [KEY_F],
 	"attack": [KEY_SPACE],
 	"build_mode": [KEY_B],
 	"crafting": [KEY_C],

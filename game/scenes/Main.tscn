@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=31 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/world.gd" id="2"]
@@ -27,6 +27,9 @@
 [ext_resource type="Script" path="res://scripts/ui/interact_prompt.gd" id="25"]
 [ext_resource type="Script" path="res://scripts/systems/floating_text.gd" id="26"]
 [ext_resource type="PackedScene" path="res://scenes/ui/Objectives.tscn" id="27"]
+[ext_resource type="PackedScene" path="res://scenes/ui/StorageScreen.tscn" id="28"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ClickMinigame.tscn" id="30"]
+[ext_resource type="PackedScene" path="res://scenes/ui/FishingMinigame.tscn" id="31"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -127,11 +130,17 @@ script = ExtResource("11")
 
 [node name="InventoryScreen" parent="." instance=ExtResource("17")]
 
+[node name="StorageScreen" parent="." instance=ExtResource("28")]
+
 [node name="HUD" parent="." instance=ExtResource("7")]
 
 [node name="MapScreen" parent="." instance=ExtResource("8")]
 
 [node name="FireMinigame" parent="." instance=ExtResource("13")]
+
+[node name="ClickMinigame" parent="." instance=ExtResource("30")]
+
+[node name="FishingMinigame" parent="." instance=ExtResource("31")]
 
 [node name="FloatingText" type="Node2D" parent="."]
 script = ExtResource("26")

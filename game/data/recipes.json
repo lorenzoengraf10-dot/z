@@ -31,13 +31,14 @@
     "categoria": "Armas",
     "cuesta": {
       "piedra": 2,
-      "madera": 1
+      "madera": 1,
+      "cuerda": 1
     },
     "produce": {
       "cuchillo": 1
     },
     "requiere_mesa": true,
-    "descripcion": "Rápido y silencioso."
+    "descripcion": "Rápido y silencioso. La cuerda es la que ata el filo al mango."
   },
   {
     "id": "lanza",
@@ -99,6 +100,33 @@
     "descripcion": "Lo más letal, y lo más ruidoso."
   },
   {
+    "id": "recipiente",
+    "nombre": "Recipiente",
+    "categoria": "Herramientas",
+    "cuesta": {
+      "metal": 3
+    },
+    "produce": {
+      "recipiente": 1
+    },
+    "requiere_mesa": true,
+    "descripcion": "Para juntar agua del lago y hervirla después."
+  },
+  {
+    "id": "cana_pescar",
+    "nombre": "Caña de pescar",
+    "categoria": "Herramientas",
+    "cuesta": {
+      "madera": 3,
+      "cuerda": 2
+    },
+    "produce": {
+      "cana_pescar": 1
+    },
+    "requiere_mesa": true,
+    "descripcion": "Sin esto no se puede pescar."
+  },
+  {
     "id": "vendaje",
     "nombre": "Vendaje",
     "categoria": "Medicina",
@@ -142,12 +170,13 @@
     "nombre": "Hervir agua",
     "categoria": "Cocina",
     "cuesta": {
+      "agua_sucia": 1,
       "madera": 1
     },
     "produce": {
       "agua": 1
     },
     "requiere_fuego": true,
-    "descripcion": "Agua segura: sacia la sed y no te cae mal."
+    "descripcion": "Herví el agua sucia del recipiente (la madera es la leña): sale segura."
   }
 ]

@@ -4,11 +4,13 @@ extends Node
 ## (puerta o fogata) y si no, el tile que tenés enfrente:
 ##   puerta → la abrís o la cerrás (cerrada frena a los zombies)
 ##   fogata → la prendés con el minijuego, o le echás leña si ya está prendida
-##   árbol  → talás y conseguís madera (hace mucho ruido: los zombies te oyen)
-##   agua   → pescás y de paso tomás agua (sacia la sed, pero sin hervir te cae mal)
-##   roca / veta → picás y conseguís piedra o metal (hace falta un pico)
+##   árbol / roca / veta → abren el minijuego de 3 clicks (ui/click_minigame.gd)
+##   agua   → **E pesca (minijuego de burbujas, hace falta caña), T toma agua**
+##            — son dos acciones separadas, no una sola que asume por vos
+##            (ver try_drink()).
 ##
-## Las acciones llevan tiempo y se cancelan si te movés.
+## Los minijuegos NO pausan el árbol: mientras están abiertos el jugador queda
+## congelado (input_blocked) pero los zombies te siguen buscando igual.
 
 signal action_started(label: String, duration: float)
 signal action_progress(ratio: float)
@@ -26,9 +28,6 @@ const ORE := "O"
 @export var campfire_reach := 30.0
 @export var door_reach := 26.0
 @export var container_reach := 28.0
-@export var chop_seconds := 1.8
-@export var fish_seconds := 3.5
-@export var mine_seconds := 2.6
 # Misma escala que player.gd, medida sobre correr = 190 = 100%.
 @export var chop_noise := 143.0    ## 75%
 ## Picar era 200, o sea MÁS ruidoso que correr, y se salía de la escala. Queda
@@ -37,16 +36,16 @@ const ORE := "O"
 @export var wood_per_tree := 3
 @export var stone_per_rock := 2
 @export var metal_per_ore := 2
-@export var fish_chance := 0.65
 ## Lo que te cuesta de salud tomar agua del lago sin hervirla.
 @export var dirty_water_damage := 6.0
-## Con la herramienta adecuada las acciones tardan esta fracción del tiempo.
-@export var tool_speedup := 0.55
+## No se puede pescar con un zombi encima: ni que te haya visto, ni que esté
+## a menos de esta cantidad de celdas (world.gd usa tiles de 16 px).
+@export var fish_danger_cells := 15
+const _TILE_SIZE := 16.0
 
 var _kind := ""
 var _elapsed := 0.0
 var _duration := 0.0
-var _cell := Vector2i.ZERO
 ## Contenedor que estamos revisando (null si la accion no es esa).
 var _container = null
 var _anchor := Vector2.ZERO
@@ -109,9 +108,14 @@ func peek() -> Dictionary:
 
 	var container = _nearby_container()
 	if container != null:
+		# Ya revisado (o un cofre, que arranca así): en vez de decir "ya lo
+		# revisaste" y no hacer nada, abre el almacenamiento — es lo que
+		# convierte 93 muebles muertos del mapa en lugares donde guardar.
+		var texto := ("Guardar cosas (%s)" % container.display_name()) \
+				if container.looted else ("Revisar %s" % container.display_name())
 		return {
 			"tipo": "contenedor",
-			"texto": "Ya lo revisaste" if container.looted else "Revisar %s" % container.display_name(),
+			"texto": texto,
 			"posicion": container.global_position,
 			"objetivo": container,
 		}
@@ -122,12 +126,18 @@ func peek() -> Dictionary:
 
 	var target: Vector2 = _player.global_position + _player.facing * reach
 	var cell: Vector2i = world.cell_at(target)
+	var char_here := world.char_at_cell(cell)
 	var texto := ""
-	match world.char_at_cell(cell):
+	match char_here:
 		TREE:
 			texto = "Talar árbol"
 		WATER:
-			texto = "Pescar"
+			if not _player.inventory.has("cana_pescar"):
+				texto = "Necesitás una caña de pescar"
+			elif _fishing_blocked_by_zombies():
+				texto = "Necesitás alejarte de los zombies para pescar"
+			else:
+				texto = "Pescar"
 		ROCK:
 			texto = "Picar piedra" if _has_tool("mineria") else "Necesitás un pico"
 		ORE:
@@ -135,12 +145,23 @@ func peek() -> Dictionary:
 		_:
 			return {}
 
-	return {
+	var result := {
 		"tipo": "tile",
 		"texto": texto,
 		"posicion": world.center_of(cell),
 		"objetivo": null,
 	}
+
+	# El agua tiene DOS acciones, no una: E pesca, T toma agua directo. Antes
+	# la E hacía las dos juntas (pescaba Y de yapa te hidrataba), y el testeo
+	# pidió que sea explícito, no una decisión tomada por el juego.
+	if char_here == WATER:
+		if _player.inventory.has("recipiente"):
+			result["extra_texto"] = "T — Llenar el recipiente (agua sucia)"
+		else:
+			result["extra_texto"] = "T — Tomar agua directa (sucia, te cae mal)"
+
+	return result
 
 
 ## La llama el jugador cuando apretás E. Actúa sobre lo que devuelve peek().
@@ -164,11 +185,41 @@ func try_interact() -> void:
 			_use_campfire(target)
 		"contenedor":
 			if target.looted:
-				action_ended.emit("Ya revisaste eso")
+				_open_storage(target)
 			else:
 				_begin_container(target)
 		"tile":
 			_begin_tile(found)
+
+
+## Tomar agua directo del lago (tecla **T**), separado de pescar (E). Es
+## instantáneo, no cancela ni compite con ninguna acción en curso.
+##
+## Sin recipiente: tomás ahí mismo, agua sucia, te cae mal — igual que antes
+## hacía "pescar" de yapa. Con recipiente: en vez de tomarla, la juntás
+## (agua_sucia en la mochila) para hervirla después en la fogata y que salga
+## segura. Ver receta "agua_hervida" en data/recipes.json.
+func try_drink() -> void:
+	var world = _world()
+	if world == null:
+		return
+	var target: Vector2 = _player.global_position + _player.facing * reach
+	var cell: Vector2i = world.cell_at(target)
+	if world.char_at_cell(cell) != WATER:
+		action_ended.emit("No hay agua ahí")
+		return
+
+	if _player.inventory.has("recipiente"):
+		var added: int = _player.receive("agua_sucia", 1)
+		if added > 0:
+			action_ended.emit("Llenaste el recipiente con agua sucia")
+		else:
+			action_ended.emit("No te entra el agua sucia (mochila llena)")
+		return
+
+	_player.needs.set_need(NeedsComponent.SED, _player.needs.max_of(NeedsComponent.SED))
+	_player.needs.damage(dirty_water_damage * _player.needs.raw_damage_multiplier)
+	action_ended.emit("Tomaste agua directo del lago (sucia, te cayó mal)")
 
 
 ## Arranca la acción que corresponda al tile que estás mirando.
@@ -180,9 +231,9 @@ func _begin_tile(found: Dictionary) -> void:
 	var cell: Vector2i = world.cell_at(position)
 	match world.char_at_cell(cell):
 		TREE:
-			_begin("talar", "Talando árbol...", _timed(chop_seconds, "tala"), cell)
+			_start_click_minigame("talar", "Talando árbol", cell, chop_noise, _has_tool("tala"))
 		WATER:
-			_begin("pescar", "Pescando...", fish_seconds, cell)
+			_try_fish(cell)
 		ROCK, ORE:
 			_try_mine(cell)
 
@@ -192,12 +243,94 @@ func _try_mine(cell: Vector2i) -> void:
 	if not _has_tool("mineria"):
 		action_ended.emit("Necesitás un pico para picar esto")
 		return
-	_begin("minar", "Picando...", _timed(mine_seconds, "mineria"), cell)
+	_start_click_minigame("minar", "Picando piedra", cell, mine_noise, true)
 
 
-## Duración de una acción, más corta si tenés la herramienta adecuada.
-func _timed(seconds: float, kind: String) -> float:
-	return seconds * (tool_speedup if _has_tool(kind) else 1.0)
+## Pescar exige caña Y que no haya zombies cerca — se revisa DE NUEVO acá
+## (además de en peek(), que es lo que muestra el cartelito) por si el estado
+## cambió justo entre que se mostró el cartel y apretaste E.
+func _try_fish(cell: Vector2i) -> void:
+	if not _player.inventory.has("cana_pescar"):
+		action_ended.emit("Necesitás una caña de pescar")
+		return
+	if _fishing_blocked_by_zombies():
+		action_ended.emit("Hay zombies cerca: no podés pescar tranquilo")
+		return
+
+	var minigame = get_tree().get_first_node_in_group("fishing_minigame")
+	if minigame == null:
+		action_ended.emit("No se pudo abrir el minijuego de pesca")
+		return
+	minigame.finished.connect(_on_fishing_finished, CONNECT_ONE_SHOT)
+	minigame.start()
+
+
+func _on_fishing_finished(caught: bool) -> void:
+	if caught:
+		_player.inventory.add("pescado", 1)
+		action_ended.emit("+1 pescado")
+	else:
+		action_ended.emit("Se te escapó")
+
+
+## True si algún zombie te vio, o si hay alguno a `fish_danger_cells` celdas
+## o menos — cualquiera de las dos alcanza para que no puedas pescar tranquilo.
+func _fishing_blocked_by_zombies() -> bool:
+	var danger_range := fish_danger_cells * _TILE_SIZE
+	for node in get_tree().get_nodes_in_group("hunter"):
+		if not (node is Node2D):
+			continue
+		var hunter = node
+		var seen := hunter.has_method("alert_level") and int(hunter.alert_level()) == 2
+		if seen:
+			return true
+		var dist: float = _player.global_position.distance_to(hunter.global_position)
+		if dist <= danger_range:
+			return true
+	return false
+
+
+## Arranca el minijuego de 3 clicks (talar / picar piedra / picar veta).
+## `easier` afloja la velocidad de la aguja si tenés la herramienta adecuada
+## (antes eso acortaba el tiempo de espera; ahora hace más fácil el timing).
+func _start_click_minigame(kind: String, label: String, cell: Vector2i, noise: float, easier: bool) -> void:
+	var minigame = get_tree().get_first_node_in_group("click_minigame")
+	if minigame == null:
+		action_ended.emit("No se pudo abrir el minijuego")
+		return
+	_player.action_noise = noise
+	minigame.finished.connect(_on_click_minigame_finished.bind(kind, cell), CONNECT_ONE_SHOT)
+	minigame.start(label, easier)
+
+
+## Entrega la recompensa (o no) al terminar el minijuego de 3 clicks. Es acá y
+## no adentro del minijuego porque un solo click_minigame.gd sirve para tres
+## recompensas distintas (madera, piedra, metal) — el minijuego no sabe nada
+## de ítems, solo avisa si ganaste o no.
+func _on_click_minigame_finished(success: bool, kind: String, cell: Vector2i) -> void:
+	_player.action_noise = 0.0
+	if not success:
+		action_ended.emit("Acción cancelada")
+		return
+
+	var world = _world()
+	if world == null:
+		return
+
+	match kind:
+		"talar":
+			world.set_char_at_cell(cell, GRASS)
+			_player.inventory.add("madera", wood_per_tree)
+			action_ended.emit("+%d madera" % wood_per_tree)
+		"minar":
+			var drop: String = world.mineable_at(cell)
+			if drop == "":
+				action_ended.emit("Ahí ya no queda nada")
+				return
+			var amount := metal_per_ore if drop == "metal" else stone_per_rock
+			world.set_char_at_cell(cell, GRASS)
+			_player.inventory.add(drop, amount)
+			action_ended.emit("+%d %s" % [amount, ItemDB.display_name(drop)])
 
 
 func _has_tool(kind: String) -> bool:
@@ -207,21 +340,42 @@ func _has_tool(kind: String) -> bool:
 	return false
 
 
-## Contenedor más cercano dentro del alcance, o null.
+## Contenedor más cercano dentro del alcance, o null. Busca en el grupo
+## "container" directo (mismo patrón que _nearby_campfire() acá abajo) en vez
+## de pasar por loot_system: así encuentra tanto los muebles del mapa como los
+## cofres que construya el jugador, que no pasan por loot_system.
 # Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
 func _nearby_container():
-	var system = get_tree().get_first_node_in_group("loot_system")
-	if system == null:
-		return null
-	return system.nearest(_player.global_position, container_reach)
+	var best = null
+	var best_dist := container_reach
+	for node in get_tree().get_nodes_in_group("container"):
+		if not (node is Node2D):
+			continue
+		var candidate = node
+		var dist: float = _player.global_position.distance_to(candidate.global_position)
+		if dist <= best_dist:
+			best_dist = dist
+			best = candidate
+	return best
 
 
 ## Arranca a revisar un contenedor. Guardamos cuál es para vaciarlo al terminar.
 func _begin_container(container) -> void:
 	_container = container
-	_begin("revisar", "Revisando %s..." % container.display_name(),
-			container.search_seconds, Vector2i.ZERO)
+	_begin("revisar", "Revisando %s..." % container.display_name(), container.search_seconds)
 	_player.action_noise = container.search_noise
+
+
+## Un mueble ya revisado (o un cofre) no se "revisa" de nuevo: abre directo
+## la pantalla de guardar/sacar. Es instantáneo, no hace falta el timer de
+## _begin() como al saquear.
+func _open_storage(container) -> void:
+	var screen = get_tree().get_first_node_in_group("storage_screen")
+	if screen == null or not screen.has_method("open_for"):
+		action_ended.emit("No se pudo abrir el almacenamiento")
+		return
+	screen.open_for(container)
+	action_ended.emit("")
 
 
 ## Puerta más cercana dentro del alcance, o null.
@@ -275,57 +429,28 @@ func cancel() -> void:
 		action_ended.emit("Acción cancelada")
 
 
-func _begin(kind: String, label: String, duration: float, cell: Vector2i) -> void:
+## Solo la usa "revisar" (saquear un contenedor) — talar/picar/pescar pasan
+## por minijuegos ahora (_start_click_minigame() / _try_fish() más arriba),
+## que no cancelan por moverte porque el jugador queda congelado mientras
+## están abiertos.
+func _begin(kind: String, label: String, duration: float) -> void:
 	_kind = kind
 	_duration = maxf(duration, 0.1)
 	_elapsed = 0.0
-	_cell = cell
 	_anchor = _player.global_position
-	if kind == "talar":
-		_player.action_noise = chop_noise
-	elif kind == "minar":
-		# Picar piedra se escucha todavía más lejos que talar.
-		_player.action_noise = mine_noise
 	action_started.emit(label, _duration)
 	action_progress.emit(0.0)
 
 
 func _complete() -> void:
 	var kind := _kind
-	var cell := _cell
 	# Nos guardamos el contenedor ANTES de _reset(), que lo limpia.
 	var container = _container
 	_reset()
 
 	var message := ""
-	match kind:
-		"revisar":
-			message = _finish_container(container)
-		"talar":
-			var world = _world()
-			if world != null:
-				world.set_char_at_cell(cell, GRASS)
-			_player.inventory.add("madera", wood_per_tree)
-			message = "+%d madera" % wood_per_tree
-		"pescar":
-			_player.needs.set_need(NeedsComponent.SED, _player.needs.max_of(NeedsComponent.SED))
-			_player.needs.damage(dirty_water_damage * _player.needs.raw_damage_multiplier)
-			if randf() < fish_chance:
-				_player.inventory.add("pescado", 1)
-				message = "+1 pescado · tomaste agua sucia (te cayó mal)"
-			else:
-				message = "Se escapó... y el agua sucia te cayó mal"
-		"minar":
-			var mine_world = _world()
-			if mine_world != null:
-				var drop: String = mine_world.mineable_at(cell)
-				if drop == "":
-					message = "Ahí ya no queda nada"
-				else:
-					var amount := metal_per_ore if drop == "metal" else stone_per_rock
-					mine_world.set_char_at_cell(cell, GRASS)
-					_player.inventory.add(drop, amount)
-					message = "+%d %s" % [amount, ItemDB.display_name(drop)]
+	if kind == "revisar":
+		message = _finish_container(container)
 
 	action_ended.emit(message)
 
@@ -359,15 +484,21 @@ func _finish_container(container) -> String:
 	var left_behind := false
 	for id in loot.keys():
 		var wanted := int(loot[id])
-		var taken: int = _player.inventory.add(str(id), wanted)
+		# receive() reparte igual que collect(): la munición del arma
+		# equipada va directo al casillero libre, el resto a la mochila.
+		var taken: int = _player.receive(str(id), wanted)
 		if taken > 0:
 			got.append("%d %s" % [taken, ItemDB.display_name(str(id))])
+		# Lo que no entró NO se pierde: se queda guardado en el mismo mueble
+		# (container.stored), listo para venir a buscarlo con más lugar o
+		# cuando el mueble ya sirva de almacenamiento (ver ui/storage_screen.gd).
 		if taken < wanted:
+			container.add_leftover(str(id), wanted - taken)
 			left_behind = true
 
 	if got.is_empty():
-		return "Encontraste cosas pero no te entra nada"
+		return "Encontraste cosas pero no te entra nada (quedó guardado ahí)"
 	var text := "Encontraste: " + ", ".join(got)
 	if left_behind:
-		text += " (algo no te entró)"
+		text += " (lo que no entró quedó guardado ahí)"
 	return text

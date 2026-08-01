@@ -44,18 +44,21 @@ const CONFIG := {
 # --- Ritmos (se ajustan después del playtest) ---
 #
 # Referencia para tocarlos: un día de juego dura `day_seconds` de day_night.gd
-# (300 s). Con estos números el hambre te dura ~222 s y la sed ~143 s, así que
-# en un día tenés que comer una vez y tomar agua dos. Se aflojaron un poco
-# respecto de antes porque el mapa pasó a 160×100 y ahora se camina mucho más
-# para llegar a cualquier lado.
+# (300 s). Con estos números el hambre te dura ~222 s y la sed ~238 s, así que
+# en un día tenés que comer una vez y tomar agua una.
+#
+# La sed era 0.70 (se vaciaba en 143 s, ¡más rápido que el hambre!) y pegaba
+# más fuerte que el hambre al llegar a 0 (2.6 contra 1.8). El testeo la marcó
+# como demasiado agresiva. Ahora se vacía más lento que el hambre y pega
+# exactamente igual — deja de ser "la necesidad injustamente dura" del grupo.
 @export var hunger_decay := 0.45       ## hambre perdida por segundo
-@export var thirst_decay := 0.70       ## sed perdida por segundo
+@export var thirst_decay := 0.42       ## sed perdida por segundo
 @export var stamina_drain := 14.0      ## energía por segundo corriendo
 @export var stamina_regen := 9.0       ## energía por segundo descansando
 @export var temperature_rate := 1.5    ## qué tan rápido se acerca a la ambiente
 
 @export var starving_damage := 1.8     ## daño/seg con hambre en 0
-@export var dehydration_damage := 2.6  ## daño/seg con sed en 0
+@export var dehydration_damage := 1.8  ## daño/seg con sed en 0
 @export var freezing_damage := 1.2     ## daño/seg con temperatura muy baja
 
 @export var cold_threshold := 25.0     ## debajo de esto empezás a congelarte

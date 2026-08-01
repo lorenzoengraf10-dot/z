@@ -10,6 +10,11 @@ extends StaticBody2D
 
 signal searched(container_type: String, loot: Dictionary)
 
+## No es una tabla de loot real (no está en loot_tables.json): un cofre
+## arranca directo con looted=true, así nunca sortea botín — solo sirve para
+## guardar (ver Chest.tscn).
+const CHEST_TYPE := "cofre"
+
 @export var container_type := "armario"
 ## Cuánto tarda en revisarse.
 @export var search_seconds := 2.2
@@ -17,6 +22,12 @@ signal searched(container_type: String, loot: Dictionary)
 @export var search_noise := 110.0
 
 var looted := false
+
+## Lo que quedó adentro: lo que no entró en la mochila al saquear (ver
+## add_leftover(), lo llama interactor.gd), o lo que alguien haya guardado a
+## propósito una vez que el mueble ya está vacío (ver ui/storage_screen.gd).
+## Es lo mismo que hace que un armario ya revisado sirva como almacenamiento.
+var stored: Dictionary = {}
 
 @onready var _body: Polygon2D = $Body
 @onready var _lid: Polygon2D = $Lid
@@ -44,10 +55,30 @@ func take_loot() -> Dictionary:
 
 
 func display_name() -> String:
+	if container_type == CHEST_TYPE:
+		return "Cofre"
 	return LootDB.table_name(container_type)
 
 
+## Lo que no entró en la mochila al saquear se queda ACÁ en vez de perderse.
+## Antes take_loot() ya marcaba el mueble como revisado y lo sobrante
+## desaparecía para siempre — era la queja más fuerte del testeo.
+func add_leftover(id: String, amount: int) -> void:
+	if amount <= 0:
+		return
+	stored[id] = int(stored.get(id, 0)) + amount
+
+
 func _apply_visuals() -> void:
+	if container_type == CHEST_TYPE:
+		# El cofre no se "apaga" nunca: aunque looted quede en true desde que
+		# se construye, tiene que seguir viéndose como un mueble útil, no como
+		# un armario ya revisado.
+		_body.color = Color(0.42, 0.30, 0.16)
+		_lid.color = Color(0.30, 0.20, 0.10)
+		_lid.position = Vector2.ZERO
+		return
+
 	if looted:
 		# Vacío: se ve abierto y apagado, para no volver a caminar hasta él.
 		_body.color = Color(0.28, 0.24, 0.20)
@@ -74,10 +105,15 @@ func _apply_visuals() -> void:
 # --- Guardado ---
 
 func to_dict() -> Dictionary:
-	return {"tipo": container_type, "vacio": looted}
+	return {"tipo": container_type, "vacio": looted, "guardado": stored.duplicate()}
 
 
 func from_dict(data: Dictionary) -> void:
 	container_type = str(data.get("tipo", container_type))
 	looted = bool(data.get("vacio", false))
+	stored.clear()
+	for key in data.get("guardado", {}).keys():
+		var amount := int(data["guardado"][key])
+		if amount > 0:
+			stored[str(key)] = amount
 	_apply_visuals()

@@ -66,7 +66,7 @@ func save_game() -> bool:
 	if map != null:
 		data["mapa"] = map.to_dict()
 
-	data["arma"] = player.equipped_weapon
+	data["armas"] = player.arms.to_dict()
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -132,7 +132,16 @@ func load_game() -> bool:
 	if map != null and typeof(map_data) == TYPE_DICTIONARY:
 		map.from_dict(map_data)
 
-	player.equip(str(data.get("arma", "")))
+	var arms_data: Variant = data.get("armas", null)
+	if typeof(arms_data) == TYPE_DICTIONARY:
+		player.arms.from_dict(arms_data)
+	else:
+		# Guardado de antes de los 3 casilleros: un solo string de arma, que
+		# en ese entonces todavía vivía adentro de la mochila. La mochila ya
+		# se cargó arriba, así que equip() la saca de ahí como corresponde.
+		var legacy := str(data.get("arma", ""))
+		if legacy != "":
+			player.arms.equip(legacy)
 
 	save_message.emit("Partida cargada")
 	loaded.emit()

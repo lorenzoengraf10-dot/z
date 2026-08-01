@@ -1,4 +1,4 @@
-extends CanvasLayer
+extends MinigameBase
 ## Minijuego para prender fuego por fricción.
 ##
 ## Cómo funciona:
@@ -12,14 +12,10 @@ extends CanvasLayer
 ##
 ## Con un mechero salteás la puntería y solo tenés que mantener 1 segundo.
 ##
-## **El juego NO se pausa**: mientras hacés fricción el mundo sigue corriendo y
-## los zombies te pueden llegar encima. Lo único que se frena es el jugador
-## (`player.input_blocked`), así no podés moverte mientras forcejeás con el
-## fuego. Si te apura una horda, Escape cancela.
+## El resto (fondo, título/pista, que no pausa el árbol, Escape cancela) sale
+## de ui/minigame_base.gd.
 
-signal finished(success: bool)
-
-enum State { CLOSED, AIM, FRICTION, DONE }
+enum State { AIM, FRICTION, DONE }
 
 ## Porcentaje del círculo que ocupa la zona verde.
 const GREEN_FRACTION := 0.15
@@ -31,7 +27,7 @@ const GREEN_FRACTION := 0.15
 @export var progress_decay := 1.6        ## cuánto se cae por segundo si soltás
 @export var radius := 96.0
 
-var _state: State = State.CLOSED
+var _state: State = State.AIM
 var _needle := 0.0
 var _green_start := 0.0
 var _green_size := TAU * GREEN_FRACTION
@@ -46,43 +42,9 @@ var _campfire = null
 var _wait_release := true
 var _close_timer := 0.0
 
-var _canvas: Control
-var _title: Label
-var _hint: Label
 
-
-func _ready() -> void:
+func _ready_extra() -> void:
 	add_to_group("fire_minigame")
-	layer = 8
-	_build_ui()
-	visible = false
-
-
-func _build_ui() -> void:
-	_canvas = Control.new()
-	_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_canvas.draw.connect(_on_canvas_draw)
-	add_child(_canvas)
-
-	_title = _make_label(24, -170)
-	_hint = _make_label(16, 150)
-
-
-func _make_label(font_size: int, y_offset: float) -> Label:
-	var label := Label.new()
-	label.add_theme_font_size_override("font_size", font_size)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.anchor_left = 0.5
-	label.anchor_right = 0.5
-	label.anchor_top = 0.5
-	label.anchor_bottom = 0.5
-	label.offset_left = -320
-	label.offset_right = 320
-	label.offset_top = y_offset
-	label.offset_bottom = y_offset + 34
-	add_child(label)
-	return label
 
 
 ## La llama el jugador al interactuar con una fogata apagada.
@@ -109,8 +71,7 @@ func start(campfire, has_lighter: bool = false) -> void:
 	_state = State.FRICTION if has_lighter else State.AIM
 	_randomize_green()
 
-	visible = true
-	_set_player_blocked(true)
+	_open()
 	_update_text()
 
 
@@ -118,22 +79,7 @@ func _randomize_green() -> void:
 	_green_start = randf() * TAU
 
 
-func _process(delta: float) -> void:
-	if _state == State.CLOSED:
-		return
-
-	# Como el juego ya no se pausa, te pueden matar en pleno minijuego.
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null or player.needs.is_dead():
-		_close(false)
-		return
-
-	# Escape siempre cancela, incluso si todavía tenés apretada la E con la que
-	# abriste el minijuego.
-	if Input.is_action_just_pressed("ui_cancel"):
-		_close(false)
-		return
-
+func _tick(delta: float) -> void:
 	# Esperamos a que sueltes la tecla con la que abriste el minijuego, así ese
 	# mismo E no cuenta como primer intento de timing.
 	if _wait_release and not Input.is_action_pressed("interact"):
@@ -149,9 +95,7 @@ func _process(delta: float) -> void:
 		State.DONE:
 			_close_timer -= delta
 			if _close_timer <= 0.0:
-				_close(true)
-
-	_canvas.queue_redraw()
+				_finish(true)
 
 
 func _try_strike() -> void:
@@ -191,22 +135,8 @@ func _succeed() -> void:
 	_update_text()
 
 
-func _close(success: bool) -> void:
-	_state = State.CLOSED
-	visible = false
-	_set_player_blocked(false)
+func _on_finish(_success: bool) -> void:
 	_campfire = null
-	finished.emit(success)
-
-
-func is_open() -> bool:
-	return _state != State.CLOSED
-
-
-func _set_player_blocked(blocked: bool) -> void:
-	var player = get_tree().get_first_node_in_group("player")
-	if player != null:
-		player.input_blocked = blocked
 
 
 func _in_green() -> bool:
@@ -217,47 +147,40 @@ func _in_green() -> bool:
 func _update_text() -> void:
 	match _state:
 		State.AIM:
-			_title.text = "PRENDER FUEGO"
+			title_label.text = "PRENDER FUEGO"
 			var extra := ""
 			if _misses > 0:
 				extra = "   (fallaste %d: la aguja va más rápido)" % _misses
-			_hint.text = "Apretá E justo cuando la aguja pase por el verde" + extra
+			hint_label.text = "Apretá E justo cuando la aguja pase por el verde" + extra
 		State.FRICTION:
-			_title.text = "¡FRICCIÓN!"
+			title_label.text = "¡FRICCIÓN!"
 			if _has_lighter:
-				_hint.text = "Mantené E apretado (mechero)"
+				hint_label.text = "Mantené E apretado (mechero)"
 			else:
-				_hint.text = "No sueltes E — si soltás, se enfría"
+				hint_label.text = "No sueltes E — si soltás, se enfría"
 		State.DONE:
-			_title.text = "¡FUEGO!"
-			_hint.text = ""
-		_:
-			_title.text = ""
-			_hint.text = ""
+			title_label.text = "¡FUEGO!"
+			hint_label.text = ""
 
 
-func _on_canvas_draw() -> void:
-	var center: Vector2 = _canvas.size / 2.0
-
-	# Fondo oscuro para separar el minijuego del mundo.
-	_canvas.draw_rect(Rect2(Vector2.ZERO, _canvas.size), Color(0, 0, 0, 0.55))
-	_canvas.draw_circle(center, radius + 34.0, Color(0.05, 0.05, 0.06, 0.9))
+func _draw_game(canvas_ctrl: Control, center: Vector2) -> void:
+	canvas_ctrl.draw_circle(center, radius + 34.0, Color(0.05, 0.05, 0.06, 0.9))
 
 	# Aro base.
-	_canvas.draw_arc(center, radius, 0.0, TAU, 96, Color(0.72, 0.72, 0.76), 6.0)
+	canvas_ctrl.draw_arc(center, radius, 0.0, TAU, 96, Color(0.72, 0.72, 0.76), 6.0)
 
 	# Zona verde (15% del círculo).
-	_canvas.draw_arc(center, radius, _green_start, _green_start + _green_size, 32,
+	canvas_ctrl.draw_arc(center, radius, _green_start, _green_start + _green_size, 32,
 			Color(0.25, 0.85, 0.35), 13.0)
 
 	# Progreso de la fricción, como anillo interior.
 	if _progress > 0.0:
 		var ratio := clampf(_progress / _duration, 0.0, 1.0)
-		_canvas.draw_arc(center, radius - 24.0, -PI / 2.0, -PI / 2.0 + TAU * ratio, 64,
+		canvas_ctrl.draw_arc(center, radius - 24.0, -PI / 2.0, -PI / 2.0 + TAU * ratio, 64,
 				Color(1.0, 0.55, 0.15), 11.0)
 
 	# Aguja (gira en sentido horario).
 	var tip: Vector2 = center + Vector2.RIGHT.rotated(_needle) * radius
 	var needle_color := Color(1.0, 0.95, 0.6) if _state == State.AIM else Color(1.0, 0.62, 0.25)
-	_canvas.draw_line(center, tip, needle_color, 4.0)
-	_canvas.draw_circle(center, 8.0, Color(0.92, 0.92, 0.92))
+	canvas_ctrl.draw_line(center, tip, needle_color, 4.0)
+	canvas_ctrl.draw_circle(center, 8.0, Color(0.92, 0.92, 0.92))

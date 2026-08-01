@@ -67,10 +67,13 @@ Mirás siempre hacia donde está el cursor, sin importar para dónde camines.
 | **Clic izq** o Espacio | Atacar o disparar con lo que tengas equipado |
 | Shift | Correr (rápido, **mucho ruido**, gasta energía) |
 | Ctrl | Agacharse (lento, **casi sin ruido**) |
-| E | Interactuar: abrir/cerrar puerta · revisar contenedor · prender fogata o echarle leña · talar · pescar · picar roca |
+| E | Interactuar: abrir/cerrar puerta · revisar contenedor · guardar/sacar de un cofre o armario · prender fogata o echarle leña · talar · picar roca o veta |
+| **T** | **Tomar agua** del lago (llena el recipiente si lo tenés, si no toma directo y sucia) |
+| E (parado en el agua) | **Pescar** con caña — abre el minijuego de burbujas |
+| **F** | Cambiar de mano: pasar el arma **en mano** entre cuerpo a cuerpo y de fuego |
 | Q | Comer o beber lo que tengas en la mochila |
 | R | Vendarte (corta el sangrado; usa vendaje o, si no tenés, un trapo) |
-| I o Tab | Inventario (equipar armas, consumir) — **pausa el juego** |
+| I o Tab | Inventario (equipar armas, consumir, **tirar objetos**) — **pausa el juego** |
 | B | Modo construcción (barricada / fogata / mesa · clic izq: poner, der: sacar) |
 | C | Panel de crafteo |
 | M | Mapa (se destapa caminando) — **pausa el juego** |
@@ -99,7 +102,10 @@ lo dice ahí mismo (*"Necesitás un pico"*).
   que está por debajo del 25% se resalta y el resto queda apagada, así de un
   vistazo ves qué te está matando. El **sangrado** parpadea cuando está activo.
 - **Debajo**: el estado de **sigilo** (`○ oculto` / `◒ te escucharon` / `◉ TE
-  VEN`), la mochila con su capacidad y el arma en mano con la munición.
+  VEN`), la mochila con su capacidad y el arma **en mano** (cuerpo a cuerpo o de
+  fuego, se cambia con **F**) con su munición si es de fuego. Lo que no está en
+  mano pero tenés equipado queda **guardado** en sus propios casilleros — ni el
+  arma ni la munición ocupan lugar de la mochila.
 - **Arriba a la derecha**: el día, la hora, la fase (☀ 🌇 🌙 🌅) y los botones.
 - **Abajo a la derecha**: el **minimapa**, con la misma niebla que el mapa
   grande. Los enemigos aparecen ahí **solo si ya te detectaron**.
@@ -166,7 +172,11 @@ id a un número del jugador).
   la escala a propósito. Es lo que usan zombies y animales para detectarte.
 - **Zombies con IA** (`zombie.gd`) — deambulan, te detectan por **visión** (cono al frente, que se corta con paredes, árboles y barricadas) o por **oído**, te persiguen y te muerden (la mordida casi siempre te hace **sangrar**). Se los puede matar.
 - **Hordas por ruido** (`systems/horde_spawner.gd`) — cuanto más ruido hacés, más "calor" acumulás; al pasar el umbral aparece una horda desde fuera de pantalla. Hay 3 variantes: normal, corredor (rápido y débil) y resistente (lento y duro).
-- **Paredes que frenan** (`world.gd`) — árboles, paredes de ladrillo, rocas y vetas colisionan de verdad, y cortan la línea de vista de los zombies. Encerrarte en una casa con la puerta cerrada es una defensa real. El mapa además está cerrado por **cuatro paredes invisibles** en el borde, así que no te podés ir al vacío.
+- **Paredes que frenan** (`world.gd`) — paredes de ladrillo, rocas y vetas colisionan de verdad y cortan la línea de vista de los zombies. Encerrarte en una casa con la puerta cerrada es una defensa real. El mapa además está cerrado por **cuatro paredes invisibles** en el borde, así que no te podés ir al vacío.
+- **Árboles atravesables** (`world.gd`) — se pueden cruzar (a menos velocidad,
+  igual que el agua) pero **siguen tapando la visión de los zombies**: usan una
+  segunda capa de física que solo mira el `VisionRay`, no los cuerpos. Meterte
+  detrás de uno sigue siendo un escondite real.
 - **Sigilo visible** (`player.gd`, `components/hunter_display.gd`) — la barra de ruido arriba de la cabeza, el `?`/`!` sobre cada enemigo y el chip del HUD. Antes el sistema de ruido existía pero era invisible y no se podía jugar con él.
 - **Feedback de combate** (`systems/floating_text.gd`, `ui/game_camera.gd`) — números de daño, parpadeo y retroceso del enemigo al golpearlo, barra de vida sobre el que estás peleando, y sacudida de cámara cuando te pegan a vos.
 - **Objetivos del arranque** (`systems/objectives.gd`) — cuatro cosas que te empujan a descubrir los sistemas (saquear, comer, prender fuego, sobrevivir la noche). Se tachan solas y después desaparecen.
@@ -175,10 +185,19 @@ id a un número del jugador).
 - **Contenedores de loot** (`container.gd` + `systems/loot_system.gd` + `data/loot_tables.json`) — se reparten solos al arrancar, pegados a las paredes de cada edificio y nunca tapando la puerta. Qué sale de cada tipo se edita en el JSON, sin tocar código.
 - **Armas de fuego** — pistola, escopeta y rifle gastan **munición** y hacen muchísimo ruido: disparar te trae una horda casi seguro. El HUD te muestra cuántas balas te quedan.
 - **Sangrado** — necesidad propia, con barra que parpadea en el HUD. No para solo (baja muy de a poco): hay que vendarse con **R**.
-- **Mochila con capacidad** (`components/inventory_component.gd`) — cada unidad ocupa un lugar. El HUD muestra `Mochila 6/8` y avisa cuando algo no entró.
+- **Mochila con capacidad** (`components/inventory_component.gd`) — cada unidad ocupa un lugar, ahora **12** lugares en vez de 8. El HUD muestra `Mochila 6/12` y avisa cuando algo no entró. Desde **I** también se puede **tirar** cualquier objeto (aparece en el piso como un `Pickup`), incluso con la mochila llena.
+- **Armas y munición aparte** (`components/arms_component.gd`) — 3 casilleros propios (cuerpo a cuerpo, arma de fuego, munición de esa arma) que **no gastan lugar de la mochila**. Lo que no está equipado sí ocupa mochila. **F** cambia cuál de las dos armas equipadas es la que "pega" (`arms.switch_hand()`); munición de un arma distinta a la equipada no entra en el casillero, va a la mochila común.
+- **Almacenamiento** (`container.gd`, `ui/StorageScreen.tscn`) — se puede construir un **cofre** (modo **B**) y, una vez que un **armario** ya fue saqueado, se puede reutilizar para guardar cosas: **E** abre una pantalla de poner/sacar en vez de perderlo para siempre.
 - **Necesidades** (`components/needs_component.gd`) — salud, hambre, sed, energía, temperatura y **sangrado**, cada una con su efecto.
   - *Nota de diseño:* había también una barra de **infección** y se sacó. Hacía lo mismo que el sangrado (drenar salud despacio después de una mordida) pero más lento, y con las dos juntas eran 7 barras que nadie miraba. Lo que hacía quedó repartido: las mordidas sangran más (60% de probabilidad en vez de 45%), y la comida cruda y el agua sin hervir **pegan directo a la salud**.
-- **Recolección** — talar árboles da madera; pescar da pescado y sacia la sed (pero el agua sin hervir te saca 6 de salud: hervirla sigue valiendo la pena).
+- **Recolección** — talar un árbol, picar una roca o picar una veta abren el
+  **minijuego de 3 clicks** (`ui/click_minigame.gd`); acertar los 3 da madera,
+  piedra o metal. **Tomar agua** (**T**) y **pescar** (**E** parado en el agua)
+  son dos acciones separadas: tomar agua directo del lago te saca 6 de salud
+  (es agua sucia) salvo que la lleves en un **recipiente** y la **hiervas** en
+  la fogata (`agua_sucia` + madera → `agua`); pescar **no** sacia la sed, solo
+  te da pescado, y usa el **minijuego de burbujas** con **caña** — no se puede
+  pescar si hay un zombi que te vio o a menos de 15 celdas.
 - **Caza** (`animal.gd`) — los animales huyen si te oyen; cazarlos deja carne en el piso.
 - **Minería** — con un **pico** podés picar las rocas y las **vetas de mineral** (las manchas naranjas de la zona rocosa al este) para sacar piedra y metal. Sin pico no se puede. Picar hace **más ruido que talar**.
 - **Crafteo** (`systems/crafting.gd` + `data/recipes.json`) — hace falta estar **al lado de una mesa de trabajo**; las recetas de cocina piden además una fogata prendida. Cada receta muestra cuánto tenés de cada material (`Madera 2/3`).
@@ -208,13 +227,23 @@ Con un **mechero** en la mochila salteás el paso 1 y solo tenés que mantener 1
 
 Todo el arte es **placeholder** a propósito (cuadrados y rombos de colores). La prioridad ahora es validar que el loop es divertido; el arte real entra después respetando `../docs/ARTE_SPEC.md` (tiles 16×16, personajes 32×32).
 
+El andamiaje de este minijuego (`is_open()`, `_set_player_blocked()`, cancelar
+con Escape, no pausar el árbol) se sacó a una base común,
+**`ui/minigame_base.gd`**, que también usan el **minijuego de 3 clicks** (talar
+/ picar) y el **minijuego de pesca** (burbujas). Si hay que tocar ese
+comportamiento compartido, se toca ahí una sola vez.
+
 ## Qué probar primero (checklist de playtest)
 
 **Lo primero de todo, que es lo que estaba roto:**
 
-- **Caminá contra una pared de ladrillo.** Tiene que frenarte. Lo mismo contra un
-  árbol y contra una roca. Si los atravesás, mirá el panel *Salida*: tendría que
-  haber un error de `world.gd` diciendo qué tiles quedaron sin colisión.
+- **Caminá contra una pared de ladrillo.** Tiene que frenarte. Lo mismo contra una
+  **roca**. Si las atravesás, mirá el panel *Salida*: tendría que haber un error
+  de `world.gd` diciendo qué tiles quedaron sin colisión.
+- **Caminá contra un árbol.** Al revés que las paredes: **te tiene que dejar
+  pasar**, pero mucho más lento. Metete detrás de uno con un zombi cerca que
+  todavía no te vio: no te tiene que descubrir (el árbol le sigue tapando la
+  visión aunque vos lo puedas cruzar).
 - **Mirá una casa desde afuera.** Tenés que ver dónde está la puerta (es lo único
   del edificio que el techo no tapa) y si está abierta o cerrada. Abrila con **E**
   parado afuera.
@@ -235,19 +264,33 @@ Después, lo de siempre:
 5. Adentro, pararte al lado de un **contenedor** y apretar **E**: barra de
    progreso, y al terminar te dice qué encontraste. Volver a apretar **E** sobre
    el mismo: tiene que decir *"Ya revisaste eso"*.
-6. Llenar la mochila hasta que el HUD diga `8/8` y probar levantar algo más:
-   tiene que avisar que no entra. Buscar una **mochila** en el loot y ver que
-   sube la capacidad.
+6. Llenar la mochila hasta que el HUD diga `12/12` y probar levantar algo más:
+   tiene que avisar que no entra. Abrir **I** y **tirar** un objeto: tiene que
+   aparecer en el piso y liberar un lugar. Buscar una **mochila** en el loot y
+   ver que sube la capacidad.
 7. Dejar que un zombie te muerda unas cuantas veces hasta que arranque el
    **sangrado**: la barra roja tiene que aparecer y **parpadear**, y la salud
    bajar sostenido. Apretar **R** para vendarte.
-8. Ir hasta un árbol, apretar **E** → madera. Después **E** en el agua → pescar:
-   fijate que **la salud baja un poco** (tomaste agua sucia). Comer el pescado
-   crudo desde **I** también tiene que sacarte salud; cocinarlo, no.
+8. Ir hasta un árbol y apretar **E**: se abre el **minijuego de 3 clicks** (aro
+   que se achica, 3 vueltas); acertar las 3 da madera. Después pará en el borde
+   del agua: **T** toma agua directo (te baja un poco la salud, es agua sucia)
+   y **E** abre el **minijuego de pesca** (burbujas) — son dos acciones
+   distintas, probá las dos por separado. Comer el pescado crudo desde **I**
+   también tiene que sacarte salud; cocinarlo, no.
+   - Con un **zombi que te vio, o a menos de 15 celdas**, probá **E** en el agua:
+     tiene que **negarse a pescar**.
+   - Craftear un **recipiente** y usar **T** con él: en vez de tomar agua sucia
+     directo, la guarda como `agua_sucia`. Prender la fogata y craftear
+     **"Hervir agua"** (gasta `agua_sucia` + madera) → da `agua` limpia, sin
+     daño al tomarla.
 9. **I** para abrir el inventario: el juego se tiene que **congelar**.
-10. **B** → poner una **mesa de trabajo** (8 madera). **C** al lado → craftear un **pico**.
-11. Picar una **roca** y una **veta naranja** → piedra y metal.
-12. Craftear un arma, equiparla desde **I** y ver que el HUD muestra "En mano".
+10. **B** → poner una **mesa de trabajo** (ahora **6 madera**, antes 8). **C** al lado → craftear un **pico**.
+11. Picar una **roca** y una **veta naranja** con el minijuego de 3 clicks → piedra y metal.
+12. Craftear un arma cuerpo a cuerpo **y** una de fuego, equipar las dos desde
+    **I**: tienen que ocupar sus propios casilleros y **no gastar mochila**.
+    Apretar **F** y ver que el HUD cambia cuál está "en mano". Craftear
+    munición o encontrarla y comprobar que tampoco ocupa mochila mientras el
+    arma esté equipada.
 13. Si encontrás un **arma de fuego** con munición: disparar y ver que (a) baja
     el contador de balas del HUD, (b) te aparece una horda enseguida. Vaciar la
     munición y ver que avisa "Sin ...".
@@ -299,6 +342,28 @@ Después, lo de siempre:
     (rojizas) y el **piso de madera**, distintos entre sí y distintos del pasto de
     afuera.
 
+**De lo nuevo de este lote (lo que pidió el testeo externo):**
+
+32. **Construí un cofre** (**B**) y guardale algo con **E**: tiene que abrir una
+    pantalla de poner/sacar, no la de saqueo de un solo uso. Volvé más tarde y
+    verificá que lo que guardaste sigue ahí (probar también con **F5/F9**).
+33. Saqueá un **armario** hasta vaciarlo y volvé a apretar **E**: en vez de
+    "Ya revisaste eso" tiene que abrir la misma pantalla de guardar/sacar.
+34. Dejá que la **sed** baje sola y cronometrá más o menos: tendría que tardar
+    del orden de **4 minutos** en vaciarse del todo (antes era bastante más
+    rápido), y el daño por deshidratación se nota más suave que antes.
+35. En el minijuego de **3 clicks** (talar/picar), fijate que el aro que hay que
+    acertar **se va achicando** en cada una de las 3 vueltas (la primera es la
+    más fácil, la última la más difícil).
+36. En el minijuego de **pesca**, fijate que las zonas de burbuja aparecen y
+    hay que clickearlas rápido; si te la tomás con calma, tienen que
+    desaparecer y aparecer otra en otro lado.
+37. **Andá por el mapa entero y fijate que ninguna casa se pisa con otra** (las
+    paredes de dos edificios no se tienen que superponer en ningún lado).
+38. Metete al agua y probá **T** (tomar) y **E** (pescar) por separado sin tener
+    caña: pescar tiene que avisar que te falta la caña; tomar agua tiene que
+    funcionar igual.
+
 ## Cómo editar el mundo (el mapa de tiles)
 
 El terreno se dibuja con un **TileMap** que se arma por código (`scripts/world.gd`) leyendo un mapa de texto: `data/level_prototype.txt`. Se edita con cualquier editor de texto, sin abrir el editor de tiles.
@@ -308,7 +373,7 @@ El terreno se dibuja con un **TileMap** que se arma por código (`scripts/world.
 | `.` | pasto | no |
 | `=` | camino | no |
 | `~` | agua | **no**: se camina, pero a menos de la mitad de velocidad (acá se pesca) |
-| `T` | árbol | sí (da madera + tapa la visión) |
+| `T` | árbol | **NO frena** (se cruza, más lento) — **sí tapa la visión** de los zombies (segunda capa de física, ver "Sistemas que ya funcionan") |
 | `#` | pared | sí |
 | `,` | piso de madera | no — **define el interior de un edificio** (de acá salen los techos) |
 | `D` | puerta | depende: cerrada frena, abierta no |

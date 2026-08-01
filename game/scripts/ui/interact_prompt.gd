@@ -31,8 +31,9 @@ func _ready() -> void:
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# El Label vive en coordenadas de mundo: lo centramos a mano sobre el objeto.
-	_label.custom_minimum_size = Vector2(160, 0)
-	_label.size = Vector2(160, 16)
+	# Alto 30 (no 16): el agua muestra 2 líneas, "E — Pescar" y "T — ...".
+	_label.custom_minimum_size = Vector2(170, 0)
+	_label.size = Vector2(170, 30)
 	add_child(_label)
 	_label.visible = false
 
@@ -67,12 +68,16 @@ func _refresh() -> void:
 	var text := str(found["texto"])
 	_blocked = text.begins_with("Ya ") or text.begins_with("Necesitás")
 
-	_label.text = text if _blocked else "E — %s" % text
+	var line := text if _blocked else "E — %s" % text
+	# El agua tiene una segunda acción (T), aparte de lo que hace la E.
+	if found.has("extra_texto"):
+		line += "\n%s" % str(found["extra_texto"])
+	_label.text = line
 	_label.modulate = blocked_tint if _blocked else tint
 	# to_local(): _target_position viene en coordenadas de mundo y el Label se
 	# posiciona relativo a este nodo. Hoy da igual porque el nodo esta en el
 	# origen, pero el dia que alguien lo mueva dejaria de andar.
-	_label.position = to_local(_target_position) + Vector2(-80, -30)
+	_label.position = to_local(_target_position) + Vector2(-85, -40)
 	_label.visible = true
 	queue_redraw()
 

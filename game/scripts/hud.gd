@@ -19,6 +19,12 @@ extends CanvasLayer
 const BAR_WIDTH := 62
 const BAR_HEIGHT := 5
 const ICON_SIZE := 15
+## La vida va aparte y bastante más grande que el resto: el testeo externo la
+## marcó como invisible (un chip más entre seis, apagada al 62% mientras
+## estás sano). Es lo único de la pantalla que de verdad importa siempre.
+const HEALTH_BAR_WIDTH := 150
+const HEALTH_BAR_HEIGHT := 10
+const HEALTH_ICON_SIZE := 22
 const MESSAGE_SECONDS := 3.0
 ## Por debajo de esto (en porcentaje) la necesidad se considera crítica.
 const CRITICAL := 25.0
@@ -51,6 +57,12 @@ var _icons: Dictionary = {}     ## id -> NeedIcon
 var _percents: Dictionary = {}  ## id -> Label
 var _chips: Dictionary = {}     ## id -> Control (la columna entera)
 
+## Todo lo de arriba a la izquierda (vida, necesidades, mochila, arma, sigilo)
+## cuelga de acá en fila vertical. Antes cada bloque se posicionaba a mano con
+## coordenadas fijas y quedaban pegoteados; un solo VBoxContainer los apila
+## solo, con aire entre cada uno.
+var _hud_left: VBoxContainer
+
 var _inventory_label: Label
 var _weapon_label: Label
 var _stealth_label: Label
@@ -63,6 +75,8 @@ var _help_panel: PanelContainer
 
 var _message_timer := 0.0
 var _blink := 0.0
+var _health_blink := 0.0
+var _health_critical := false
 var _day_night = null
 var _player_ref = null
 var _run = null
@@ -73,6 +87,13 @@ func _ready() -> void:
 	layer = 2
 	# Tiene que responder con el juego pausado: la ayuda se abre y se cierra ahí.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+
+	_hud_left = VBoxContainer.new()
+	_passthrough(_hud_left)
+	_hud_left.add_theme_constant_override("separation", 8)
+	_hud_left.position = Vector2(14, 10)
+	add_child(_hud_left)
+
 	_build_needs()
 	_build_status()
 	_build_toolbar()
@@ -95,6 +116,7 @@ func _process(delta: float) -> void:
 		_update_stealth()
 
 	_blink_bleed(delta)
+	_blink_health(delta)
 
 	if _day_night != null and is_instance_valid(_day_night):
 		var phase := str(_day_night.phase_name())
@@ -120,15 +142,92 @@ func _passthrough(control: Control) -> Control:
 	return control
 
 
-## Fila de necesidades: ícono + barra + porcentaje, una al lado de la otra.
+## La vida, aparte y grande, arriba de todo; abajo el resto de las
+## necesidades en la fila chica de siempre. Las dos adentro de un panel con
+## fondo, para que no floten sueltas sobre el pasto.
 func _build_needs() -> void:
+	var panel := PanelContainer.new()
+	_passthrough(panel)
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0, 0, 0, 0.4)
+	panel_style.set_corner_radius_all(4)
+	panel_style.content_margin_left = 10
+	panel_style.content_margin_right = 10
+	panel_style.content_margin_top = 8
+	panel_style.content_margin_bottom = 8
+	panel.add_theme_stylebox_override("panel", panel_style)
+	_hud_left.add_child(panel)
+
+	var column := VBoxContainer.new()
+	_passthrough(column)
+	column.add_theme_constant_override("separation", 6)
+	panel.add_child(column)
+
+	_build_health_row(column)
+	column.add_child(HSeparator.new())
+	_build_small_needs_row(column)
+
+
+## La vida sola: ícono e info más grandes, y **siempre a máxima opacidad** —
+## antes se apagaba al 62% mientras estabas sano, que es al revés de lo que
+## hace falta (lo crítico tiene que resaltar, no lo normal apagarse).
+func _build_health_row(column: VBoxContainer) -> void:
+	var id := NeedsComponent.SALUD
+	var tint: Color = COLORS.get(id, Color.WHITE)
+
+	var row := HBoxContainer.new()
+	# PASS (no IGNORE): deja que el tooltip aparezca al pasar el mouse, pero
+	# sigue sin comerse el clic — un STOP acá rompería el ataque.
+	row.mouse_filter = Control.MOUSE_FILTER_PASS
+	row.tooltip_text = str(LABELS.get(id, id))
+	row.add_theme_constant_override("separation", 8)
+	column.add_child(row)
+	_chips[id] = row
+
+	var icon := NeedIcon.new().setup(id, tint)
+	icon.custom_minimum_size = Vector2(HEALTH_ICON_SIZE, HEALTH_ICON_SIZE)
+	_passthrough(icon)
+	row.add_child(icon)
+	_icons[id] = icon
+
+	var info := VBoxContainer.new()
+	_passthrough(info)
+	info.add_theme_constant_override("separation", 2)
+	row.add_child(info)
+
+	var label := Label.new()
+	_passthrough(label)
+	label.add_theme_font_size_override("font_size", 15)
+	label.text = "100 / 100"
+	info.add_child(label)
+	_percents[id] = label
+
+	var bar := ProgressBar.new()
+	_passthrough(bar)
+	bar.custom_minimum_size = Vector2(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)
+	bar.max_value = 100.0
+	bar.value = 100.0
+	bar.show_percentage = false
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = tint
+	bar.add_theme_stylebox_override("fill", fill)
+	var back := StyleBoxFlat.new()
+	back.bg_color = Color(0, 0, 0, 0.45)
+	bar.add_theme_stylebox_override("background", back)
+	info.add_child(bar)
+	_bars[id] = bar
+
+
+## El resto de las necesidades (todo menos salud), chicas y en fila.
+func _build_small_needs_row(column: VBoxContainer) -> void:
 	var row := HBoxContainer.new()
 	_passthrough(row)
 	row.add_theme_constant_override("separation", 14)
-	row.position = Vector2(14, 10)
-	add_child(row)
+	column.add_child(row)
 
 	for id in NeedsComponent.ORDER:
+		if id == NeedsComponent.SALUD:
+			continue
 		var tint: Color = COLORS.get(id, Color.WHITE)
 
 		var chip := VBoxContainer.new()
@@ -137,12 +236,16 @@ func _build_needs() -> void:
 		row.add_child(chip)
 
 		var head := HBoxContainer.new()
-		_passthrough(head)
+		# PASS (no IGNORE): habilita el tooltip con el nombre de la necesidad
+		# sin comerse el clic del ataque (eso rompería con STOP).
+		head.mouse_filter = Control.MOUSE_FILTER_PASS
+		head.tooltip_text = str(LABELS.get(id, id))
 		head.add_theme_constant_override("separation", 5)
 		chip.add_child(head)
 
 		var icon := NeedIcon.new().setup(str(id), tint)
 		icon.custom_minimum_size = Vector2(ICON_SIZE, ICON_SIZE)
+		_passthrough(icon)
 		head.add_child(icon)
 		_icons[id] = icon
 
@@ -150,7 +253,6 @@ func _build_needs() -> void:
 		_passthrough(percent)
 		percent.add_theme_font_size_override("font_size", 13)
 		percent.text = "100%"
-		percent.tooltip_text = str(LABELS.get(id, id))
 		head.add_child(percent)
 		_percents[id] = percent
 
@@ -163,9 +265,9 @@ func _build_needs() -> void:
 		var fill := StyleBoxFlat.new()
 		fill.bg_color = tint
 		bar.add_theme_stylebox_override("fill", fill)
-		var back := StyleBoxFlat.new()
-		back.bg_color = Color(0, 0, 0, 0.45)
-		bar.add_theme_stylebox_override("background", back)
+		var bar_back := StyleBoxFlat.new()
+		bar_back.bg_color = Color(0, 0, 0, 0.45)
+		bar.add_theme_stylebox_override("background", bar_back)
 		chip.add_child(bar)
 		_bars[id] = bar
 
@@ -176,9 +278,8 @@ func _build_needs() -> void:
 func _build_status() -> void:
 	var column := VBoxContainer.new()
 	_passthrough(column)
-	column.position = Vector2(14, 62)
 	column.add_theme_constant_override("separation", 1)
-	add_child(column)
+	_hud_left.add_child(column)
 
 	_stealth_label = Label.new()
 	_passthrough(_stealth_label)
@@ -298,10 +399,12 @@ const HELP := [
 	["Pelear", [
 		["Mouse", "apuntás siempre hacia donde está el cursor"],
 		["Clic izquierdo / Espacio", "atacar o disparar"],
+		["F", "cambiar de mano (cuerpo a cuerpo <-> arma de fuego)"],
 		["R", "vendarte (corta el sangrado)"],
 	]],
 	["Usar el mundo", [
 		["E", "puerta · contenedor · fogata · talar · pescar · picar"],
+		["T", "tomar agua del lago (o llenarla en el recipiente, si tenés)"],
 		["Q", "comer o beber lo primero que tengas"],
 		["B", "construir · C craftear (hace falta mesa de trabajo)"],
 	]],
@@ -385,12 +488,15 @@ func help_open() -> bool:
 
 
 func _other_screen_open() -> bool:
-	for group in ["inventory_screen", "map_screen", "run_summary"]:
+	for group in ["inventory_screen", "map_screen", "run_summary", "storage_screen"]:
 		var screen = get_tree().get_first_node_in_group(group)
 		if screen != null and screen.visible:
 			return true
-	var fire = get_tree().get_first_node_in_group("fire_minigame")
-	return fire != null and fire.is_open()
+	for group in ["fire_minigame", "click_minigame", "fishing_minigame"]:
+		var minigame = get_tree().get_first_node_in_group(group)
+		if minigame != null and minigame.is_open():
+			return true
+	return false
 
 
 # --- Actualización ---
@@ -403,14 +509,20 @@ func _day_prefix() -> String:
 
 
 func _update_weapon() -> void:
+	var arms: ArmsComponent = _player_ref.arms
 	var weapon: Dictionary = _player_ref.weapon_stats()
 	var text := "En mano: %s  (daño %d · alcance %d)" % [
 		str(weapon["nombre"]), int(weapon["dano"]), int(weapon["alcance"]),
 	]
-	# Las de fuego valen lo que la munición que te queda.
+	# La munición vive en el casillero de ArmsComponent, no en la mochila.
 	if bool(weapon["fuego"]):
-		var ammo := str(weapon["municion"])
-		text += "  ·  %s: %d" % [ItemDB.display_name(ammo), _player_ref.inventory.count(ammo)]
+		text += "  ·  %s: %d" % [ItemDB.display_name(str(weapon["municion"])), arms.ammo]
+
+	# La otra mano, guardada: recordatorio de que F cambia sin abrir nada.
+	var other := arms.melee if arms.active == ArmsComponent.FIREARM else arms.firearm
+	if other != "":
+		text += "   ·   Guardada: %s (F cambia)" % ItemDB.display_name(other)
+
 	_weapon_label.text = text
 
 
@@ -447,6 +559,19 @@ func _blink_bleed(delta: float) -> void:
 		return
 	_blink = fmod(_blink + delta * 4.0, TAU)
 	chip.modulate = Color(1, 1, 1, 0.6 + 0.4 * absf(sin(_blink)))
+
+
+## La vida parpadea cuando está crítica. Nunca se apaga (ver _on_need_changed):
+## esto es lo único que la distingue de "normal", además del número.
+func _blink_health(delta: float) -> void:
+	var chip: Control = _chips.get(NeedsComponent.SALUD)
+	if chip == null:
+		return
+	if not _health_critical:
+		chip.modulate = Color.WHITE
+		return
+	_health_blink = fmod(_health_blink + delta * 5.0, TAU)
+	chip.modulate = Color(1, 1, 1, 0.55 + 0.45 * absf(sin(_health_blink)))
 
 
 # --- Señales ---
@@ -503,11 +628,24 @@ func _on_need_changed(id: String, current: float, maximum: float) -> void:
 	var ratio := 0.0 if maximum <= 0.0 else current / maximum
 	var label: Label = _percents.get(id)
 	if label != null:
-		label.text = "%d%%" % int(round(ratio * 100.0))
+		if id == NeedsComponent.SALUD:
+			# "80/100" y no "80%": con el máximo siempre en 100 daba lo mismo,
+			# pero así se lee como vida y no como un porcentaje cualquiera.
+			label.text = "%d / %d" % [int(round(current)), int(round(maximum))]
+		else:
+			label.text = "%d%%" % int(round(ratio * 100.0))
 
 	# El sangrado es al revés: 0 es lo bueno. Las demás, mientras más alto mejor.
 	var inverted := id == NeedsComponent.SANGRADO
 	var critical := ratio * 100.0 > 0.0 if inverted else ratio * 100.0 <= CRITICAL
+
+	if id == NeedsComponent.SALUD:
+		# La vida NUNCA se apaga: antes se dibujaba al 62% de opacidad mientras
+		# estabas sano, que es exactamente al revés de lo que hace falta. Lo
+		# único que cambia con lo crítico es que empieza a parpadear
+		# (ver _blink_health).
+		_health_critical = critical
+		return
 
 	var chip: Control = _chips.get(id)
 	if chip != null:

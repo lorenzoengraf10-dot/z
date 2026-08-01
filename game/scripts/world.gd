@@ -6,10 +6,19 @@ extends TileMap
 ## Tiles del atlas placeholder (una fila de 9, 16x16 c/u):
 ##   0 pasto | 1 camino | 2 agua | 3 arbol | 4 pared
 ##   5 piso  | 6 roca   | 7 veta | 8 puerta
-## Las tiles sólidas (árbol, pared, roca, veta) colisionan en la capa 1 → frenan
-## al jugador/zombie y tapan la visión del zombie (que hace raycast contra esa
-## capa). El agua y la puerta NO: al agua se entra (lento) y la puerta la bloquea
-## el nodo Door cuando está cerrada.
+##
+## Pared, roca y veta son sólidas de verdad: colisionan en la capa de física 1
+## → frenan a todos los cuerpos (jugador/zombie/lobo/animal) y de paso tapan
+## la visión del zombie (su RayCast2D hace mask contra esa misma capa).
+##
+## El árbol es distinto **a propósito**: se puede atravesar (más lento, ver
+## SPEED) pero sigue tapando la vista. Por eso tiene su PROPIA capa de física
+## (la 2, bit 16) que ningún cuerpo choca — solo la mira el RayCast2D del
+## zombie, que tiene las dos capas en su mask (1|16 = 17). Así el escondite
+## sigue funcionando (no te ven) aunque ya no te frene caminar.
+##
+## El agua y la puerta no bloquean nada: al agua se entra (lento) y la puerta
+## la bloquea el nodo Door cuando está cerrada.
 ##
 ## Nota: en Godot 4.3+ el nodo TileMap figura como deprecado (lo reemplaza
 ## TileMapLayer), pero sigue funcionando. Se usa TileMap a propósito para que el
@@ -60,13 +69,27 @@ const CHAR_TO_TILE := {
 	DOOR: 8,
 }
 
-## Índices de tiles que colisionan (y tapan la visión).
-## El agua NO está: se puede caminar, solo que lento (ver SPEED).
-## La puerta tampoco: la colisión la pone el nodo Door cuando está cerrada.
+## Índices de tiles "ocupados": ahí no se puede construir ni spawnear
+## (build_system.gd y run_manager.gd/horde_spawner.gd lo consultan vía
+## is_solid_cell()/is_solid()). El árbol sigue acá adentro a propósito, aunque
+## ya no frene el paso — ver BLOCKS_BODIES más abajo para esa distinción.
+## El agua NO está (se camina, solo que lento) y la puerta tampoco (la
+## colisión la pone el nodo Door cuando está cerrada).
 const SOLID := {3: true, 4: true, 6: true, 7: true}
 
+## De los tiles de SOLID, cuáles chocan de VERDAD contra los cuerpos (capa de
+## física 1: jugador, zombie, lobo, animal). El árbol no está: pasa a
+## BLOCKS_SIGHT_ONLY, más abajo.
+const BLOCKS_BODIES := {4: true, 6: true, 7: true}
+
+## Tiles que tapan la visión del zombie pero NO frenan el paso — hoy solo el
+## árbol. Van en una capa de física aparte (ver _build_tileset()).
+const BLOCKS_SIGHT_ONLY := {3: true}
+
 ## Multiplicador de velocidad por tile (lo que no está acá va a 1.0).
-const SPEED := {2: 0.45}
+## El árbol ralentiza igual que el agua, pero un poco menos (0.55 vs 0.45):
+## cruzar el monte cuesta, pero no tanto como meterse al lago.
+const SPEED := {2: 0.45, 3: 0.55}
 
 ## Tiles que se pueden picar con el pico, y qué dejan.
 const MINEABLE := {ROCK: "piedra", ORE: "metal"}
@@ -93,9 +116,17 @@ func _build_tileset() -> TileSet:
 	var ts := TileSet.new()
 	ts.tile_size = Vector2i(TILE_SIZE, TILE_SIZE)
 
-	# Capa de física: lo sólido choca en la capa de colisión 1 (el "mundo").
+	# Capa de física 0: lo sólido de verdad choca en la capa de colisión 1 (el
+	# "mundo") — pared, roca, veta. Frena a todos los cuerpos.
 	ts.add_physics_layer()
 	ts.set_physics_layer_collision_layer(0, 1)
+
+	# Capa de física 1: SOLO el árbol. Colisión en la capa 16, que ningún
+	# cuerpo choca (jugador/zombie/lobo/animal tienen mask sin ese bit) — la
+	# usa nada más el RayCast2D de visión del zombie, que sí la incluye en su
+	# mask. Así el árbol tapa la vista pero no frena el paso.
+	ts.add_physics_layer()
+	ts.set_physics_layer_collision_layer(1, 16)
 
 	var src := TileSetAtlasSource.new()
 	src.texture = _build_atlas()
@@ -123,10 +154,14 @@ func _build_tileset() -> TileSet:
 	for tile_index in range(CHAR_TO_TILE.size()):
 		var coords := Vector2i(tile_index, 0)
 		src.create_tile(coords)
-		if SOLID.has(tile_index):
+		if BLOCKS_BODIES.has(tile_index):
 			var data := src.get_tile_data(coords, 0)
 			data.add_collision_polygon(0)
 			data.set_collision_polygon_points(0, 0, square)
+		if BLOCKS_SIGHT_ONLY.has(tile_index):
+			var data := src.get_tile_data(coords, 0)
+			data.add_collision_polygon(1)
+			data.set_collision_polygon_points(1, 0, square)
 
 	_verify_collisions(src)
 	return ts
@@ -228,23 +263,31 @@ func _verify_atlas(atlas: Image) -> void:
 			% ", ".join(vacios))
 
 
-## Comprueba que los tiles sólidos hayan quedado realmente con colisión.
+## Comprueba que los tiles sólidos (y el árbol, que tapa la vista sin frenar
+## el paso) hayan quedado realmente con colisión en la capa que corresponde.
 ##
 ## Existe porque el bug de arriba falla EN SILENCIO: el juego abre igual, se ve
-## igual, y recién te das cuenta cuando cruzás una pared caminando. Mejor que
-## avise al arrancar.
+## igual, y recién te das cuenta cuando cruzás una pared caminando (o cuando un
+## zombie te ve a través de un árbol). Mejor que avise al arrancar.
 func _verify_collisions(src: TileSetAtlasSource) -> void:
 	var sin_colision: Array[String] = []
-	for tile_index in SOLID.keys():
+	for tile_index in BLOCKS_BODIES.keys():
 		var data := src.get_tile_data(Vector2i(int(tile_index), 0), 0)
 		if data == null or data.get_collision_polygons_count(0) == 0:
-			sin_colision.append("%s (tile %d)" % [_tile_to_char.get(tile_index, "?"), tile_index])
+			sin_colision.append("%s (tile %d, capa 0)" % [_tile_to_char.get(tile_index, "?"), tile_index])
+	for tile_index in BLOCKS_SIGHT_ONLY.keys():
+		var data := src.get_tile_data(Vector2i(int(tile_index), 0), 0)
+		if data == null or data.get_collision_polygons_count(1) == 0:
+			sin_colision.append("%s (tile %d, capa 1 — tapar vista)" % [_tile_to_char.get(tile_index, "?"), tile_index])
 
 	if sin_colision.is_empty():
-		print("world.gd: %d tiles sólidos con colisión OK" % SOLID.size())
+		print("world.gd: %d tiles sólidos + %d que tapan vista, colisión OK"
+				% [BLOCKS_BODIES.size(), BLOCKS_SIGHT_ONLY.size()])
 		return
-	push_error("world.gd: estos tiles quedaron SIN colisión y se van a poder " +
-			"atravesar: %s — revisá el orden de add_source() en _build_tileset()"
+	# Un solo string literal, no dos con "+": el % de formato ata más fuerte
+	# que el "+" y aplicarlo sobre dos strings pegados es justo el tipo de
+	# trampa que este mismo archivo advierte en otros comentarios.
+	push_error("world.gd: estos tiles quedaron SIN colisión: %s — revisá el orden de add_source() en _build_tileset()"
 			% ", ".join(sin_colision))
 
 

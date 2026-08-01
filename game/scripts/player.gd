@@ -46,8 +46,6 @@ var action_noise := 0.0
 ## Lo prenden las pantallas modales (minijuego de fuego): te frena sin pausar el
 ## juego, así los zombies te siguen viniendo encima mientras forcejeás.
 var input_blocked := false
-## Arma equipada ("" = a mano pelada). La cambia el inventario.
-var equipped_weapon := ""
 ## Lo baja el perk "Pisada liviana" (1.0 = normal, 0.75 = hacés menos ruido).
 var noise_multiplier := 1.0
 
@@ -71,6 +69,7 @@ var _camera_cache = null
 
 @onready var needs: NeedsComponent = $NeedsComponent
 @onready var inventory: InventoryComponent = $InventoryComponent
+@onready var arms: ArmsComponent = $ArmsComponent
 @onready var interactor: Interactor = $Interactor
 
 
@@ -204,10 +203,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("interact"):
 		interactor.try_interact()
+	elif event.is_action_pressed("drink_water"):
+		interactor.try_drink()
 	elif event.is_action_pressed("eat"):
 		_try_eat()
 	elif event.is_action_pressed("bandage"):
 		_try_bandage()
+	elif event.is_action_pressed("switch_weapon"):
+		arms.switch_hand()
+		var id := arms.current_weapon()
+		message.emit("Mano: %s" % (ItemDB.display_name(id) if id != "" else "Manos"))
 	elif event.is_action_pressed("attack"):
 		_try_attack()
 
@@ -229,10 +234,11 @@ func _try_eat() -> void:
 		message.emit("Consumiste %s" % ItemDB.display_name(id))
 
 
-## Estadísticas del golpe actual: salen del arma equipada, o de los @export si
-## vas a mano pelada.
+## Estadísticas del golpe actual: salen de lo que tengas activo en ArmsComponent
+## (arms.current_weapon()), o de los @export si vas a mano pelada.
 func weapon_stats() -> Dictionary:
-	if equipped_weapon == "" or not inventory.has(equipped_weapon):
+	var id := arms.current_weapon()
+	if id == "":
 		return {
 			"nombre": "Manos",
 			"dano": attack_damage,
@@ -243,25 +249,14 @@ func weapon_stats() -> Dictionary:
 			"municion": "",
 		}
 	return {
-		"nombre": ItemDB.display_name(equipped_weapon),
-		"dano": ItemDB.value_of(equipped_weapon, "dano"),
-		"alcance": ItemDB.value_of(equipped_weapon, "alcance"),
-		"ruido": ItemDB.value_of(equipped_weapon, "ruido"),
-		"espera": ItemDB.value_of(equipped_weapon, "espera"),
-		"fuego": ItemDB.is_firearm(equipped_weapon),
-		"municion": ItemDB.ammo_of(equipped_weapon),
+		"nombre": ItemDB.display_name(id),
+		"dano": ItemDB.value_of(id, "dano"),
+		"alcance": ItemDB.value_of(id, "alcance"),
+		"ruido": ItemDB.value_of(id, "ruido"),
+		"espera": ItemDB.value_of(id, "espera"),
+		"fuego": ItemDB.is_firearm(id),
+		"municion": ItemDB.ammo_of(id),
 	}
-
-
-## La usa el inventario al equipar.
-func equip(item_id: String) -> void:
-	if item_id != "" and not ItemDB.is_weapon(item_id):
-		return
-	equipped_weapon = item_id
-	if item_id == "":
-		message.emit("Guardaste el arma")
-	else:
-		message.emit("Equipaste %s" % ItemDB.display_name(item_id))
 
 
 ## Vendarse (tecla R). Usa el mejor corta-sangrado que tengas: el vendaje corta
@@ -287,11 +282,11 @@ func _try_attack() -> void:
 	var damage := float(weapon["dano"])
 	var reach := float(weapon["alcance"])
 
-	# Las armas de fuego gastan munición. Sin balas, no dispara.
+	# Las armas de fuego gastan munición del casillero de ArmsComponent (no de
+	# la mochila: la munición del arma equipada vive ahí, sin ocupar lugar).
 	if bool(weapon["fuego"]):
-		var ammo := str(weapon["municion"])
-		if not inventory.remove(ammo, 1):
-			message.emit("Sin %s" % ItemDB.display_name(ammo))
+		if not arms.consume_ammo(1):
+			message.emit("Sin %s" % ItemDB.display_name(str(weapon["municion"])))
 			_attack_timer = 0.35
 			return
 		AudioManager.play("disparo")
@@ -351,9 +346,9 @@ func apply_bleed(amount: float) -> void:
 	needs.bleed(amount)
 
 
-## La llaman los pickups y los contenedores. Avisa si no entró todo.
+## La llaman los pickups. Avisa si no entró todo.
 func collect(item: String, amount: int) -> int:
-	var taken := inventory.add(item, amount)
+	var taken := receive(item, amount)
 	if taken <= 0:
 		message.emit("Mochila llena: no te entra %s" % ItemDB.display_name(item))
 	elif taken < amount:
@@ -361,6 +356,56 @@ func collect(item: String, amount: int) -> int:
 	else:
 		message.emit("+%d %s" % [taken, ItemDB.display_name(item)])
 	return taken
+
+
+## El mismo reparto que collect(), pero sin el mensaje individual: lo usa
+## _finish_container() en interactor.gd, que arma un solo mensaje con todo lo
+## que salió del mueble en vez de uno por ítem.
+##
+## Si `item` es la munición del arma de fuego equipada, va directo al
+## casillero de ArmsComponent y NO gasta lugar de mochila — es lo que pidió el
+## testeo ("que las municiones sean de esa arma"). Cualquier otra cosa (o
+## munición de un arma que no llevás) va a la mochila de siempre.
+func receive(item: String, amount: int) -> int:
+	var to_slot := arms.add_ammo(item, amount)
+	var remaining := amount - to_slot
+	var taken := to_slot
+	if remaining > 0:
+		taken += inventory.add(item, remaining)
+	return taken
+
+
+## Tira `amount` del ítem `id` al piso, en tu posición. La llama la pantalla de
+## inventario (I). Devuelve true si había para tirar.
+func drop(item: String, amount: int = 1) -> bool:
+	if not inventory.remove(item, amount):
+		return false
+	_spawn_pickup(item, amount)
+	message.emit("Tiraste %d %s" % [amount, ItemDB.display_name(item)])
+	return true
+
+
+## Instancia un Pickup con `item`/`amount` en tu posición. Lo usa drop() y
+## también ArmsComponent cuando algo no entra de vuelta en la mochila (al
+## desequipar un arma con la mochila llena, por ejemplo) — así nunca
+## desaparece nada, mismo patrón que animal.gd al soltar carne al morir.
+func _spawn_pickup(item: String, amount: int) -> void:
+	if amount <= 0:
+		return
+	var scene := load("res://scenes/Pickup.tscn") as PackedScene
+	if scene == null:
+		return
+	# Sin ":=" : instantiate() devuelve Node y le seteamos item/amount/position.
+	var dropped = scene.instantiate()
+	dropped.item = item
+	dropped.amount = amount
+
+	# Sin tipar: get_parent() devuelve Node y le pedimos to_local(), de Node2D.
+	var host = get_parent()
+	if host == null:
+		return
+	dropped.position = host.to_local(global_position) if host is Node2D else global_position
+	host.add_child(dropped)
 
 
 func _on_died() -> void:

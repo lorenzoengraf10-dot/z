@@ -166,7 +166,29 @@ if os.path.exists(world_gd):
                           f"{CONVERSOR}(). Si el formato no coincide con el del atlas, la "
                           "copia falla EN SILENCIO y el tile queda transparente.")
 
-# --- 8. autoloads existen ---
+# --- 8. Zombie.tscn: el VisionRay sigue mirando la capa de los arboles ---
+#
+# world.gd le da al arbol su propia capa de fisica (bit 16): no frena el paso,
+# pero sigue tapando la vista. Si alguien le saca el 16 a la mask del
+# VisionRay (por ejemplo, "limpiando" el numero porque no entiende de donde
+# sale), el zombie te ve a traves de los arboles y el sigilo se rompe SIN que
+# se note jugando: el arbol se sigue dibujando igual, y hay que meterse atras
+# de uno para descubrir que no te esconde.
+zombie_tscn = os.path.join(ROOT, "scenes", "Zombie.tscn")
+if os.path.exists(zombie_tscn):
+    src = open(zombie_tscn, encoding="utf-8").read()
+    bloque = re.search(r'\[node name="VisionRay".*?(?=\n\[node|\Z)', src, re.S)
+    if bloque is None:
+        errors.append("Zombie.tscn: no encontre el nodo VisionRay")
+    else:
+        m = re.search(r'collision_mask\s*=\s*(\d+)', bloque.group(0))
+        mask = int(m.group(1)) if m else 1  # sin la linea, Godot usa 1 por default
+        if not (mask & 16):
+            errors.append(f"Zombie.tscn: VisionRay.collision_mask={mask} no incluye la capa "
+                          "16 (arboles) — el zombie va a ver a traves de los arboles. "
+                          "Tiene que ser un numero con el bit 16 prendido (ej. 17 = 1|16).")
+
+# --- 9. autoloads existen ---
 proj = open(os.path.join(ROOT, "project.godot"), encoding="utf-8").read()
 for name, path in re.findall(r'^(\w+)="\*(res://[^"]+)"', proj, re.M):
     if not os.path.exists(res_to_fs(path)):
