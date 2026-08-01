@@ -23,6 +23,12 @@ const MAX_FRAMES := 24
 
 ## Nombre de la carpeta dentro de assets/sprites/.
 @export var sprite_name := ""
+## Si sprite_name no tiene ningún PNG todavía, prueba con esta carpeta antes
+## de caer al placeholder de forma. La usan las variantes que van a tener su
+## propio dibujo pero mientras tanto muestran el del personaje base (ver
+## SPRITE_OVERRIDE en horde_spawner.gd). El día que aparezca el PNG propio,
+## este campo deja de hacer efecto solo, sin tocar nada más.
+@export var sprite_name_fallback := ""
 ## Cuadros por segundo de las animaciones.
 @export var fps := 8.0
 ## El personaje se dibuja con los pies en la fila 24 de un cuadro de 32, y el
@@ -38,6 +44,8 @@ var _sprite: AnimatedSprite2D
 var _placeholders: Array[Node2D] = []
 var _has_art := false
 var _current := ""
+## Cuál de las dos carpetas terminó usando: sprite_name o sprite_name_fallback.
+var _loaded_sprite_name := ""
 
 
 func _ready() -> void:
@@ -84,6 +92,14 @@ func flash_target() -> Node2D:
 	return _placeholders[0] if not _placeholders.is_empty() else self
 
 
+## Cuál carpeta terminó usando: sprite_name (el dibujo propio) o
+## sprite_name_fallback (el de respaldo, mientras no exista el propio). Vacío
+## si no se pudo cargar nada. La usa zombie.gd para no tintar por encima de un
+## dibujo que ya es propio y distinto.
+func active_sprite_name() -> String:
+	return _loaded_sprite_name
+
+
 ## Elige el cuadro según hacia dónde mira el personaje.
 ##
 ## Se dibujan 3 direcciones y la izquierda sale de espejar la derecha, así que
@@ -126,13 +142,30 @@ func _load_frames() -> SpriteFrames:
 	if sprite_name == "":
 		return null
 
+	var frames := _load_frames_from(sprite_name)
+	if frames != null:
+		_loaded_sprite_name = sprite_name
+		return frames
+
+	if sprite_name_fallback != "":
+		frames = _load_frames_from(sprite_name_fallback)
+		if frames != null:
+			_loaded_sprite_name = sprite_name_fallback
+			return frames
+
+	return null
+
+
+## Arma el SpriteFrames buscando en assets/sprites/<nombre>/. Devuelve null si
+## esa carpeta no tiene nada, así _load_frames() puede probar con la siguiente.
+func _load_frames_from(nombre: String) -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	# SpriteFrames viene con una animación "default" que no usamos.
 	frames.remove_animation("default")
 
 	var found := false
 	for direction in ["abajo", "arriba", "lado"]:
-		var textures := _load_direction(direction)
+		var textures := _load_direction(nombre, direction)
 		if textures.is_empty():
 			continue
 		found = true
@@ -147,12 +180,12 @@ func _load_frames() -> SpriteFrames:
 
 ## Los cuadros de una dirección: primero busca los numerados (animación) y si no
 ## hay, el suelto (quieto).
-func _load_direction(direction: String) -> Array[Texture2D]:
+func _load_direction(nombre: String, direction: String) -> Array[Texture2D]:
 	var textures: Array[Texture2D] = []
 
 	# Animado: abajo_1.png, abajo_2.png... hasta que falte uno.
 	for i in range(1, MAX_FRAMES + 1):
-		var path := CARPETA % [sprite_name, "%s_%d.png" % [direction, i]]
+		var path := CARPETA % [nombre, "%s_%d.png" % [direction, i]]
 		if not ResourceLoader.exists(path):
 			break
 		var texture := load(path) as Texture2D
@@ -164,7 +197,7 @@ func _load_direction(direction: String) -> Array[Texture2D]:
 		return textures
 
 	# Quieto: un solo archivo, que es una animación de un cuadro.
-	var single := CARPETA % [sprite_name, direction + ".png"]
+	var single := CARPETA % [nombre, direction + ".png"]
 	if ResourceLoader.exists(single):
 		var texture := load(single) as Texture2D
 		if texture != null:

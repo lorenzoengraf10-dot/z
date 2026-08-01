@@ -195,8 +195,18 @@ lo que más cambia la cara del juego:
 - [ ] `sprites/lobo/` — abajo, arriba, lado
 - [ ] `sprites/animal/` — abajo, arriba, lado
 
-Las **tres variantes de zombi** (normal, corredor, resistente) usan el mismo
-dibujo y se distinguen por color, como ahora. No hacen falta tres sets.
+**Las variantes de zombi** (normal, corredor, resistente) por defecto usan el
+mismo dibujo de `sprites/zombi/` y se distinguen por un tinte de color, así que
+no hace falta un set por variante. Pero si alguna variante quiere su **propio**
+dibujo (como el zombi grande/resistente), va en su propia carpeta con el mismo
+formato de siempre — `sprites/zombi_resistente/` (abajo, arriba, lado, 32×32,
+transparente) — y **no se tiñe**: se distingue por su propio diseño. Mientras
+esa carpeta no tenga PNG, esa variante sigue mostrando el dibujo base con el
+tinte, así que se puede ir agregando art de a una variante sin romper nada.
+Para agregar otra variante con dibujo propio, sumarla a `SPRITE_OVERRIDE` en
+`scripts/systems/horde_spawner.gd`.
+
+- [ ] `sprites/zombi_resistente/` — abajo, arriba, lado (el zombi grande)
 
 **Los tiles no llevan transparencia** (son cuadrados llenos). Los **personajes
 sí**: fondo transparente, siempre.

@@ -56,8 +56,25 @@ def nombres_de_personajes():
     return nombres
 
 
+def nombres_de_variantes_con_arte_propio():
+    """Sprites que usan algunas variantes en vez del personaje base.
+
+    No aparecen en ningún .tscn porque se asignan por código al spawnear (ver
+    SPRITE_OVERRIDE en horde_spawner.gd), así que hay que leerlos de ahí para
+    que esta lista no se desactualice.
+    """
+    path = os.path.join(GAME, "scripts", "systems", "horde_spawner.gd")
+    if not os.path.exists(path):
+        return []
+    src = open(path, encoding="utf-8").read()
+    bloque = re.search(r'const SPRITE_OVERRIDE\s*:=\s*\{(.*?)\}', src, re.S)
+    if not bloque:
+        return []
+    return re.findall(r':\s*"([^"]+)"', bloque.group(1))
+
+
 TILES = nombres_de_tiles()
-PERSONAJES = nombres_de_personajes()
+PERSONAJES = nombres_de_personajes() + nombres_de_variantes_con_arte_propio()
 
 errors = []
 warns = []

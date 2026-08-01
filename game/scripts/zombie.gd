@@ -30,6 +30,11 @@ var facing := Vector2.DOWN
 var last_known_position := Vector2.ZERO
 var health := 0.0
 
+## True si esta variante ya tiene su propio dibujo puesto (lo decide
+## horde_spawner.gd al spawnear, mirando SPRITE_OVERRIDE). Si es true,
+## set_tint() no la tiñe: ya se distingue sola y tintarla la ensuciaría.
+var uses_dedicated_art := false
+
 ## Cuánto dura la barra de vida en pantalla después de que le pegues.
 @export var health_bar_seconds := 3.0
 ## Fuerza del retroceso cuando lo golpean.
@@ -212,7 +217,7 @@ func take_damage(amount: float) -> void:
 ## dibujo. El zombi normal queda con sus colores tal cual.
 func set_tint(color: Color) -> void:
 	if _art.has_art():
-		if zombie_type != "normal":
+		if zombie_type != "normal" and not uses_dedicated_art:
 			_art.modulate = Color.WHITE.lerp(color, 0.35)
 		return
 

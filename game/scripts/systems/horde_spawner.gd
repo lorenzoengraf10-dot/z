@@ -7,6 +7,15 @@ extends Node2D
 
 const ZOMBIE_SCENE := "res://scenes/Zombie.tscn"
 
+## Variantes que tienen su propio dibujo en vez del compartido de zombi.gd.
+## Carpeta esperada: assets/sprites/<nombre>/, 3 direcciones, igual que
+## cualquier otro personaje (ver docs/ARTE_SPEC.md). Mientras esa carpeta no
+## tenga PNG, la variante sigue mostrando el dibujo base tintado, como hasta
+## ahora: no hay que esperar a tener el arte para agregarla acá.
+const SPRITE_OVERRIDE := {
+	"resistente": "zombi_resistente",
+}
+
 ## Variantes. El spawner sobreescribe los @export del zombie al crearlo.
 const VARIANTS := {
 	"normal": {
@@ -130,6 +139,18 @@ func _spawn_one(position_global: Vector2, variant: String) -> void:
 	# Sin ":=" : instantiate() devuelve Node y acá le seteamos las stats propias.
 	var z = _zombie.instantiate()
 	z.zombie_type = variant
+
+	# Si esta variante tiene su propio dibujo (SPRITE_OVERRIDE), hay que
+	# pedírselo al SpriteDirectional ANTES de add_child(): _ready() carga los
+	# PNG apenas el nodo entra al árbol, así que después ya es tarde.
+	var override: String = SPRITE_OVERRIDE.get(variant, "")
+	var art: SpriteDirectional = null
+	if override != "":
+		art = z.get_node_or_null("SpriteDirectional") as SpriteDirectional
+		if art != null:
+			art.sprite_name = override
+			art.sprite_name_fallback = "zombi"
+
 	z.chase_speed = float(stats["chase_speed"])
 	z.wander_speed = float(stats["wander_speed"])
 	z.max_health = float(stats["max_health"])
@@ -137,9 +158,15 @@ func _spawn_one(position_global: Vector2, variant: String) -> void:
 	add_child(z)
 	z.global_position = position_global
 
+	# Recién acá se sabe si el PNG propio existía de verdad o si tuvo que caer
+	# al de respaldo (art.active_sprite_name() se llena en _ready(), que ya
+	# corrió). Si es el propio, que no lo tiña: ya se distingue solo.
+	if art != null:
+		z.uses_dedicated_art = art.active_sprite_name() == override
+
 	# Color distinto por variante, para distinguirlas mientras el arte es
-	# placeholder. Se lo pedimos al zombi en vez de meterle mano a sus nodos:
-	# así el día que Visual cambie de forma, esto no se rompe.
+	# placeholder o compartido. Se lo pedimos al zombi en vez de meterle mano a
+	# sus nodos: así el día que Visual cambie de forma, esto no se rompe.
 	var tint: Color = stats["color"]
 	z.set_tint(tint)
 
