@@ -71,14 +71,26 @@ for f in all_files:
         continue
     text = open(f, encoding="utf-8").read()
     ids = dict(re.findall(r'^\[ext_resource type="Script" path="([^"]+)" id="([^"]+)"', text, re.M))
-    # nodos de la escena
-    nodes = re.findall(r'^\[node name="([^"]+)"(?:[^\]]*?)(?:parent="([^"]*)")?', text, re.M)
+    # Nodos de la escena.
+    #
+    # Ojo con como se parsea: antes era un solo regex con `parent=` opcional
+    # DESPUES de un comodin perezoso, y asi casi nunca capturaba el parent (el
+    # motor prefiere el match mas corto y el grupo es opcional). Con nodos de un
+    # solo nivel no se notaba —"Panel" y "./Panel" terminan dando la misma
+    # entrada— pero cualquier ruta anidada tipo $Visual/Panel daba un falso
+    # error de "ese nodo no esta en la escena". Se separa en dos busquedas para
+    # que ademas no dependa del orden de los atributos.
     node_paths = set()
-    for name, parent in nodes:
-        if parent in (None, ""):
-            node_paths.add(name)  # raiz
-        elif parent == ".":
-            node_paths.add(name)
+    for m in re.finditer(r'^\[node ([^\]]*)\]', text, re.M):
+        attrs = m.group(1)
+        name_m = re.search(r'name="([^"]+)"', attrs)
+        if name_m is None:
+            continue
+        name = name_m.group(1)
+        parent_m = re.search(r'parent="([^"]*)"', attrs)
+        parent = parent_m.group(1) if parent_m else ""
+        if parent in ("", "."):
+            node_paths.add(name)      # raiz, o hijo directo de la raiz
         else:
             node_paths.add(f"{parent}/{name}")
     for path, _id in ids.items():
@@ -250,7 +262,34 @@ if os.path.exists(hud_gd):
                       "cambiar el filtro para que ande rompe el ataque. Si hace falta un "
                       "tooltip, dibujarlo a mano con un hit-test en _process().")
 
-# --- 11. autoloads existen ---
+# --- 11. las escenas construibles con vida tienen su script ---
+#
+# Un muro sin script sigue siendo un StaticBody2D perfectamente valido: frena
+# igual, se ve igual, el juego abre igual. Lo unico que NO hace es tener vida,
+# asi que queda indestructible — que es justo el bug que este sistema vino a
+# arreglar (antes Barricade.tscn era exactamente eso). No hay forma de darse
+# cuenta jugando salvo pegarle a una pared un minuto entero y ver que no pasa
+# nada.
+#
+# La lista sale de BUILDABLES: se comprueba que cada escena de un muro tenga
+# structure.gd (o un script que herede de el, como door.gd).
+ESTRUCTURAS_CON_VIDA = ["Barricade.tscn", "WallStone.tscn", "WallMetal.tscn", "Door.tscn"]
+for nombre in ESTRUCTURAS_CON_VIDA:
+    ruta = os.path.join(ROOT, "scenes", nombre)
+    if not os.path.exists(ruta):
+        errors.append(f"scenes/{nombre}: no existe (se renombro?); esta en la lista de "
+                      "estructuras que tienen que poder romperse")
+        continue
+    src = open(ruta, encoding="utf-8").read()
+    if not re.search(r'\[ext_resource type="Script"[^\]]*path="res://scripts/(structure|door)\.gd"', src):
+        errors.append(f"scenes/{nombre}: no tiene structure.gd (ni un script que lo herede). "
+                      "Sin script no tiene vida: queda INDESTRUCTIBLE y los zombies no la "
+                      "pueden romper, sin ningun error visible.")
+    elif "max_health" not in src:
+        errors.append(f"scenes/{nombre}: tiene el script pero no setea max_health, "
+                      "asi que usa el default en vez de su propia resistencia.")
+
+# --- 12. autoloads existen ---
 proj = open(os.path.join(ROOT, "project.godot"), encoding="utf-8").read()
 for name, path in re.findall(r'^(\w+)="\*(res://[^"]+)"', proj, re.M):
     if not os.path.exists(res_to_fs(path)):

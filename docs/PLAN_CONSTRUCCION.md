@@ -1,6 +1,16 @@
 # Plan — Construcción de fortalezas
 
-Propuesta para discutir en equipo. Todavía **no** está implementado.
+> **Estado: la Fase 1 está hecha, más el verbo *reparar* de la Fase 2.**
+> Lo que ya anda: muros de madera/piedra/metal con vida, puertas rompibles
+> (también las de las casas del mapa), zombies que atacan lo que los frena,
+> reparar con **B** + clic, y la regla de no construir dentro de las casas.
+>
+> Lo que **sigue pendiente**: puerta construible y reforzar puertas (resto de
+> la Fase 2), la cama, y las Fases 3 y 4 completas.
+>
+> Se implementó *reparar* junto con la Fase 1 y no después, porque la Fase 1
+> sola dejaba el juego peor que antes: se te rompía la puerta del refugio y no
+> había ninguna forma de recuperarla.
 
 ## Por qué
 

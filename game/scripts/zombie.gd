@@ -158,6 +158,33 @@ func _do_chase(_delta: float, player) -> void:
 	else:
 		velocity = Vector2.ZERO
 	_move_with_knockback()
+	_attack_blocking_structure()
+
+
+## Si quedó trabado contra un muro, una barricada o una puerta yendo hacia vos,
+## le pega en vez de quedarse empujando para siempre.
+##
+## Va solo en CHASE **a propósito**: si también pegara mientras deambula, los
+## zombies irían demoliendo el mapa de fondo sin que nadie los provoque. Solo
+## rompe lo que se interpone entre él y vos.
+##
+## Los lobos NO hacen esto: son animales, no tiene sentido que tiren paredes
+## abajo, y además les abriría cualquier refugio.
+func _attack_blocking_structure() -> void:
+	if _attack_timer > 0.0:
+		return
+	for i in range(get_slide_collision_count()):
+		# get_collider() devuelve Object: sin tipar para poder pedirle
+		# take_damage(), que no existe en Object.
+		var hit = get_slide_collision(i).get_collider()
+		if hit == null or not (hit is Node):
+			continue
+		var node := hit as Node
+		if not node.is_in_group("structure") or not node.has_method("take_damage"):
+			continue
+		_attack_timer = attack_cooldown
+		node.take_damage(attack_damage)
+		return
 
 
 func _do_attack(player) -> void:

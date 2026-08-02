@@ -422,6 +422,19 @@ func is_solid(global_pos: Vector2) -> bool:
 	return is_solid_cell(cell_at(global_pos))
 
 
+## ¿Esta celda es el piso de una casa que ya venía dibujada en el mapa?
+##
+## Es lo que usa build_system.gd para no dejarte construir adentro de las casas
+## prediseñadas: si se pudiera, ocupar una casa y equiparla entera (mesa, fogata,
+## cofre) sería siempre mejor que armarse un refugio propio, y construir dejaría
+## de tener sentido.
+##
+## Está acá y no suelto en build_system.gd para que el literal "," viva en un
+## solo lugar, al lado del resto de los caracteres del mapa.
+func is_map_floor(cell: Vector2i) -> bool:
+	return char_at_cell(cell) == FLOOR
+
+
 ## Cuánto frena el terreno en esa posición (1.0 = normal, 0.45 = agua).
 func speed_at(global_pos: Vector2) -> float:
 	var atlas := get_cell_atlas_coords(0, cell_at(global_pos))

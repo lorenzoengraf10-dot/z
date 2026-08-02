@@ -34,9 +34,13 @@ const VARIANTS := {
 		"chase_speed": 168.0, "wander_speed": 42.0, "max_health": 26.0,
 		"attack_damage": 6.0, "color": Color(0.72, 0.32, 0.14),
 	},
+	# 16 y no 15 para que la tabla de resistencia de las construcciones cierre
+	# redonda: un muro de piedra (240) aguanta 30 golpes del zombi normal (8) y
+	# 15 de este; una puerta (160), 20 y 10. Contra el jugador la diferencia
+	# entre 15 y 16 no se nota.
 	"resistente": {
 		"chase_speed": 76.0, "wander_speed": 22.0, "max_health": 115.0,
-		"attack_damage": 15.0, "color": Color(0.34, 0.10, 0.30),
+		"attack_damage": 16.0, "color": Color(0.34, 0.10, 0.30),
 	},
 }
 

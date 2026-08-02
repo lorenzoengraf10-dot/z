@@ -74,7 +74,7 @@ Mirás siempre hacia donde está el cursor, sin importar para dónde camines.
 | Q | Comer o beber lo que tengas en la mochila |
 | R | Vendarte (corta el sangrado; usa vendaje o, si no tenés, un trapo) |
 | I o Tab | Inventario (equipar armas, consumir, **tirar objetos**) — **pausa el juego** |
-| B | Modo construcción (barricada / fogata / mesa · clic izq: poner, der: sacar) |
+| B | Modo construcción (muros / fogata / mesa / cofre · clic izq: poner **o reparar**, der: sacar) |
 | C | Panel de crafteo |
 | M | Mapa (se destapa caminando) — **pausa el juego** |
 | **H** o F1 | **Ayuda con todos los controles** — **pausa el juego** |
@@ -217,8 +217,22 @@ id a un número del jugador).
 - **Minería** — con un **pico** podés picar las rocas y las **vetas de mineral** (las manchas naranjas de la zona rocosa al este) para sacar piedra y metal. Sin pico no se puede. Picar hace **más ruido que talar**.
 - **Crafteo** (`systems/crafting.gd` + `data/recipes.json`) — hace falta estar **al lado de una mesa de trabajo**; las recetas de cocina piden además una fogata prendida. Cada receta muestra cuánto tenés de cada material (`Madera 2/3`).
 - **Armas** — se craftean (cuchillo, lanza, hacha, bate con clavos, pico) y se **equipan desde el inventario**. Cada una tiene su daño, alcance, ruido y velocidad: el bate mata de un golpe pero se escucha de lejos, el cuchillo es rápido y silencioso. El hacha tala más rápido y el pico habilita minar.
-- **Construcción** (`systems/build_system.gd`) — barricadas, fogatas y mesas de trabajo en cualquier lado del mapa; las barricadas frenan zombies y les tapan la visión.
-- **Puertas** (`door.gd`) — los edificios tienen puerta. Con **E** la abrís y la cerrás, y **cerrada frena a los zombies y les corta la visión**: encerrarte es una defensa real.
+- **Construcción** (`systems/build_system.gd`) — muros de madera, piedra y metal, fogatas, mesas de trabajo y cofres. Cada cosa cuesta sus propios materiales (`{"metal": 2, "tabla": 1}`, mismo formato que las recetas). Los muros frenan zombies y les tapan la visión.
+- **Todo lo construido se rompe** (`structure.gd`) — muros y puertas tienen vida, y **un zombi que te persigue le pega a lo que se interponga** en vez de quedarse empujando contra la pared. Un zombi que solo deambula no rompe nada: si no, el mapa se iría demoliendo solo.
+
+  | Qué | Vida | Golpes (zombi normal) | Golpes (resistente) |
+  |---|---|---|---|
+  | Muro de madera | 120 | 15 | 8 |
+  | Muro de piedra | 240 | 30 | 15 |
+  | Muro de metal | 400 | 50 | 25 |
+  | Puerta | 160 | 20 | 10 |
+
+  Como los zombies pegan una vez por segundo, esa columna son **segundos**. Ojo:
+  son contra **un** zombi — con tres encima de la misma puerta, es un tercio.
+  Los **lobos no** rompen nada: son animales.
+- **Reparar** — en modo construcción (**B**), clic izquierdo sobre algo dañado lo arregla gastando su material (una unidad por clic). Sirve también para las **puertas de las casas del mapa**, que es lo que te permite adoptar una casa como base.
+- **En las casas del mapa no se puede construir** — ni muro, ni mesa, ni fogata, ni cofre. Es lo que hace que valga la pena armarse un refugio propio en vez de ocupar una casa y equiparla entera. Los armarios ya saqueados **sí** se siguen pudiendo usar como guardado.
+- **Puertas** (`door.gd`) — los edificios tienen puerta. Con **E** la abrís y la cerrás, y **cerrada frena a los zombies y les corta la visión**. Pero **se rompen**: al quedarse sin vida quedan abiertas para siempre (el marco sigue ahí) y ya no se pueden cerrar. Encerrarse sigue siendo una defensa, pero ahora es una que hay que mantener.
 - **Techos** (`systems/roof_system.gd`) — desde afuera ves el techo tapando el edificio; al entrar se oculta y ves el interior.
 - **El agua ya no es una pared**: se puede cruzar, pero te deja a menos de la mitad de velocidad. Ojo con meterte al agua escapando de una horda.
 - **Ciclo día/noche con amanecer y atardecer** (`systems/day_night.gd`) — el mundo cambia de color según la hora: **noche** azul profundo → **amanecer** rosa cálido (05:00-07:30) → **día** → **atardecer** naranja (18:00-21:00) → noche. De noche además **baja la temperatura**, así que necesitás fuego. Un día completo dura 4 minutos reales (ajustable con `day_seconds`).
@@ -414,6 +428,31 @@ Después, lo de siempre:
 47. Buscá un **zombi resistente** (el lento, duro y que pega fuerte): tiene que
     verse con **su propio dibujo**, sin un tinte violeta encima. Si se ve
     violeta, el spawner no está reconociendo que la variante tiene arte propio.
+
+**De la construcción rompible (Fase 1 del plan de fortalezas):**
+
+48. **Encerrate en una casa con un zombi persiguiéndote.** Tiene que **pegarle a
+    la puerta** —número de daño, barra de vida sobre ella— y tirarla en unos 20
+    segundos. Al romperse queda abierta para siempre y ya no se puede cerrar.
+49. **Un zombi que solo deambula NO tiene que romper nada.** Si ves paredes o
+    puertas cayéndose solas sin que nadie te esté persiguiendo, está mal.
+50. Contá los golpes: muro de piedra **30** de un zombi normal, puerta **20**.
+    Con una horda de tres encima es un tercio de eso — ese es el número que de
+    verdad importa medir.
+51. **Reparar:** con la puerta dañada, apretá **B** y clic izquierdo sobre ella.
+    Tiene que cobrarte madera y subirle la vida. Probá también sin material:
+    tiene que avisar que te falta.
+52. **Metete en una casa del mapa y probá construir adentro.** No te tiene que
+    dejar. Afuera, en el pasto, sí. El armario saqueado de esa misma casa se
+    tiene que seguir pudiendo abrir para guardar cosas.
+53. **Pegá un mandoble adentro de tu propia base.** Tus muros **no** se tienen
+    que dañar: el ataque del jugador no toca las estructuras a propósito.
+54. Construí un **muro de piedra** y uno de **metal**: el panel de abajo tiene
+    que mostrar el costo correcto de cada uno (3 piedra / 2 metal + 1 tabla) y
+    ponerse en rojo si no te alcanza.
+55. **F5 / F9 con muros a media vida.** Al cargar tienen que volver con la misma
+    vida, no enteros ni rotos. Y una partida guardada **antes** de este cambio
+    tiene que cargar con todo entero (no en cero).
 
 ## Cómo editar el mundo (el mapa de tiles)
 

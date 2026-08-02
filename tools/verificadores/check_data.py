@@ -90,6 +90,41 @@ for iid, idef in items.items():
     if idef.get("arma") and "dano" not in idef:
         errors.append(f"items[{iid}]: es arma pero no tiene 'dano'")
 
+# --- Los costos de construir nombran items que existen ---
+#
+# BUILDABLES vive en GDScript, no en un JSON, asi que se lee con regex. Vale la
+# pena igual: el costo paso de ser un numero suelto ("costo": 2, siempre madera)
+# a un diccionario {item: cantidad}, y en esa migracion un typo tipo "peidra" no
+# rompe nada al abrir el juego — simplemente NUNCA vas a poder construir esa
+# cosa, porque inventory.has("peidra") siempre da false. Se descubre recien
+# cuando alguien junta piedra, va a construir y el boton sigue en rojo.
+build_gd = os.path.join(GAME, "scripts", "systems", "build_system.gd")
+if os.path.exists(build_gd):
+    import re
+    src = open(build_gd, encoding="utf-8").read()
+    bloque = re.search(r'const BUILDABLES\s*:=\s*\[(.*?)\n\]', src, re.S)
+    if bloque is None:
+        errors.append("build_system.gd: no encontre const BUILDABLES")
+    else:
+        cuerpo = bloque.group(1)
+        # Cada entrada: "id": "algo" ... "costo": { ... }
+        entradas = re.findall(r'"id"\s*:\s*"([^"]+)"(.*?)(?=\n\t\{|\Z)', cuerpo, re.S)
+        if not entradas:
+            errors.append("build_system.gd: BUILDABLES no tiene ninguna entrada legible")
+        for build_id, resto in entradas:
+            costo = re.search(r'"costo"\s*:\s*\{([^}]*)\}', resto)
+            if costo is None:
+                errors.append(f"build_system.gd[{build_id}]: 'costo' tiene que ser un "
+                              "diccionario {item: cantidad}, como el 'cuesta' de recipes.json")
+                continue
+            materiales = re.findall(r'"([^"]+)"\s*:\s*(\d+)', costo.group(1))
+            if not materiales:
+                errors.append(f"build_system.gd[{build_id}]: 'costo' esta vacio")
+            for item, _cantidad in materiales:
+                if item not in known:
+                    errors.append(f"build_system.gd[{build_id}]: cuesta '{item}', que no "
+                                  "existe en items.json — nunca se va a poder construir")
+
 print("=== DATOS ===")
 print(f"items: {len(items)} · tablas de loot: {len([k for k in loot if not k.startswith('_')])} · recetas: {len(recipes)} · perks: {len(perks)}")
 print("\n".join(errors) if errors else "(sin errores)")

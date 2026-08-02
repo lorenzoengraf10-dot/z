@@ -10,19 +10,41 @@ signal mode_changed(active: bool)
 signal build_message(text: String)
 
 ## Lo que se puede construir. Agregar uno nuevo es solo sumar una entrada acá.
+##
+## "costo" es un **diccionario** {item: cantidad}, igual que el "cuesta" de
+## data/recipes.json. Antes era un número suelto y todo costaba madera: con
+## muros de piedra y de metal eso ya no alcanzaba, y unificar el formato con el
+## de las recetas evita tener dos formas distintas de decir lo mismo.
 const BUILDABLES := [
 	{
+		# El id sigue siendo "barricada" y NO se renombra aunque ahora se llame
+		# "Muro de madera": load_cells() usa ese id como valor por defecto para
+		# las partidas guardadas viejas, así que cambiarlo las rompería.
 		"id": "barricada",
-		"nombre": "Barricada",
+		"nombre": "Muro de madera",
 		"escena": "res://scenes/Barricade.tscn",
-		"costo": 2,
+		"costo": {"madera": 2},
 		"color": Color(0.55, 0.38, 0.2, 0.5),
+	},
+	{
+		"id": "muro_piedra",
+		"nombre": "Muro de piedra",
+		"escena": "res://scenes/WallStone.tscn",
+		"costo": {"piedra": 3},
+		"color": Color(0.45, 0.43, 0.4, 0.5),
+	},
+	{
+		"id": "muro_metal",
+		"nombre": "Muro de metal",
+		"escena": "res://scenes/WallMetal.tscn",
+		"costo": {"metal": 2, "tabla": 1},
+		"color": Color(0.45, 0.47, 0.5, 0.5),
 	},
 	{
 		"id": "fogata",
 		"nombre": "Fogata",
 		"escena": "res://scenes/Campfire.tscn",
-		"costo": 5,
+		"costo": {"madera": 5},
 		"color": Color(1.0, 0.6, 0.2, 0.5),
 	},
 	{
@@ -32,19 +54,18 @@ const BUILDABLES := [
 		# Era 8 (3 árboles enteros) y es la puerta de entrada a 8 de las 11
 		# recetas: el testeo la marcó como el cuello de botella más caro del
 		# arranque. -15% ~ 6.8, redondeado para abajo a 6.
-		"costo": 6,
+		"costo": {"madera": 6},
 		"color": Color(0.65, 0.5, 0.25, 0.5),
 	},
 	{
 		"id": "cofre",
 		"nombre": "Cofre",
 		"escena": "res://scenes/Chest.tscn",
-		"costo": 5,
+		"costo": {"madera": 5},
 		"color": Color(0.5, 0.35, 0.15, 0.5),
 	},
 ]
 
-const COST_ITEM := "madera"
 const REFUND_RATIO := 0.5
 const MAX_RANGE := 96.0
 
@@ -106,7 +127,7 @@ func _build_palette() -> void:
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(150, 40)
 		button.focus_mode = Control.FOCUS_NONE
-		button.text = "%d) %s\n%d madera" % [i + 1, str(entry["nombre"]), int(entry["costo"])]
+		button.text = "%d) %s\n%s" % [i + 1, str(entry["nombre"]), _cost_text(entry["costo"])]
 		button.pressed.connect(select.bind(i))
 		row.add_child(button)
 		_palette_buttons.append(button)
@@ -119,8 +140,7 @@ func _refresh_palette() -> void:
 	var player = _player()
 	for i in range(_palette_buttons.size()):
 		var button := _palette_buttons[i]
-		var cost := int(BUILDABLES[i]["costo"])
-		var affordable := player != null and player.inventory.has(COST_ITEM, cost)
+		var affordable := _can_afford(player, BUILDABLES[i]["costo"])
 		if i == selected:
 			button.modulate = Color(1, 1, 1) if affordable else Color(1.0, 0.6, 0.6)
 		else:
@@ -150,8 +170,36 @@ func _current() -> Dictionary:
 	return BUILDABLES[clampi(selected, 0, BUILDABLES.size() - 1)]
 
 
-func _cost() -> int:
-	return int(_current()["costo"])
+func _cost() -> Dictionary:
+	return _current()["costo"]
+
+
+## ¿Tenés todo lo que pide este costo?
+func _can_afford(player, costo: Dictionary) -> bool:
+	if player == null:
+		return false
+	for item in costo:
+		if not player.inventory.has(str(item), int(costo[item])):
+			return false
+	return true
+
+
+## Cobra el costo entero, o no cobra nada. Nunca a medias: sin el chequeo previo
+## te podría sacar la piedra y después fallar al sacar el metal.
+func _pay(player, costo: Dictionary) -> bool:
+	if not _can_afford(player, costo):
+		return false
+	for item in costo:
+		player.inventory.remove(str(item), int(costo[item]))
+	return true
+
+
+## "2 madera" / "2 metal + 1 tabla", para los botones y los mensajes.
+func _cost_text(costo: Dictionary) -> String:
+	var partes: Array[String] = []
+	for item in costo:
+		partes.append("%d %s" % [int(costo[item]), ItemDB.display_name(str(item))])
+	return " + ".join(partes)
 
 
 func _make_ghost() -> Polygon2D:
@@ -249,9 +297,11 @@ func _can_build(cell: Vector2i) -> bool:
 		return false
 	if world.is_solid_cell(cell):
 		return false
+	if world.is_map_floor(cell):
+		return false
 	if world.center_of(cell).distance_to(player.global_position) > MAX_RANGE:
 		return false
-	return player.inventory.has(COST_ITEM, _cost())
+	return _can_afford(player, _cost())
 
 
 func _try_place(cell: Vector2i) -> void:
@@ -260,17 +310,28 @@ func _try_place(cell: Vector2i) -> void:
 	if player == null or world == null:
 		return
 
+	# Clic sobre algo que ya está: si está dañado, esto es un arreglo, no un
+	# intento fallido de construir encima.
+	var existente = _structure_at(cell)
+	if existente != null:
+		_try_repair(existente)
+		return
 	if _placed.has(_key(cell)):
 		build_message.emit("Ya hay algo construido ahí")
 		return
 	if world.is_solid_cell(cell):
 		build_message.emit("No se puede construir sobre agua, árboles o paredes")
 		return
+	# Adentro de las casas del mapa no se construye: es lo que hace que valga la
+	# pena armarse un refugio propio en vez de ocupar una casa y equiparla entera.
+	if world.is_map_floor(cell):
+		build_message.emit("Acá no: armate tu propio refugio afuera")
+		return
 	if world.center_of(cell).distance_to(player.global_position) > MAX_RANGE:
 		build_message.emit("Demasiado lejos")
 		return
-	if not player.inventory.remove(COST_ITEM, _cost()):
-		build_message.emit("Te falta madera (necesitás %d)" % _cost())
+	if not _pay(player, _cost()):
+		build_message.emit("Te falta material (necesitás %s)" % _cost_text(_cost()))
 		return
 
 	var entry := _current()
@@ -283,6 +344,59 @@ func _try_place(cell: Vector2i) -> void:
 			build_message.emit("Mesa lista — ahora podés craftear parado al lado (C)")
 		_:
 			build_message.emit("%s construida" % str(entry["nombre"]))
+
+
+## Arreglar una estructura dañada: **modo construcción (B) + clic izquierdo**
+## sobre ella.
+##
+## Va acá y no en la tecla E a propósito: una puerta ya usa E para abrirse y
+## cerrarse, así que meter el arreglo ahí obligaría a que E haga dos cosas
+## distintas según cuánta vida le quede. El modo construcción, en cambio, ya es
+## el contexto de "estoy trabajando en la base" y ya sabe de materiales y costos.
+## Estructura reparable que ocupa esa celda, o null.
+##
+## Busca en el grupo "structure" y no solo en `_placed` **a propósito**:
+## `_placed` únicamente tiene lo que construyó el jugador, así que mirando ahí
+## nomás no se podrían arreglar las **puertas de las casas del mapa** — que es
+## justo el caso principal, porque son las que te van a romper primero.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
+func _structure_at(cell: Vector2i):
+	var world = _world()
+	if world == null:
+		return null
+	for node in get_tree().get_nodes_in_group("structure"):
+		if not (node is Node2D):
+			continue
+		var candidate = node
+		if world.cell_at(candidate.global_position) == cell:
+			return candidate
+	return null
+
+
+func _try_repair(node) -> void:
+	if not is_instance_valid(node) or not node.has_method("repair"):
+		build_message.emit("Ya hay algo construido ahí")
+		return
+	if not node.is_damaged():
+		build_message.emit("Eso está entero")
+		return
+
+	var player = _player()
+	if player == null:
+		return
+	var item := str(node.repair_item)
+	if not player.inventory.has(item, 1):
+		build_message.emit("Necesitás %s para arreglar esto" % ItemDB.display_name(item))
+		return
+
+	# Se cobra de a una unidad por clic: así no se te va media mochila de un
+	# golpe en algo que estaba raspado nada más.
+	player.inventory.remove(item, 1)
+	var curado: float = node.repair(float(node.repair_per_item))
+	AudioManager.play("construir")
+	build_message.emit("Reparaste (+%d) — %d%%" % [
+		int(curado), int(round(node.health_ratio() * 100.0)),
+	])
 
 
 func _try_remove(cell: Vector2i) -> void:
@@ -307,13 +421,16 @@ func _try_remove(cell: Vector2i) -> void:
 	if is_instance_valid(node):
 		node.queue_free()
 
-	# Devolvemos la mitad de lo que costó (redondeando para abajo, mínimo 1).
-	var refund := maxi(1, int(floor(_cost_of(type_id) * REFUND_RATIO)))
-	if player != null:
-		# Al piso si no entra: la construcción ya se desarmó, no hay forma de
-		# devolver el vuelto de otra manera.
-		player.give_or_drop(COST_ITEM, refund)
-	build_message.emit("Desarmaste %s (+%d madera)" % [_name_of(type_id), refund])
+	# Devolvemos la mitad de cada material (redondeando para abajo, mínimo 1).
+	var devuelto := {}
+	for item in _cost_of(type_id):
+		var refund := maxi(1, int(floor(int(_cost_of(type_id)[item]) * REFUND_RATIO)))
+		devuelto[item] = refund
+		if player != null:
+			# Al piso si no entra: la construcción ya se desarmó, no hay forma de
+			# devolver el vuelto de otra manera.
+			player.give_or_drop(str(item), refund)
+	build_message.emit("Desarmaste %s (+%s)" % [_name_of(type_id), _cost_text(devuelto)])
 
 
 func _entry_of(type_id: String) -> Dictionary:
@@ -323,8 +440,8 @@ func _entry_of(type_id: String) -> Dictionary:
 	return BUILDABLES[0]
 
 
-func _cost_of(type_id: String) -> int:
-	return int(_entry_of(type_id)["costo"])
+func _cost_of(type_id: String) -> Dictionary:
+	return _entry_of(type_id)["costo"]
 
 
 func _name_of(type_id: String) -> String:
