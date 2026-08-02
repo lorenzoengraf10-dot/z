@@ -25,6 +25,34 @@ que ya andan, es **la noche**: baja la temperatura (hace falta fuego), y las
 hordas ya reaccionan al ruido acumulado. Llegar al anochecer con un refugio en
 pie pasa a ser un objetivo real de la partida.
 
+### Regla nueva: las casas del mapa no se equipan
+
+Falta una pieza para que "construir tu propio refugio" tenga un motivo real:
+hoy cualquiera se mete en una casa del mapa y la equipa entera —cofre, mesa,
+fogata— sin haber construido nada. La regla: **ninguna construcción nueva se
+puede plantar sobre el piso de una casa prediseñada del mapa.** Ni muro, ni
+puerta, ni mesa, ni fogata, ni cofre, ni la cama de más abajo.
+
+Lo que **no** cambia: un armario ya saqueado adentro de una casa se sigue
+pudiendo reutilizar para guardar cosas (esa mecánica no pasa por el sistema de
+construcción, así que la regla no la toca). Las casas del mapa no dejan de
+servir para nada — siguen siendo un refugio de emergencia real, y se les puede
+reforzar la puerta (Fase 2) — pero dejan de poder equiparse desde cero. Para
+tener mesa, fogata, cofre y cama hace falta un refugio propio.
+
+**Detalle técnico** — `world.gd` ya expone `char_at_cell(cell)` y la constante
+`FLOOR := ","`, el mismo tile que usa `roof_system.gd` para reconocer el
+interior de un edificio. Es el chequeo que se agrega a
+`build_system.gd::_can_build()`.
+
+> **Ojo con esto cuando se implemente la Fase 3:** esa fase agrega un tile de
+> piso que el jugador puede colocar en su propio refugio, con el mismo `FLOOR`
+> del mapa. Si la regla nueva no distingue *piso del mapa* de *piso que puso el
+> jugador*, el jugador queda trabado sin poder seguir construyendo dentro de su
+> propia casa apenas le pone el piso. Hace falta un tile distinguible (mismo
+> aspecto, distinto índice interno) — se resuelve al implementar la Fase 3, no
+> antes.
+
 ---
 
 ## Fase 1 — Muros con vida y materiales
@@ -44,8 +72,32 @@ La base de todo lo demás. Sin esto, el resto no tiene sentido.
   | Metal | 2 metal + 1 tabla | 400 | 50 | 25 |
   | **Puerta** | — | **160** | **20** | **10** |
   | Puerta reforzada | 2 tabla + 1 metal | 320 | 40 | 20 |
+  | Cama | 2 piel de animal + 5 madera | — | — | — |
 
   Los números en negrita son los que fijó el equipo; el resto sale de escalarlos.
+  La cama no tiene vida propia: es mobiliario, no defensa.
+
+### La cama: dos cosas nuevas, no solo reutilización
+
+- **La "piel" es un ítem que no existe hoy.** `data/items.json` no la tiene, y
+  `animal.gd::_drop_meat()` solo suelta `"carne"`. Hace falta agregar el ítem
+  y sumarlo como drop de caza (mismo patrón que la carne, otra tirada de loot al
+  cazar un animal). Es poco trabajo, pero es trabajo nuevo — no alcanza con
+  reutilizar algo que ya está, como sí pasa con la puerta o el guardado.
+- **Qué hace dormir:** restaura la energía y además salta el reloj hasta la
+  mañana. Es la opción más completa que se decidió, y también la única pieza de
+  todo este agregado que no es puro reciclaje de sistemas existentes —
+  `day_night.gd::hour` hoy solo avanza en tiempo real, no tiene forma de
+  adelantarlo de una vez.
+- **La cama depende de la Fase 3.** `roof_system.gd` es lo que distingue "estar
+  en una casa" de "estar parado entre cuatro muros a cielo abierto": sin piso
+  propio, un refugio armado por el jugador nunca es una habitación de verdad
+  para ese sistema, y la cama quedaría siempre a la intemperie. Dos caminos, a
+  decidir cuando se implemente (no ahora): que la cama solo funcione si
+  `roof_system` reconoce esa celda como interior (consistente, pero espera a la
+  Fase 3 completa), o que funcione en cualquier lado como excepción provisoria
+  y se ate a la Fase 3 más adelante (la cama llega antes, pero es una excepción
+  a destejer después).
 
 ### De dónde salen esos números
 
@@ -124,7 +176,8 @@ Con los muros rompibles, aparecen los dos verbos que faltan.
 ## Fase 3 — Que sea una casa de verdad
 
 En este punto una fortaleza es funcional, pero visualmente sigue siendo un montón
-de bloques sueltos.
+de bloques sueltos. Esta fase también es la que le da sentido real a la cama de
+la Fase 1 — ver "La cama depende de la Fase 3", arriba.
 
 - **Piso colocable.** `roof_system.gd` ya sabe convertir piso + paredes + puerta
   en un edificio con techo, interior y todo. Pero solo lee el mapa prediseñado.
