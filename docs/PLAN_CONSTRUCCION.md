@@ -37,11 +37,36 @@ La base de todo lo demás. Sin esto, el resto no tiene sentido.
   (mismo patrón de feedback que ya usan zombies y lobos: parpadeo y barra).
 - Tres materiales en vez de uno solo:
 
-  | Muro | Cuesta | Aguanta | Para qué |
-  |---|---|---|---|
-  | Madera | 2 madera | Poco | Tapar un hueco rápido |
-  | Piedra | 3 piedra | Medio | El muro estándar |
-  | Metal | 2 metal + 1 tabla | Mucho | El anillo interno de la base |
+  | Muro | Cuesta | Vida | Golpes (normal) | Golpes (resistente) |
+  |---|---|---|---|---|
+  | Madera | 2 madera | 120 | 15 | 8 |
+  | **Piedra** | 3 piedra | **240** | **30** | **15** |
+  | Metal | 2 metal + 1 tabla | 400 | 50 | 25 |
+  | **Puerta** | — | **160** | **20** | **10** |
+  | Puerta reforzada | 2 tabla + 1 metal | 320 | 40 | 20 |
+
+  Los números en negrita son los que fijó el equipo; el resto sale de escalarlos.
+
+### De dónde salen esos números
+
+En el código, un zombi normal pega **8** de daño y el resistente **15**, los dos
+**una vez por segundo**. O sea que la columna de golpes es directamente
+**segundos**: un muro de piedra aguanta medio minuto contra un zombi solo, y una
+puerta veinte segundos.
+
+Para que el resistente caiga justo en la mitad de golpes que el normal, hay que
+subirle el daño de **15 a 16**. Es un cambio de una línea y en combate contra el
+jugador no se nota (un punto sobre 15), pero hace que toda la tabla cierre
+redonda. Si no, el resistente da 16 y 11 golpes en vez de 15 y 10.
+
+El **corredor** pega 6, así que contra las defensas es casi inofensivo: 40 golpes
+para un muro de piedra. Está bien que sea así — es el rápido y débil, no el que
+rompe puertas.
+
+> **Ojo con esto en el playtest:** los números de arriba son contra **un** zombi.
+> Una horda son 2 a 4, y si tres llegan a pegarle a la misma puerta, los 20
+> segundos se convierten en 7. El número que importa medir no es el de un zombi
+> solo, es el de la horda.
 
 - **Los zombies atacan lo que los frena.** Cuando uno queda trabado contra una
   estructura, le pega en vez de empujar. Se detecta con las colisiones que el
@@ -120,15 +145,15 @@ Estas dos son mejoras, no requisitos. Si hay que recortar, se recortan.
 
 ## Lo que hay que decidir entre todos
 
-1. **¿Cuánto tiene que aguantar cada cosa?** Es puro balance y solo se resuelve
-   jugando. Los números de la tabla de arriba son un punto de partida, y lo que
-   más va a costar calibrar es la puerta: muy blanda y no sirve de nada, muy dura
-   y no cambió nada respecto de hoy.
-2. **¿Vale la pena construir si igual perdés todo al morir?** Hoy la base dura lo
+1. **¿Vale la pena construir si igual perdés todo al morir?** Hoy la base dura lo
    que dura la partida. Alternativa a discutir: que algo quede entre partidas.
+2. **¿El jugador puede romper muros y puertas a golpes?** Hoy solo puede desarmar
+   lo que construyó él. Si además pudiera romper a golpes, entrar a una casa
+   cerrada sería una opción más (ruidosa y lenta) en vez de depender de la
+   puerta. No es urgente, pero sale casi gratis una vez que todo tiene vida.
 
-> **Ya decidido:** las puertas se rompen, también las de las casas del mapa.
-> Ver "Qué implica que las puertas se rompan", arriba.
+> **Ya decidido:** las puertas se rompen, también las de las casas del mapa, y
+> los números de vida ya están fijados (ver la tabla de la Fase 1).
 
 ## Riesgo a tener en cuenta
 
