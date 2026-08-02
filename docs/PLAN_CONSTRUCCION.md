@@ -47,6 +47,32 @@ La base de todo lo demás. Sin esto, el resto no tiene sentido.
   estructura, le pega en vez de empujar. Se detecta con las colisiones que el
   cuerpo ya reporta al moverse; es el mismo mecanismo que `animal.gd` usa para
   esquivar obstáculos.
+- **Las puertas también se rompen** — incluidas las de las casas del mapa. Una
+  puerta cerrada pasa a ser un muro más: aguanta un rato y cede. Al romperse
+  queda abierta para siempre.
+
+### Qué implica que las puertas se rompan
+
+Es el cambio de mayor peso de todo el plan, así que conviene tenerlo claro:
+**se terminan los refugios gratis**. Hoy cualquiera de las 24 casas del mapa es
+un búnker perfecto sin costo. Con puertas rompibles, meterse en una casa deja de
+ser la respuesta a todo y pasa a ser el *punto de partida*.
+
+El efecto secundario es bueno y vale la pena buscarlo a propósito: la forma
+natural de jugar deja de ser "levantar una fortaleza en un campo vacío" y pasa a
+ser **agarrar una casa y reforzarla**. Es más intuitivo, aprovecha los edificios
+que ya están dibujados, y le da un uso concreto al material que juntás.
+
+Para que no quede injusto, dos recaudos de balance:
+
+- Una puerta tiene que aguantar bastante más que un muro de madera. Que ceda es
+  cuestión de tiempo y de cuántos zombies haya, no de dos mordiscos.
+- Romperla tiene que hacer **ruido**, para que se note desde adentro que se están
+  metiendo y dé tiempo a reaccionar.
+
+**Detalle técnico** — el guardado de puertas ya delega en la puerta misma
+(`to_dict()` devuelve si está abierta), así que sumarle la vida al guardado no
+requiere tocar el sistema de guardado.
 
 **Detalle técnico** — hoy el costo de construir es un solo número y un solo
 material (`COST_ITEM := "madera"` en `build_system.gd`). Pasa a ser un
@@ -62,9 +88,13 @@ Con los muros rompibles, aparecen los dos verbos que faltan.
   zombies y les corta la visión): alcanza con agregarla a la lista de cosas
   construibles. Sin esto, "hacer una casa" es levantar un anillo de paredes sin
   entrada.
-- **Reparar con E.** Pararse al lado de un muro dañado con material en la mochila
-  y repararlo. Sin esto, la única forma de arreglar algo es desarmarlo y volver a
-  construirlo, que es tedioso y encima devuelve la mitad del material.
+- **Reparar con E.** Pararse al lado de un muro o una puerta dañada con material
+  en la mochila y arreglarla. Sin esto, la única forma de arreglar algo es
+  desarmarlo y volver a construirlo, que es tedioso y encima devuelve la mitad
+  del material.
+- **Reforzar puertas.** Gastar material en una puerta que encontraste para
+  subirle la vida. Es lo que convierte una casa cualquiera en *tu* base, y le da
+  sentido a quedarse en un lugar en vez de andar dando vueltas.
 
 ## Fase 3 — Que sea una casa de verdad
 
@@ -90,13 +120,15 @@ Estas dos son mejoras, no requisitos. Si hay que recortar, se recortan.
 
 ## Lo que hay que decidir entre todos
 
-1. **¿Los zombies rompen las puertas de las casas del mapa?** Si sí, esconderse
-   deja de ser infalible, pero también deja de haber refugios seguros gratis.
-   Es el cambio que más afecta cómo se siente el juego.
-2. **¿Cuánto tiene que aguantar un muro?** Es puro balance y solo se resuelve
-   jugando. Los números de la tabla de arriba son un punto de partida.
-3. **¿Vale la pena construir si igual perdés todo al morir?** Hoy la base dura lo
+1. **¿Cuánto tiene que aguantar cada cosa?** Es puro balance y solo se resuelve
+   jugando. Los números de la tabla de arriba son un punto de partida, y lo que
+   más va a costar calibrar es la puerta: muy blanda y no sirve de nada, muy dura
+   y no cambió nada respecto de hoy.
+2. **¿Vale la pena construir si igual perdés todo al morir?** Hoy la base dura lo
    que dura la partida. Alternativa a discutir: que algo quede entre partidas.
+
+> **Ya decidido:** las puertas se rompen, también las de las casas del mapa.
+> Ver "Qué implica que las puertas se rompan", arriba.
 
 ## Riesgo a tener en cuenta
 
