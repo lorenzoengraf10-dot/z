@@ -162,7 +162,17 @@ func _register_preplaced() -> void:
 		var key := _key(cell)
 		if _placed.has(key):
 			continue
-		var type_id := "fogata" if child.is_in_group("campfire") else "barricada"
+		# Se mira el grupo de cada uno en vez de asumir "barricada" para todo lo
+		# que no sea fogata: la mesa de trabajo que viene puesta en Main.tscn
+		# quedaba registrada como barricada, así que al desarmarla devolvía
+		# 1 madera en vez de las 3 que corresponden.
+		var type_id := "barricada"
+		if child.is_in_group("campfire"):
+			type_id = "fogata"
+		elif child.is_in_group("workbench"):
+			type_id = "mesa"
+		elif child.is_in_group("container"):
+			type_id = "cofre"
 		_placed[key] = {"nodo": child, "tipo": type_id}
 
 
@@ -220,7 +230,13 @@ func _process(_delta: float) -> void:
 	if world == null:
 		return
 	_ghost.global_position = world.center_of(cell)
-	if _can_build(cell):
+	var reparable = _structure_at(cell)
+	if reparable != null and reparable.is_damaged():
+		# Verde: acá el clic izquierdo arregla en vez de construir. Sin esto el
+		# fantasma quedaba rojo sobre un muro dañado, que se lee como "no podés
+		# hacer nada acá" justo donde sí se puede.
+		_ghost.color = Color(0.35, 0.9, 0.4, 0.5)
+	elif _can_build(cell):
 		_ghost.color = _current()["color"]
 	else:
 		_ghost.color = Color(1.0, 0.3, 0.3, 0.45)
@@ -377,12 +393,17 @@ func _try_repair(node) -> void:
 	if not is_instance_valid(node) or not node.has_method("repair"):
 		build_message.emit("Ya hay algo construido ahí")
 		return
-	if not node.is_damaged():
-		build_message.emit("Eso está entero")
-		return
 
 	var player = _player()
 	if player == null:
+		return
+	# El mismo alcance que para construir: si no, con el mouse se podría arreglar
+	# una pared del otro lado del mapa sin moverse.
+	if node.global_position.distance_to(player.global_position) > MAX_RANGE:
+		build_message.emit("Demasiado lejos para arreglar eso")
+		return
+	if not node.is_damaged():
+		build_message.emit("Eso está entero")
 		return
 	var item := str(node.repair_item)
 	if not player.inventory.has(item, 1):
@@ -468,8 +489,28 @@ func _spawn_at(cell: Vector2i, type_id: String):
 	var node = _scenes[index].instantiate()
 	node.global_position = world.center_of(cell)
 	_structures().add_child(node)
-	_placed[_key(cell)] = {"nodo": node, "tipo": type_id}
+	var key := _key(cell)
+	_placed[key] = {"nodo": node, "tipo": type_id}
+
+	# Cuando un zombi lo tira abajo hay que sacarlo de _placed, si no la celda
+	# queda ocupada por un fantasma. Ver _on_structure_destroyed().
+	if node.has_signal("destroyed"):
+		node.destroyed.connect(_on_structure_destroyed.bind(key), CONNECT_ONE_SHOT)
 	return node
+
+
+## Limpia la celda cuando la estructura se rompió sola (un zombi la tiró).
+##
+## Sin esto, `_placed` se quedaba con la entrada apuntando a un nodo ya liberado,
+## y eso rompía cuatro cosas a la vez, todas en silencio:
+##   1. la celda quedaba ocupada para siempre — no se podía volver a construir ahí
+##   2. clic derecho sobre el hueco te devolvía material de algo que ya no existía
+##      (material infinito gratis)
+##   3. placed_cells() la seguía guardando, así que al cargar la partida el muro
+##      destruido volvía a aparecer, entero
+##   4. el fantasma del modo construcción se quedaba rojo sobre pasto vacío
+func _on_structure_destroyed(key: String) -> void:
+	_placed.erase(key)
 
 
 # --- Guardado ---

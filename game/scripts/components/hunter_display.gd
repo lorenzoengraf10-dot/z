@@ -23,6 +23,9 @@ const SEEN := Color(1.0, 0.28, 0.24)
 
 var _label: Label
 var _hunter = null
+## Si la barra se estaba viendo el frame pasado. Sirve para redibujar una última
+## vez cuando se apaga, sin tener que redibujar siempre.
+var _bar_was_visible := false
 
 
 func _ready() -> void:
@@ -58,7 +61,17 @@ func _process(_delta: float) -> void:
 	else:
 		_label.visible = false
 
-	queue_redraw()
+	# Redibujar solo cuando hay barra que mostrar (o cuando se acaba de apagar y
+	# hay que borrarla).
+	#
+	# Antes esto era un queue_redraw() por frame y estaba bien mientras el nodo
+	# colgaba solo de zombies y lobos, que son pocos. Ahora también lo usan los
+	# muros y las 24 puertas del mapa: son decenas de nodos quietos pidiendo un
+	# redibujado constante para no dibujar nada.
+	var bar_visible := bool(_hunter.show_health_bar())
+	if bar_visible or _bar_was_visible:
+		queue_redraw()
+	_bar_was_visible = bar_visible
 
 
 func _draw() -> void:

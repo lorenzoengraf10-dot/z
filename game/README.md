@@ -127,7 +127,7 @@ que aprendiste.
 2. **Entrás a los edificios a saquear.** Cada casa, galpón o granja tiene
    contenedores (armario, cajón, botiquín, caja militar). Se revisan con **E**,
    tardan un par de segundos, **hacen ruido** y **solo se pueden revisar una vez**.
-3. **No te entra todo.** La mochila tiene lugares contados: arrancás con 8 y las
+3. **No te entra todo.** La mochila tiene lugares contados: arrancás con 12 y las
    mochilas que encontrás te suben la capacidad. Elegir qué dejar es parte del juego.
 4. **Te van a morder.** Zombies y lobos te hacen **sangrar**, que es lo que más
    rápido te mata. Se corta con **R** (vendaje o trapo).
@@ -355,10 +355,11 @@ Después, lo de siempre:
 26. Apretá **H**: se abre la ayuda y el juego se pausa.
 27. Mirá el **minimapa** de abajo a la derecha: se tiene que ir destapando igual
     que el mapa grande.
-28. Encerrate en una casa con la puerta cerrada y un zombi afuera: **no tiene que
-    entrar ni verte**. Ojo que esto ahora hace que esconderse sea una estrategia
-    muy fuerte; si les parece demasiado, lo hablamos (una opción sería que los
-    zombies rompan las puertas, pero eso ya es una función nueva).
+28. Encerrate en una casa con la puerta cerrada y un zombi afuera: **no te tiene
+    que ver, y tampoco alcanzarte a través de la puerta**. Pero sí te la va a
+    **romper** si te está persiguiendo (ver el ítem 48): esconderse ya no es
+    gratis, hay que mantener la puerta. Si el zombi te muerde con la puerta
+    cerrada y entera, eso sí es un bug.
 
 **Del mapa (esto se rompió una vez y no se notó hasta jugar):**
 

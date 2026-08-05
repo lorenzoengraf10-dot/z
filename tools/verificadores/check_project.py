@@ -289,7 +289,40 @@ for nombre in ESTRUCTURAS_CON_VIDA:
         errors.append(f"scenes/{nombre}: tiene el script pero no setea max_health, "
                       "asi que usa el default en vez de su propia resistencia.")
 
-# --- 12. autoloads existen ---
+# --- 12. nadie muerde a traves de una pared ---
+#
+# El ataque de zombies y lobos NO chequea linea de vista: solo mide distancia
+# (ver zombie.gd::_do_chase, que pasa a ATTACK con distance_to <= attack_range).
+# Que hoy no puedan morderte a traves de una puerta cerrada es pura geometria:
+#
+#   pared/puerta 16 de ancho -> 8 del centro al borde
+#   + medio zombie (colision 12x12)  -> 6
+#   + medio jugador (colision 12x12) -> 6
+#   = 20 de cada lado, 28 entre los dos centros con la pared en el medio
+#
+# Con attack_range = 20 quedan 8 de margen. Si alguien lo sube a 28 o mas, los
+# zombies empiezan a morderte a traves de las paredes y **toda la defensa del
+# juego deja de existir**, sin un solo error en pantalla: la puerta se sigue
+# viendo cerrada. Es exactamente el tipo de cosa que hay que atrapar aca.
+MARGEN_PARED = 28  # 16 (pared) / 2 + 6 (medio zombie) + 6 (medio jugador) + 8
+for nombre in ["zombie.gd", "wolf.gd"]:
+    ruta = os.path.join(ROOT, "scripts", nombre)
+    if not os.path.exists(ruta):
+        continue
+    src = "\n".join(l.split("#")[0] for l in open(ruta, encoding="utf-8").read().split("\n"))
+    m = re.search(r'@export var attack_range\s*:=\s*([\d.]+)', src)
+    if m is None:
+        errors.append(f"scripts/{nombre}: no encontre attack_range; es el numero que decide "
+                      "si pueden morderte atravesando una pared")
+        continue
+    alcance = float(m.group(1))
+    if alcance >= MARGEN_PARED:
+        errors.append(f"scripts/{nombre}: attack_range={alcance:g} llega a {MARGEN_PARED} o mas, "
+                      "asi que puede morder al jugador A TRAVES de una pared o una puerta cerrada "
+                      "(el ataque solo mide distancia, no chequea linea de vista). Bajarlo, o "
+                      "agregarle un chequeo de linea de vista al ataque.")
+
+# --- 13. autoloads existen ---
 proj = open(os.path.join(ROOT, "project.godot"), encoding="utf-8").read()
 for name, path in re.findall(r'^(\w+)="\*(res://[^"]+)"', proj, re.M):
     if not os.path.exists(res_to_fs(path)):

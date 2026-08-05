@@ -45,16 +45,22 @@ var _health_bar_timer := 0.0
 func _ready() -> void:
 	add_to_group("structure")
 	health = max_health
+	# Arranca sin procesar: un muro quieto no tiene nada que animar, y el mapa
+	# tiene 24 puertas más todo lo que construya el jugador. Se prende solo al
+	# recibir un golpe (ver take_damage) y se vuelve a apagar cuando terminan el
+	# parpadeo y la barra.
+	set_process(false)
 
 
 func _process(delta: float) -> void:
 	_health_bar_timer = maxf(0.0, _health_bar_timer - delta)
-	if _hit_flash <= 0.0:
-		return
-	_hit_flash = maxf(0.0, _hit_flash - delta * 4.0)
-	if _flash_target is CanvasItem:
-		var visual := _flash_target as CanvasItem
-		visual.modulate = Color.WHITE.lerp(Color(3.0, 3.0, 3.0), _hit_flash)
+	if _hit_flash > 0.0:
+		_hit_flash = maxf(0.0, _hit_flash - delta * 4.0)
+		if _flash_target is CanvasItem:
+			var visual := _flash_target as CanvasItem
+			visual.modulate = Color.WHITE.lerp(Color(3.0, 3.0, 3.0), _hit_flash)
+	if _hit_flash <= 0.0 and _health_bar_timer <= 0.0:
+		set_process(false)
 
 
 ## La llaman los zombies cuando quedan trabados contra esto (ver zombie.gd).
@@ -64,6 +70,7 @@ func take_damage(amount: float) -> void:
 	health = maxf(0.0, health - amount)
 	_hit_flash = 1.0
 	_health_bar_timer = health_bar_seconds
+	set_process(true)
 
 	var textos = get_tree().get_first_node_in_group("floating_text")
 	if textos != null:
@@ -85,7 +92,17 @@ func repair(amount: float) -> float:
 	var curado := health - antes
 	if curado > 0.0:
 		_health_bar_timer = health_bar_seconds
+		set_process(true)
+		_on_repaired()
 	return curado
+
+
+## Para que la subclase reaccione al arreglo. La puerta lo necesita: si se
+## arregla una que estaba rota, hay que volver a dibujarla entera y dejar que se
+## pueda cerrar otra vez. Sin este aviso subía la vida pero seguía viéndose y
+## comportándose como rota, que es justo lo que uno acaba de pagar por arreglar.
+func _on_repaired() -> void:
+	pass
 
 
 func is_broken() -> bool:

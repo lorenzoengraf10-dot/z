@@ -61,6 +61,12 @@ func _on_broken() -> void:
 	_apply()
 
 
+## Arreglarla la saca del estado "rota": vuelve a dibujarse como una puerta
+## abierta normal y se puede volver a cerrar con E.
+func _on_repaired() -> void:
+	_apply()
+
+
 func _apply() -> void:
 	# disabled se toca diferido: cambiar una colisión en pleno paso de física
 	# tira error en Godot.
