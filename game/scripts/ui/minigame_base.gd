@@ -52,6 +52,51 @@ func _build_base_ui() -> void:
 
 	title_label = _make_label(24, -170)
 	hint_label = _make_label(16, 150)
+	_build_exit()
+
+
+## Cartel fijo + botón para salir.
+##
+## Escape ya cancelaba desde el primer día (ver _process), pero **no lo decía en
+## ningún lado**: quien no lo adivinaba se sentía atrapado adentro del minijuego.
+## El arreglo no es de lógica, es de que se vea.
+func _build_exit() -> void:
+	var salir := Label.new()
+	salir.text = "Escape — salir"
+	salir.add_theme_font_size_override("font_size", 14)
+	salir.modulate = Color(0.78, 0.78, 0.82)
+	salir.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	salir.anchor_left = 0.5
+	salir.anchor_right = 0.5
+	salir.anchor_top = 0.5
+	salir.anchor_bottom = 0.5
+	salir.offset_left = -160
+	salir.offset_right = 160
+	salir.offset_top = 196
+	salir.offset_bottom = 220
+	add_child(salir)
+
+	# Botón aparte para quien juegue con el mouse y no lea el cartel. Es un
+	# Button de verdad, así que sí puede recibir el clic (a diferencia del resto
+	# del HUD, que va con MOUSE_FILTER_IGNORE para no comerse el ataque).
+	var boton := Button.new()
+	boton.text = "Salir"
+	boton.focus_mode = Control.FOCUS_NONE
+	boton.anchor_left = 0.5
+	boton.anchor_right = 0.5
+	boton.anchor_top = 0.5
+	boton.anchor_bottom = 0.5
+	boton.offset_left = -44
+	boton.offset_right = 44
+	boton.offset_top = 226
+	boton.offset_bottom = 258
+	boton.pressed.connect(_on_exit_pressed)
+	add_child(boton)
+
+
+func _on_exit_pressed() -> void:
+	if is_active:
+		_finish(false)
 
 
 func _make_label(font_size: int, y_offset: float) -> Label:

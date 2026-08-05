@@ -97,6 +97,36 @@ for y in range(H):
 print(f"puertas revisadas: {sum(1 for y in range(H) for x in range(W) if at(x, y) == DOOR)}")
 problems += tapadas
 
+# La FACHADA tiene que estar despejada, no solo el tile de la puerta.
+#
+# La regla de arriba solo salta si TODAS las salidas estan tapadas, asi que un
+# arbol justo al lado de la puerta pasaba sin problema. En la practica eso ya
+# molesta: entras y salis de costado, los zombies se traban en la esquina, y
+# con las paredes frenando de verdad la casa se vuelve incomoda sin que se vea
+# por que. Cuando se escribio esta regla habia 12 de 24 puertas asi.
+#
+# Zona exigida: 3 de ancho por 2 de fondo delante de cada puerta, sin arboles,
+# rocas, vetas ni agua.
+FACHADA_ANCHO = 1   # a cada lado del eje de la puerta -> 3 de ancho
+FACHADA_FONDO = 2
+sucias = []
+for y in range(H):
+    for x in range(W):
+        if at(x, y) != DOOR:
+            continue
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            # Solo el lado de afuera: adentro es piso o pared.
+            if at(x + dx, y + dy) in (FLOOR, WALL):
+                continue
+            px, py = -dy, dx        # perpendicular, para barrer el ancho
+            for d in range(1, FACHADA_FONDO + 1):
+                for s in range(-FACHADA_ANCHO, FACHADA_ANCHO + 1):
+                    cx, cy = x + dx * d + px * s, y + dy * d + py * s
+                    if at(cx, cy) in SOLID or at(cx, cy) == "~":
+                        sucias.append(f"la puerta ({x},{y}) tiene {at(cx, cy)!r} en ({cx},{cy}), "
+                                      "dentro de la zona despejada de la fachada (3x2)")
+problems += sucias
+
 # El borde del mapa no puede ser caminable.
 #
 # El anillo de arboles se dibujaba antes que la costa y la costa se lo comia:

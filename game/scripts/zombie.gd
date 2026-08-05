@@ -14,6 +14,15 @@ enum State { WANDER, CHASE, ATTACK }
 @export var chase_speed := 110.0
 @export var vision_range := 220.0
 @export var vision_half_angle_deg := 45.0
+## Cuánto del ruido del jugador atraviesa una pared (0 = nada, 1 = todo).
+##
+## **No puede ser 0 aunque suene tentador.** Si adentro de una casa no te ven ni
+## te oyen, ningún zombi va a golpear nunca una puerta, y las puertas rompibles
+## quedan como contenido muerto: te encerrás y ganás. Con un valor bajo,
+## quedarte quieto adentro te esconde de verdad, pero pelear o correr en una
+## habitación te sigue delatando — que es lo que mantiene la tensión.
+@export var muffle_through_walls := 0.35
+
 @export var attack_range := 20.0
 @export var attack_damage := 8.0
 @export var attack_cooldown := 1.0
@@ -99,17 +108,24 @@ func _detect_player():
 		var to_player: Vector2 = p.global_position - global_position
 		var dist := to_player.length()
 
-		# Oído: entra dentro del radio de ruido del jugador (ignora paredes).
+		# La línea de vista se calcula una sola vez: la usan el oído y la visión.
+		var libre := _has_line_of_sight(p)
+
+		# Oído: entra dentro del radio de ruido del jugador, pero **las paredes
+		# lo tapan**. Antes lo ignoraban, y por eso meterse en una casa no servía
+		# de nada: te escuchaban igual desde afuera.
 		var noise := 0.0
 		if p.has_method("get_noise_radius"):
 			noise = p.get_noise_radius()
+		if not libre:
+			noise *= muffle_through_walls
 		if noise > 0.0 and dist <= noise:
 			return p
 
 		# Visión: dentro del rango, dentro del cono al frente y con línea de vista.
 		if dist <= vision_range:
 			var angle := absf(rad_to_deg(facing.angle_to(to_player)))
-			if angle <= vision_half_angle_deg and _has_line_of_sight(p):
+			if angle <= vision_half_angle_deg and libre:
 				return p
 	return null
 
@@ -150,7 +166,7 @@ func _do_chase(_delta: float, player) -> void:
 	if player != null and player.global_position.distance_to(global_position) <= attack_range:
 		state = State.ATTACK
 		return
-	var to_target := last_known_position - global_position
+	var to_target := _chase_waypoint() - global_position
 	if to_target.length() > 2.0:
 		var dir := to_target.normalized()
 		facing = dir
@@ -159,6 +175,40 @@ func _do_chase(_delta: float, player) -> void:
 		velocity = Vector2.ZERO
 	_move_with_knockback()
 	_attack_blocking_structure()
+
+
+## A dónde caminar para llegar a `last_known_position`.
+##
+## Normalmente es esa misma posición, en línea recta. La excepción es cuando el
+## objetivo está **adentro de un edificio y este bicho no**: ahí caminar derecho
+## lo estrella contra la pared de afuera y se queda empujando ahí para siempre.
+## En ese caso apunta primero a la puerta más cercana de ESA habitación, y una
+## vez adentro (misma habitación) sigue derecho.
+##
+## No es pathfinding de verdad, y no hace falta: roof_system.gd ya sabe qué celda
+## es de qué habitación y dónde están sus puertas, así que alcanza con usar la
+## puerta como punto intermedio. Un A* completo sería mucho más código para
+## resolver el mismo caso, que es el único que aparece en este mapa.
+func _chase_waypoint() -> Vector2:
+	var roofs = get_tree().get_first_node_in_group("roof_system")
+	var world = _world_node()
+	if roofs == null or world == null:
+		return last_known_position
+
+	var sala_objetivo: int = roofs.room_at(world.cell_at(last_known_position))
+	if sala_objetivo < 0:
+		return last_known_position          # afuera: derecho
+	if roofs.room_at(world.cell_at(global_position)) == sala_objetivo:
+		return last_known_position          # ya estamos adentro con él
+	return roofs.nearest_door(sala_objetivo, global_position)
+
+
+# Sin tipar: usamos cell_at(), propio de world.gd.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
+func _world_node():
+	if _world_cache == null or not is_instance_valid(_world_cache):
+		_world_cache = get_tree().get_first_node_in_group("world")
+	return _world_cache
 
 
 ## Si quedó trabado contra un muro, una barricada o una puerta yendo hacia vos,

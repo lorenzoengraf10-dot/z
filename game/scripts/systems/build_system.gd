@@ -69,6 +69,11 @@ const BUILDABLES := [
 const REFUND_RATIO := 0.5
 const MAX_RANGE := 96.0
 
+## Medidas del panel de construcción. Alto fijo con scroll adentro: así sumar
+## cosas construibles no lo hace crecer hasta taparte la pantalla.
+const PALETTE_WIDTH := 190.0
+const PALETTE_HEIGHT := 300.0
+
 var active := false
 var selected := 0
 
@@ -97,20 +102,30 @@ func _ready() -> void:
 
 ## Panel de construcción: se muestra al entrar en modo construcción y deja
 ## elegir qué poner con el mouse (o con los números).
+##
+## Es una **lista vertical scrolleable** al costado, no una fila de botones.
+## Antes era una fila: seis cosas de 150 px de ancho metidas en un panel de 500,
+## así que las últimas (el cofre, entre ellas) se salían de la pantalla y no
+## había forma de verlas ni de elegirlas con el mouse. Con cada cosa nueva que
+## se agregue el problema iba a empeorar; una lista crece hacia abajo y scrollea.
+##
+## Mismo patrón de fila+botón que ui/inventory_screen.gd y ui/storage_screen.gd.
 func _build_palette() -> void:
 	_palette = CanvasLayer.new()
 	_palette.layer = 4
 	add_child(_palette)
 
 	var panel := PanelContainer.new()
-	panel.anchor_left = 0.5
-	panel.anchor_right = 0.5
-	panel.anchor_top = 1.0
-	panel.anchor_bottom = 1.0
-	panel.offset_left = -250
-	panel.offset_right = 250
-	panel.offset_top = -104
-	panel.offset_bottom = -46
+	# Anclado a la izquierda y centrado en vertical: no tapa el HUD de arriba a
+	# la izquierda ni el minimapa de abajo a la derecha.
+	panel.anchor_left = 0.0
+	panel.anchor_right = 0.0
+	panel.anchor_top = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left = 12
+	panel.offset_right = 12 + PALETTE_WIDTH
+	panel.offset_top = -PALETTE_HEIGHT * 0.5
+	panel.offset_bottom = PALETTE_HEIGHT * 0.5
 	_palette.add_child(panel)
 
 	var margin := MarginContainer.new()
@@ -118,24 +133,51 @@ func _build_palette() -> void:
 		margin.add_theme_constant_override("margin_" + side, 8)
 	panel.add_child(margin)
 
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	margin.add_child(row)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 4)
+	margin.add_child(column)
+
+	var title := Label.new()
+	title.text = "CONSTRUIR"
+	title.add_theme_font_size_override("font_size", 15)
+	column.add_child(title)
+
+	var hint := Label.new()
+	hint.text = "clic izq: poner o reparar\nclic der: sacar  ·  B: cerrar"
+	hint.add_theme_font_size_override("font_size", 11)
+	hint.modulate = Color(0.72, 0.72, 0.76)
+	column.add_child(hint)
+
+	column.add_child(HSeparator.new())
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
+
+	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation", 2)
+	scroll.add_child(list)
 
 	for i in range(BUILDABLES.size()):
 		var entry: Dictionary = BUILDABLES[i]
 		var button := Button.new()
-		button.custom_minimum_size = Vector2(150, 40)
+		button.custom_minimum_size = Vector2(0, 38)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.focus_mode = Control.FOCUS_NONE
-		button.text = "%d) %s\n%s" % [i + 1, str(entry["nombre"]), _cost_text(entry["costo"])]
+		# El número solo hasta el 9: son las teclas que sirven de atajo.
+		var atajo := "%d) " % (i + 1) if i < 9 else "   "
+		button.text = "%s%s\n     %s" % [atajo, str(entry["nombre"]), _cost_text(entry["costo"])]
 		button.pressed.connect(select.bind(i))
-		row.add_child(button)
+		list.add_child(button)
 		_palette_buttons.append(button)
 
 	_palette.visible = false
 
 
-## Marca cuál está elegido y si te alcanza la madera.
+## Marca cuál está elegido y si te alcanzan los materiales.
 func _refresh_palette() -> void:
 	var player = _player()
 	for i in range(_palette_buttons.size()):
@@ -144,7 +186,7 @@ func _refresh_palette() -> void:
 		if i == selected:
 			button.modulate = Color(1, 1, 1) if affordable else Color(1.0, 0.6, 0.6)
 		else:
-			button.modulate = Color(0.62, 0.62, 0.66)
+			button.modulate = Color(0.72, 0.72, 0.76) if affordable else Color(0.5, 0.42, 0.42)
 
 
 ## Adopta lo que ya estaba colgado del nodo Structures al arrancar.

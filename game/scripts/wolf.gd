@@ -14,6 +14,9 @@ enum State { ROAM, CHASE, ATTACK }
 @export var chase_speed := 150.0     ## más rápido que vos corriendo
 @export var vision_range := 190.0
 @export var vision_half_angle_deg := 70.0   ## ven mejor que los zombies
+## Cuánto ruido atraviesa una pared. Ver la nota larga en zombie.gd: no puede
+## ser 0, si no encerrarse te vuelve invisible y nadie ataca nunca una puerta.
+@export var muffle_through_walls := 0.35
 @export var attack_range := 20.0
 @export var attack_damage := 14.0
 @export var attack_cooldown := 1.1
@@ -44,6 +47,7 @@ var _time_since_seen := 999.0
 var _attack_timer := 0.0
 var _world_cache = null
 
+@onready var _vision_ray: RayCast2D = $VisionRay
 @onready var _visual: Node2D = $Visual
 @onready var _art: SpriteDirectional = $SpriteDirectional
 
@@ -87,17 +91,39 @@ func _detect_player():
 		var to_player: Vector2 = p.global_position - global_position
 		var dist := to_player.length()
 
+		# Una sola vez, la usan el oído y la vista.
+		var libre := _has_line_of_sight(p)
+
 		var noise := 0.0
 		if p.has_method("get_noise_radius"):
 			noise = p.get_noise_radius()
-		# Oyen mejor que los zombies: les alcanza con la mitad de tu ruido.
+		# Oyen mejor que los zombies: les alcanza con menos ruido. Pero las
+		# paredes también los tapan a ellos.
+		if not libre:
+			noise *= muffle_through_walls
 		if noise > 0.0 and dist <= noise * 1.4:
 			return p
 		if dist <= vision_range:
 			var angle := absf(rad_to_deg(facing.angle_to(to_player)))
-			if angle <= vision_half_angle_deg:
+			# ⚠ El `libre` de acá faltaba: hasta ahora el lobo era el ÚNICO que
+			# te veía a través de las paredes. El zombi siempre chequeó la línea
+			# de vista; el lobo se copió sin esa parte y nadie lo notó, porque
+			# jugando parece que "te olió".
+			if angle <= vision_half_angle_deg and libre:
 				return p
 	return null
+
+
+## ¿Hay algo sólido entre el lobo y el objetivo?
+##
+## Mismo mecanismo que zombie.gd: la máscara del rayo (17 = paredes + árboles)
+## es la que decide qué tapa. Los árboles entran aunque se puedan cruzar.
+func _has_line_of_sight(target: Node2D) -> bool:
+	if _vision_ray == null:
+		return true
+	_vision_ray.target_position = _vision_ray.to_local(target.global_position)
+	_vision_ray.force_raycast_update()
+	return not _vision_ray.is_colliding()
 
 
 ## Le avisa a los lobos cercanos dónde estás: por eso vienen en manada.
@@ -146,7 +172,7 @@ func _do_chase(prey) -> void:
 	if prey != null and prey.global_position.distance_to(global_position) <= attack_range:
 		state = State.ATTACK
 		return
-	var to_target := last_known_position - global_position
+	var to_target := _chase_waypoint() - global_position
 	if to_target.length() > 2.0:
 		var dir := to_target.normalized()
 		facing = dir
@@ -154,6 +180,31 @@ func _do_chase(prey) -> void:
 	else:
 		velocity = Vector2.ZERO
 	_move_with_knockback()
+
+
+## Igual que en zombie.gd: si el objetivo está adentro de una casa y el lobo no,
+## va primero a la puerta en vez de empujar la pared de afuera. Ver el comentario
+## largo allá para el porqué de no usar un A*.
+func _chase_waypoint() -> Vector2:
+	var roofs = get_tree().get_first_node_in_group("roof_system")
+	var world = _world_node()
+	if roofs == null or world == null:
+		return last_known_position
+
+	var sala_objetivo: int = roofs.room_at(world.cell_at(last_known_position))
+	if sala_objetivo < 0:
+		return last_known_position
+	if roofs.room_at(world.cell_at(global_position)) == sala_objetivo:
+		return last_known_position
+	return roofs.nearest_door(sala_objetivo, global_position)
+
+
+# Sin tipar: usamos cell_at()/speed_at(), propios de world.gd.
+# Ojo: quien la llame debe usar `var x = ...`, NUNCA `:=` (no se puede inferir).
+func _world_node():
+	if _world_cache == null or not is_instance_valid(_world_cache):
+		_world_cache = get_tree().get_first_node_in_group("world")
+	return _world_cache
 
 
 func _do_attack(prey) -> void:

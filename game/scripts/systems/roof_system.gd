@@ -35,6 +35,9 @@ const DOOR := "D"
 var _rooms: Array[Node2D] = []
 ## "x,y" -> índice de habitación (incluye interiores y sus puertas)
 var _cell_room: Dictionary = {}
+## índice de habitación -> Array[Vector2i] con las celdas de sus puertas.
+## Lo consultan los zombies y los lobos para entrar por donde se entra.
+var _room_doors: Dictionary = {}
 var _current_room := -1
 
 
@@ -136,12 +139,54 @@ func _make_room(cells: Array[Vector2i], world) -> void:
 				# Pararte en la puerta ya cuenta como estar adentro: si no, el
 				# techo parpadea justo al cruzarla.
 				_cell_room[key] = index
+				# Y se anota como puerta de esta habitación: es lo que usa la IA
+				# para saber por dónde entrar (ver door_positions()).
+				if not _room_doors.has(index):
+					_room_doors[index] = []
+				if not _room_doors[index].has(neighbour):
+					_room_doors[index].append(neighbour)
 
 	for key in covered.keys():
 		var data: Dictionary = covered[key]
 		var cell: Vector2i = data["celda"]
 		var tint: Color = data["color"]
 		room.add_child(_roof_tile(world.center_of(cell), tint))
+
+
+# --- Lo que consulta la IA para entrar por la puerta ---
+#
+# Este sistema ya tenía que resolver "qué celda pertenece a qué habitación" para
+# saber cuándo ocultar un techo, y de paso ya marcaba las puertas. Los zombies y
+# los lobos reusan esos mismos datos en vez de tener su propio pathfinding: sin
+# esto se quedaban empujando la pared de afuera de la casa donde te metiste.
+
+## En qué habitación cae esa celda, o -1 si está afuera de todo edificio.
+func room_at(cell: Vector2i) -> int:
+	return int(_cell_room.get(_key(cell), -1))
+
+
+## Posiciones (en coordenadas del mundo) de las puertas de esa habitación.
+func door_positions(index: int) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var world = _world()
+	if world == null or not _room_doors.has(index):
+		return out
+	for cell in _room_doors[index]:
+		out.append(world.center_of(cell))
+	return out
+
+
+## La puerta más cercana a `from` de la habitación `index`, o `from` mismo si esa
+## habitación no tiene ninguna (no debería pasar: check_rooms.py lo verifica).
+func nearest_door(index: int, from: Vector2) -> Vector2:
+	var best := from
+	var best_dist := INF
+	for pos in door_positions(index):
+		var d := from.distance_to(pos)
+		if d < best_dist:
+			best_dist = d
+			best = pos
+	return best
 
 
 func _roof_tile(center: Vector2, tint: Color) -> Polygon2D:

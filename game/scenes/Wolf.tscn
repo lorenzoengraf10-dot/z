@@ -45,8 +45,13 @@ color = Color(0.3, 0.3, 0.34, 1)
 polygon = PackedVector2Array(8, -2, 10, -2, 10, 0, 8, 0)
 color = Color(0.95, 0.85, 0.25, 1)
 
+[node name="VisionRay" type="RayCast2D" parent="."]
+target_position = Vector2(0, 1)
+collision_mask = 17
+
 [node name="HunterDisplay" type="Node2D" parent="."]
 script = ExtResource("2")
+height = 32.0
 
 [node name="SpriteDirectional" type="Node2D" parent="."]
 script = ExtResource("3")

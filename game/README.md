@@ -72,7 +72,7 @@ Mirás siempre hacia donde está el cursor, sin importar para dónde camines.
 | E (parado en el agua) | **Pescar** con caña — abre el minijuego de burbujas |
 | **F** | Cambiar de mano: pasar el arma **en mano** entre cuerpo a cuerpo y de fuego |
 | Q | Comer o beber lo que tengas en la mochila |
-| R | Vendarte (corta el sangrado; usa vendaje o, si no tenés, un trapo) |
+| R | Curarte: si sangrás te venda (vendaje o trapo); si no, usa un **botiquín** |
 | I o Tab | Inventario (equipar armas, consumir, **tirar objetos**) — **pausa el juego** |
 | B | Modo construcción (muros / fogata / mesa / cofre · clic izq: poner **o reparar**, der: sacar) |
 | C | Panel de crafteo |
@@ -171,6 +171,8 @@ id a un número del jugador).
   Las **armas de fuego** tienen su propio ruido en `data/items.json` y se pasan de
   la escala a propósito. Es lo que usan zombies y animales para detectarte.
 - **Zombies con IA** (`zombie.gd`) — deambulan, te detectan por **visión** (cono al frente, que se corta con paredes, árboles y barricadas) o por **oído**, te persiguen y te muerden (la mordida casi siempre te hace **sangrar**). Se los puede matar.
+- **Las paredes tapan el ruido** (`zombie.gd`, `wolf.gd` · `muffle_through_walls`) — adentro de una casa te escuchan mucho menos (35%). Es lo que hace que meterse sirva de algo: antes te oían igual a través de la pared. *No* es un bloqueo total a propósito — si adentro fueras invisible y sordo para ellos, nadie golpearía nunca una puerta y las puertas rompibles no tendrían sentido. Quedate quieto y estás a salvo; peleá o corré adentro y te encuentran igual.
+- **Entran por la puerta** (`zombie.gd`/`wolf.gd` · `_chase_waypoint()`) — si te metés en una casa, el que te persigue **rodea hasta la puerta** en vez de quedarse empujando la pared de afuera. Reusa lo que `roof_system.gd` ya sabe (qué celda es de qué habitación y dónde están sus puertas), sin necesidad de un pathfinding aparte.
 - **Hordas por ruido** (`systems/horde_spawner.gd`) — cuanto más ruido hacés, más "calor" acumulás; al pasar el umbral aparece una horda desde fuera de pantalla. Hay 3 variantes: normal, corredor (rápido y débil) y resistente (lento y duro).
 - **Paredes que frenan** (`world.gd`) — paredes de ladrillo, rocas y vetas colisionan de verdad y cortan la línea de vista de los zombies. Encerrarte en una casa con la puerta cerrada es una defensa real. El mapa además está cerrado por **cuatro paredes invisibles** en el borde, así que no te podés ir al vacío.
 - **Árboles atravesables** (`world.gd`) — se pueden cruzar (a menos velocidad,
@@ -191,6 +193,8 @@ id a un número del jugador).
 - **Contenedores de loot** (`container.gd` + `systems/loot_system.gd` + `data/loot_tables.json`) — se reparten solos al arrancar, pegados a las paredes de cada edificio y nunca tapando la puerta. Qué sale de cada tipo se edita en el JSON, sin tocar código.
 - **Armas de fuego** — pistola, escopeta y rifle gastan **munición** y hacen muchísimo ruido: disparar te trae una horda casi seguro. El HUD te muestra cuántas balas te quedan.
 - **Sangrado** — necesidad propia, con barra que parpadea en el HUD. No para solo (baja muy de a poco): hay que vendarse con **R**.
+- **Botiquín** — cura 10 y es lo **único que cura sin estar sangrando**: el vendaje, que cura más, solo se puede usar con una hemorragia abierta. Sale poco frecuente de los botiquines del mapa y se craftea con 5 trapo + 1 vendaje + 2 metal. Se usa con **R** cuando no estás sangrando.
+- **Cartel de sigilo** (`hud.gd`) — arriba y al centro, grande. Aparece solo cuando te escucharon o te vieron; si no hay cartel, estás oculto. Antes era una línea chica perdida en la esquina, que es donde menos se mira justo la información más urgente del juego.
 - **Mochila con capacidad** (`components/inventory_component.gd`) — cada unidad ocupa un lugar, ahora **12** lugares en vez de 8. El HUD muestra `Mochila 6/12` y avisa cuando algo no entró. Desde **I** también se puede **tirar** cualquier objeto (aparece en el piso como un `Pickup`), incluso con la mochila llena.
 - **Armas y munición aparte** (`components/arms_component.gd`) — 3 casilleros propios (cuerpo a cuerpo, arma de fuego, munición de esa arma) que **no gastan lugar de la mochila**. Lo que no está equipado sí ocupa mochila. **F** cambia cuál de las dos armas equipadas es la que "pega" (`arms.switch_hand()`); munición de un arma distinta a la equipada no entra en el casillero, va a la mochila común. Al **equipar** un arma de fuego se lleva al casillero la munición de esa arma que ya tuvieras suelta en la mochila (encontrar las balas antes que el arma es el caso normal), y al **guardarla** las devuelve.
 - **Almacenamiento** (`container.gd`, `ui/StorageScreen.tscn`) — se puede construir un **cofre** (modo **B**) y, una vez que un **armario** ya fue saqueado, se puede reutilizar para guardar cosas: **E** abre una pantalla de poner/sacar en vez de perderlo para siempre.
@@ -454,6 +458,34 @@ Después, lo de siempre:
 55. **F5 / F9 con muros a media vida.** Al cargar tienen que volver con la misma
     vida, no enteros ni rotos. Y una partida guardada **antes** de este cambio
     tiene que cargar con todo entero (no en cero).
+
+**Del lote de interfaz, mapa e IA:**
+
+56. Apretá **B**: el panel de construcción tiene que ser una **lista vertical
+    scrolleable** a la izquierda, con **todas** las opciones visibles —
+    incluido el cofre, que antes se salía de la pantalla.
+57. Entrá a cualquier minijuego (talar, pescar, fogata): tiene que verse
+    *"Escape — salir"* y un botón **Salir**. Probá los dos.
+58. Craftear el **recipiente de madera**: tiene que costar **2 madera** (antes
+    3 metal).
+59. **Metete en una casa, cerrá la puerta y quedate quieto** con un zombi
+    afuera: no te tiene que encontrar. Ahora **corré o pegá adentro**: el ruido
+    atraviesa un poco y sí te va a venir a buscar. Las dos cosas tienen que
+    pasar — si quieto igual te encuentra, o si haciendo ruido nunca aparece,
+    está mal.
+60. **Entrá a una casa mientras un zombi te persigue.** Tiene que **rodear
+    hasta la puerta** y entrar, no quedarse empujando la pared de afuera.
+61. **Ponete detrás de una pared con un lobo del otro lado.** No te tiene que
+    ver. Era el único bicho que veía a través de las paredes.
+62. Mirá el **zombi resistente** (el que tiene dibujo propio): el `?` y el `!`
+    tienen que quedar **arriba de su cabeza**, sin taparle el dibujo.
+63. El cartel de **sigilo** tiene que salir arriba y al centro cuando te
+    detectan, y desaparecer del todo cuando estás oculto.
+64. Recorré el mapa: **ninguna puerta** tiene que tener un árbol, una roca, una
+    veta o agua pegados a la fachada (zona de 3 de ancho por 2 de fondo).
+65. Conseguí un **botiquín** (loot de botiquín o crafteo) y apretá **R** con la
+    vida baja **sin estar sangrando**: tiene que curarte 10. Con un vendaje y
+    sin sangrado, **R** no te lo tiene que gastar.
 
 ## Cómo editar el mundo (el mapa de tiles)
 

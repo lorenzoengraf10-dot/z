@@ -101,10 +101,10 @@
   },
   {
     "id": "recipiente",
-    "nombre": "Recipiente",
+    "nombre": "Recipiente de madera",
     "categoria": "Herramientas",
     "cuesta": {
-      "metal": 3
+      "madera": 2
     },
     "produce": {
       "recipiente": 1
@@ -138,6 +138,21 @@
     },
     "requiere_mesa": true,
     "descripcion": "Corta la hemorragia del todo y cura un poco."
+  },
+  {
+    "id": "botiquin",
+    "nombre": "Botiquín",
+    "categoria": "Medicina",
+    "cuesta": {
+      "trapo": 5,
+      "vendaje": 1,
+      "metal": 2
+    },
+    "produce": {
+      "botiquin": 1
+    },
+    "requiere_mesa": true,
+    "descripcion": "Caro, pero es lo único que te cura sin estar sangrando (el vendaje pide hemorragia)."
   },
   {
     "id": "carne_cocida",

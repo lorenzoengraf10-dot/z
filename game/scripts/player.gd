@@ -259,19 +259,36 @@ func weapon_stats() -> Dictionary:
 	}
 
 
-## Vendarse (tecla R). Usa el mejor corta-sangrado que tengas: el vendaje corta
-## del todo, el trapo solo una parte.
+## Curarte (tecla R). Hace dos cosas distintas según cómo estés:
+##
+##   sangrando  -> el mejor corta-sangrado que tengas (vendaje corta del todo,
+##                 trapo solo una parte)
+##   sano       -> un botiquín, que es lo único que cura sin hemorragia
+##
+## Están en la misma tecla porque para el jugador es la misma intención
+## ("curarme") y no tiene por qué saber de antemano cuál de las dos aplica.
 func _try_bandage() -> void:
-	if not needs.is_bleeding():
-		message.emit("No estás sangrando")
+	if needs.is_bleeding():
+		var id := inventory.first_bandage()
+		if id == "":
+			message.emit("Estás sangrando y no tenés con qué vendarte")
+			return
+		if inventory.remove(id, 1):
+			needs.consume_item(id)
+			message.emit("Te vendaste con %s" % ItemDB.display_name(id))
 		return
-	var id := inventory.first_bandage()
-	if id == "":
-		message.emit("No tenés con qué vendarte")
+
+	# Sin sangrado: el vendaje no sirve (es lo que lo hace un recurso de
+	# emergencia y no una poción de vida), pero el botiquín sí.
+	var kit := inventory.first_healing()
+	if kit == "":
+		message.emit("No estás sangrando (para curarte igual hace falta un botiquín)")
 		return
-	if inventory.remove(id, 1):
-		needs.consume_item(id)
-		message.emit("Te vendaste con %s" % ItemDB.display_name(id))
+	if inventory.remove(kit, 1):
+		needs.consume_item(kit)
+		message.emit("Usaste %s (+%d de salud)" % [
+			ItemDB.display_name(kit), int(ItemDB.value_of(kit, "cura")),
+		])
 
 
 func _try_attack() -> void:

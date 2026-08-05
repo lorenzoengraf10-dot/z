@@ -322,7 +322,35 @@ for nombre in ["zombie.gd", "wolf.gd"]:
                       "(el ataque solo mide distancia, no chequea linea de vista). Bajarlo, o "
                       "agregarle un chequeo de linea de vista al ataque.")
 
-# --- 13. autoloads existen ---
+# --- 13. nadie detecta al jugador atravesando paredes ---
+#
+# El lobo se escribio copiando al zombi pero SIN el chequeo de linea de vista,
+# y durante mucho tiempo fue el unico bicho que te veia a traves de las paredes.
+# Jugando no se distingue de "me olio": parece que la IA es buena, no que esta
+# rota. Lo mismo con el oido, que hasta este lote ignoraba las paredes en los
+# dos.
+#
+# La regla: todo script que detecte al jugador tiene que nombrar
+# _has_line_of_sight (para la vista) y muffle_through_walls (para el oido).
+CAZADORES = ["zombie.gd", "wolf.gd"]
+for nombre in CAZADORES:
+    ruta = os.path.join(ROOT, "scripts", nombre)
+    if not os.path.exists(ruta):
+        errors.append(f"scripts/{nombre}: no existe (se renombro?); esta en la lista de "
+                      "los que detectan al jugador")
+        continue
+    src = "\n".join(l.split("#")[0] for l in open(ruta, encoding="utf-8").read().split("\n"))
+    if "_detect_player" not in src:
+        continue
+    if "_has_line_of_sight" not in src:
+        errors.append(f"scripts/{nombre}: detecta al jugador pero no usa _has_line_of_sight(), "
+                      "asi que TE VE A TRAVES DE LAS PAREDES. Jugando parece que te olfateo, "
+                      "no que esta roto: meterse en una casa deja de servir.")
+    if "muffle_through_walls" not in src:
+        errors.append(f"scripts/{nombre}: no aplica muffle_through_walls al oido, asi que "
+                      "TE ESCUCHA A TRAVES DE LAS PAREDES y esconderse en una casa no sirve.")
+
+# --- 14. autoloads existen ---
 proj = open(os.path.join(ROOT, "project.godot"), encoding="utf-8").read()
 for name, path in re.findall(r'^(\w+)="\*(res://[^"]+)"', proj, re.M):
     if not os.path.exists(res_to_fs(path)):

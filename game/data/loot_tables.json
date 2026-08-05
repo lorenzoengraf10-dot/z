@@ -39,7 +39,8 @@
       { "item": "vendaje", "peso": 40, "min": 1, "max": 2 },
       { "item": "trapo", "peso": 30, "min": 1, "max": 3 },
       { "item": "agua", "peso": 15, "min": 1, "max": 1 },
-      { "item": "comida", "peso": 15, "min": 1, "max": 1 }
+      { "item": "comida", "peso": 15, "min": 1, "max": 1 },
+      { "item": "botiquin", "peso": 6, "min": 1, "max": 1 }
     ]
   },
 

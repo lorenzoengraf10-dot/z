@@ -14,6 +14,12 @@ extends Node2D
 ## encima, y todo el sistema de ruido era invisible.
 
 ## Alto al que flota, en píxeles sobre el centro del enemigo.
+##
+## ⚠ Tiene que quedar **por encima del borde de arriba del sprite**, si no el
+## `?`/`!` y la barra se dibujan sobre el dibujo del personaje y no se entienden.
+## Con las medidas de docs/ARTE_SPEC.md (32×32 con los pies en la fila 28) ese
+## borde está en y = -28, así que a los personajes se les pone 32 en su escena.
+## El default sigue en 13 para lo chico (las estructuras usan 11).
 @export var height := 13.0
 @export var bar_width := 16.0
 @export var bar_height := 2.5

@@ -52,9 +52,9 @@
     "descripcion": "Del lago, sin hervir. Sacia la sed pero te cae mal cruda — hervila en la fogata (con madera) para que salga segura."
   },
   "recipiente": {
-    "nombre": "Recipiente",
+    "nombre": "Recipiente de madera",
     "comestible": false,
-    "descripcion": "Para juntar agua sucia del lago (tecla T) y después hervirla en la fogata."
+    "descripcion": "Tallado en madera. Para juntar agua sucia del lago (tecla T) y después hervirla en la fogata."
   },
   "madera": {
     "nombre": "Madera",
@@ -85,8 +85,15 @@
     "nombre": "Vendaje",
     "comestible": false,
     "cura": 30,
-    "descripcion": "Corta la hemorragia por completo y cura un poco.",
+    "descripcion": "Corta la hemorragia por completo y cura un poco. Solo se puede usar si estás sangrando.",
     "corta_sangrado": 100
+  },
+  "botiquin": {
+    "nombre": "Botiquín",
+    "comestible": false,
+    "cura": 10,
+    "cura_sin_sangrado": true,
+    "descripcion": "Cura 10 de salud CUANDO QUIERAS, sin necesidad de estar sangrando: es lo único que hace eso. Raro de encontrar y caro de fabricar."
   },
   "mechero": {
     "nombre": "Mechero",

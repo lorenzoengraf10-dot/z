@@ -105,6 +105,25 @@ func first_bandage() -> String:
 	return best
 
 
+## Primer ítem que cure **sin** necesidad de estar sangrando (el botiquín), o "".
+##
+## Mira la marca `cura_sin_sangrado` de items.json y no simplemente "cura", que
+## sería lo obvio: el vendaje también cura (30, más que el botiquín), así que
+## buscando por "cura" el vendaje ganaría siempre y se podría usar sin
+## hemorragia — justo lo que el juego no permite a propósito.
+func first_healing() -> String:
+	var best := ""
+	var best_value := 0.0
+	for id in items.keys():
+		if not bool(ItemDB.definition(str(id)).get("cura_sin_sangrado", false)):
+			continue
+		var value := ItemDB.value_of(str(id), "cura")
+		if value > best_value:
+			best_value = value
+			best = str(id)
+	return best
+
+
 func clear() -> void:
 	items.clear()
 	changed.emit(items)

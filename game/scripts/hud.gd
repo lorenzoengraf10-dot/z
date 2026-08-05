@@ -79,6 +79,8 @@ var _hud_left: VBoxContainer
 var _inventory_label: Label
 var _weapon_label: Label
 var _stealth_label: Label
+## Cartel de sigilo (arriba y al centro). Se muestra solo si te detectaron.
+var _stealth_panel: PanelContainer
 var _message_label: Label
 var _action_box: VBoxContainer
 var _action_label: Label
@@ -109,6 +111,7 @@ func _ready() -> void:
 
 	_build_needs()
 	_build_status()
+	_build_stealth_banner()
 	_build_toolbar()
 	_build_help()
 	# Esperamos un frame para que el jugador y los sistemas ya estén en el árbol.
@@ -289,17 +292,50 @@ func _build_small_needs_row(column: VBoxContainer) -> void:
 		_chips[id] = chip
 
 
-## Debajo de las necesidades: mochila, arma y sigilo.
+## Cartel de sigilo, arriba y al centro de la pantalla.
+##
+## Antes era una línea de 14 px perdida en la columna de arriba a la izquierda,
+## entre la mochila y el arma. Saber si te están viendo es la información más
+## urgente del juego —decide si seguís o salís corriendo— y estaba en el lugar
+## donde menos se mira.
+##
+## Solo aparece cuando te escucharon o te vieron: mientras estás oculto no
+## ensucia la pantalla, y esa ausencia ya es en sí misma la señal de "tranquilo".
+func _build_stealth_banner() -> void:
+	_stealth_panel = PanelContainer.new()
+	_passthrough(_stealth_panel)
+	_stealth_panel.anchor_left = 0.5
+	_stealth_panel.anchor_right = 0.5
+	_stealth_panel.anchor_top = 0.0
+	_stealth_panel.anchor_bottom = 0.0
+	_stealth_panel.offset_left = -150
+	_stealth_panel.offset_right = 150
+	_stealth_panel.offset_top = 12
+	_stealth_panel.offset_bottom = 48
+
+	var fondo := StyleBoxFlat.new()
+	fondo.bg_color = Color(0, 0, 0, 0.55)
+	fondo.set_corner_radius_all(5)
+	fondo.content_margin_top = 5
+	fondo.content_margin_bottom = 5
+	_stealth_panel.add_theme_stylebox_override("panel", fondo)
+	add_child(_stealth_panel)
+
+	_stealth_label = Label.new()
+	_passthrough(_stealth_label)
+	_stealth_label.add_theme_font_size_override("font_size", 20)
+	_stealth_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stealth_panel.add_child(_stealth_label)
+
+	_stealth_panel.visible = false
+
+
+## Debajo de las necesidades: mochila y arma.
 func _build_status() -> void:
 	var column := VBoxContainer.new()
 	_passthrough(column)
 	column.add_theme_constant_override("separation", 1)
 	_hud_left.add_child(column)
-
-	_stealth_label = Label.new()
-	_passthrough(_stealth_label)
-	_stealth_label.add_theme_font_size_override("font_size", 14)
-	column.add_child(_stealth_label)
 
 	_inventory_label = Label.new()
 	_passthrough(_inventory_label)
@@ -554,14 +590,17 @@ func _update_stealth() -> void:
 			1: hearing += 1
 
 	if seeing > 0:
-		_stealth_label.text = "◉ TE VEN (%d)" % seeing
+		_stealth_label.text = "◉  TE VEN  (%d)" % seeing
 		_stealth_label.modulate = Color(1.0, 0.35, 0.30)
+		_stealth_panel.visible = true
 	elif hearing > 0:
-		_stealth_label.text = "◒ te escucharon (%d)" % hearing
+		_stealth_label.text = "◒  te escucharon  (%d)" % hearing
 		_stealth_label.modulate = Color(1.0, 0.82, 0.35)
+		_stealth_panel.visible = true
 	else:
-		_stealth_label.text = "○ oculto"
-		_stealth_label.modulate = Color(0.55, 0.75, 0.55)
+		# Oculto: se esconde el cartel entero. No hace falta un letrero para
+		# decirte que no pasa nada — que no haya nada YA es esa información.
+		_stealth_panel.visible = false
 
 
 ## La barra de sangrado parpadea: es la que te mata si la ignorás.
