@@ -290,16 +290,27 @@ lo que más cambia la cara del juego:
 - [ ] `sprites/lobo/` — abajo, arriba, lado
 - [ ] `sprites/animal/` — abajo, arriba, lado
 
-**Las variantes de zombi** (normal, corredor, resistente) por defecto usan el
-mismo dibujo de `sprites/zombi/` y se distinguen por un tinte de color, así que
-no hace falta un set por variante. Pero si alguna variante quiere su **propio**
-dibujo (como el zombi grande/resistente), va en su propia carpeta con el mismo
-formato de siempre — `sprites/zombi_resistente/` (abajo, arriba, lado, 32×32,
-transparente) — y **no se tiñe**: se distingue por su propio diseño. Mientras
-esa carpeta no tenga PNG, esa variante sigue mostrando el dibujo base con el
-tinte, así que se puede ir agregando art de a una variante sin romper nada.
-Para agregar otra variante con dibujo propio, sumarla a `SPRITE_OVERRIDE` en
-`scripts/systems/horde_spawner.gd`.
+**Las variantes de zombi** (normal, corredor, resistente) usan por defecto el
+mismo dibujo de `sprites/zombi/`. Si alguna quiere el **suyo propio** va en su
+carpeta, con el mismo formato de siempre — `sprites/zombi_resistente/` (abajo,
+arriba, lado, 32×32, transparente) — y se la suma a `SPRITE_OVERRIDE` en
+`scripts/systems/horde_spawner.gd`. Mientras esa carpeta no tenga PNG, la
+variante sigue mostrando el dibujo base, así que se puede ir agregando arte de a
+una sin romper nada.
+
+> **El dibujo es el color: nada se tiñe.** Antes el juego le daba un tinte suave
+> a las variantes sin arte propio, para distinguirlas mientras todas eran el
+> mismo polígono gris. Con pixel art de verdad eso solo lo ensucia, así que se
+> sacó. (De paso se fue un bug: el tinte no sobrevivía al primer golpe, porque
+> el parpadeo blanco de "me pegaron" escribe en el mismo `modulate` y al
+> apagarse lo dejaba en blanco puro.)
+>
+> **Lo que eso deja pendiente:** sin tinte, el **corredor** (el rápido y débil)
+> se ve igual que el normal, y es justo el que conviene reconocer de lejos. El
+> próximo set de arte más útil es darle su propia carpeta:
+>
+> - [ ] `sprites/zombi_corredor/` — abajo, arriba, lado (algo flaco y nervioso,
+>       que se lea distinto de un vistazo)
 
 - [x] `sprites/zombi_resistente/abajo` — **el zombi pesado, 8 cuadros** ✅
 - [x] `sprites/zombi_resistente/arriba` — 8 cuadros ✅

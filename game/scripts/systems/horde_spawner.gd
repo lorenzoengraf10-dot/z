@@ -170,9 +170,8 @@ func _spawn_one(position_global: Vector2, variant: String) -> void:
 	# pedírselo al SpriteDirectional ANTES de add_child(): _ready() carga los
 	# PNG apenas el nodo entra al árbol, así que después ya es tarde.
 	var override: Dictionary = SPRITE_OVERRIDE.get(variant, {})
-	var art: SpriteDirectional = null
 	if not override.is_empty():
-		art = z.get_node_or_null("SpriteDirectional") as SpriteDirectional
+		var art := z.get_node_or_null("SpriteDirectional") as SpriteDirectional
 		if art != null:
 			art.sprite_name = str(override["sprite"])
 			art.sprite_name_fallback = "zombi"
@@ -185,20 +184,10 @@ func _spawn_one(position_global: Vector2, variant: String) -> void:
 	add_child(z)
 	z.global_position = position_global
 
-	# Recién acá se sabe si el PNG propio existía de verdad o si tuvo que caer
-	# al de respaldo (art.active_sprite_name() se llena en _ready(), que ya
-	# corrió). Si es el propio, que no lo tiña: ya se distingue solo.
-	if art != null:
-		# Ojo: contra override["sprite"] (un String), NO contra `override`, que
-		# es el diccionario entero {"sprite":..., "fps":...}. Comparar un String
-		# con un Dictionary da siempre false y no rompe nada: el zombi seguía
-		# saliendo tintado por encima de su propio dibujo, justo lo que el
-		# comentario de acá arriba dice que hay que evitar.
-		z.uses_dedicated_art = art.active_sprite_name() == str(override["sprite"])
-
-	# Color distinto por variante, para distinguirlas mientras el arte es
-	# placeholder o compartido. Se lo pedimos al zombi en vez de meterle mano a
-	# sus nodos: así el día que Visual cambie de forma, esto no se rompe.
+	# Color por variante, SOLO mientras el zombi sea un polígono de placeholder.
+	# Con pixel art puesto set_tint() no hace nada: el dibujo ya trae su color y
+	# pintarle algo encima lo ensucia. Se lo pedimos al zombi en vez de meterle
+	# mano a sus nodos: así el día que Visual cambie de forma, esto no se rompe.
 	var tint: Color = stats["color"]
 	z.set_tint(tint)
 

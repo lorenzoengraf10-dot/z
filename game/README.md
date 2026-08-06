@@ -431,8 +431,7 @@ Después, lo de siempre:
     segunda fue por ponerle tooltips a las barras. Si algún día no ataca, mirá
     los `mouse_filter` de `hud.gd` (hay un verificador que lo controla).
 47. Buscá un **zombi resistente** (el lento, duro y que pega fuerte): tiene que
-    verse con **su propio dibujo**, sin un tinte violeta encima. Si se ve
-    violeta, el spawner no está reconociendo que la variante tiene arte propio.
+    verse con **su propio dibujo**. Ya ningún zombi se tiñe — ver el ítem 70.
 
 **De la construcción rompible (Fase 1 del plan de fortalezas):**
 
@@ -502,10 +501,15 @@ Después, lo de siempre:
 69. Mirá el **zombi pesado dándose vuelta**: puede que **cambie de color** entre
     el frente y la espalda (se dibujaron en sesiones distintas con paletas
     distintas). Está anotado en `ARTE_SPEC.md`; si molesta, se rehace.
-70. Compará las tres variantes, que **comparten el dibujo nuevo**: el **normal**
-    sale con los colores tal cual; el **corredor** (rápido y débil) sale con un
-    tinte naranja por encima, que es a propósito para distinguirlo; y el
-    **resistente** usa su propio dibujo, sin tinte.
+70. **Ningún zombi tiene que salir teñido.** El dibujo ya trae su color, así que
+    las tres variantes se ven con los colores del PNG y nada encima. Ojo sobre
+    todo con el **corredor**, que antes salía naranja.
+71. **Pegale a un zombi y miralo después del parpadeo blanco.** Tiene que volver
+    exactamente al dibujo original, no quedar lavado ni cambiado de color.
+72. *Consecuencia a tener en cuenta:* sin tinte, el **corredor se ve igual que
+    el normal** (comparten dibujo) y solo se lo distingue **cuando arranca a
+    correr**. Si al jugar les molesta no poder anticiparlo, la salida es
+    dibujarle su propia carpeta `sprites/zombi_corredor/` — ver `ARTE_SPEC.md`.
 
 ## Cómo editar el mundo (el mapa de tiles)
 

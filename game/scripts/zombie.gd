@@ -39,11 +39,6 @@ var facing := Vector2.DOWN
 var last_known_position := Vector2.ZERO
 var health := 0.0
 
-## True si esta variante ya tiene su propio dibujo puesto (lo decide
-## horde_spawner.gd al spawnear, mirando SPRITE_OVERRIDE). Si es true,
-## set_tint() no la tiñe: ya se distingue sola y tintarla la ensuciaría.
-var uses_dedicated_art := false
-
 ## Cuánto dura la barra de vida en pantalla después de que le pegues.
 @export var health_bar_seconds := 3.0
 ## Fuerza del retroceso cuando lo golpean.
@@ -290,13 +285,20 @@ func take_damage(amount: float) -> void:
 
 ## Pinta al zombi según la variante. La llama horde_spawner.gd al crearlo.
 ##
-## Con pixel art no se repinta el sprite (quedaría un manchón): se le da un tinte
-## suave, lo justo para distinguir al corredor del resistente sin arruinar el
-## dibujo. El zombi normal queda con sus colores tal cual.
+## **Con pixel art no se pinta nada: el dibujo YA es el color.** Antes se le daba
+## un tinte suave para distinguir al corredor, y eso tenía sentido mientras todos
+## los zombies eran el mismo polígono gris; encima de un dibujo de verdad solo lo
+## ensucia.
+##
+## De paso se va un bug que nadie había notado: el tinte no sobrevivía al primer
+## golpe. Se escribía en `_art.modulate`, y el parpadeo blanco de "me pegaron"
+## escribe en `_art.flash_target()`, que con arte devuelve ESE MISMO nodo — al
+## apagarse dejaba el modulate en blanco puro y se llevaba el tinte para siempre.
+##
+## La rama del placeholder se queda: el lobo, el animal y el jugador todavía son
+## polígonos, y ahí el color por variante sí es lo único que los distingue.
 func set_tint(color: Color) -> void:
 	if _art.has_art():
-		if zombie_type != "normal" and not uses_dedicated_art:
-			_art.modulate = Color.WHITE.lerp(color, 0.35)
 		return
 
 	var body := _visual.get_node_or_null("Body") as Polygon2D
