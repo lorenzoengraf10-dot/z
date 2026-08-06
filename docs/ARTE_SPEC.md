@@ -106,6 +106,23 @@ derecha espejada, eso lo hace el juego solo.
 Ojo con `lado.png`: **siempre mirando a la derecha**. Si lo dibujás mirando a la
 izquierda, en el juego va a mirar al revés.
 
+### Si querés dibujar la izquierda aparte (opcional)
+
+Con los 3 de arriba alcanza. Pero si el espejo no te convence —porque el
+personaje tiene algo asimétrico, o porque querés controlar cómo se ve de ese
+lado— podés agregar un **`izquierda.png`** (o `izquierda_1.png`, `izquierda_2`…)
+y el juego lo va a usar **en vez del espejo**.
+
+```
+sprites/zombi/   abajo_1..12   arriba_1..12   lado_1..12   izquierda_1..12
+```
+
+- Es **opcional**: sin ese archivo todo sigue funcionando igual que siempre.
+- No cuenta como "falta dibujar" en el resumen de `check_arte.py`, pero si está,
+  se le revisan las medidas y la numeración igual que a las demás.
+- El zombi chiquito tiene una propia: su izquierda no es el espejo exacto de la
+  derecha (difieren en un 15% de los píxeles).
+
 ---
 
 ## Nombres de archivo
@@ -208,30 +225,42 @@ para que veas si eran a propósito o se coló uno sin querer.
 <!-- PALETA:INICIO (generado por tools/actualizar_paleta.py) -->
 | Color | Hex | | Color | Hex |
 |---|---|---|---|---|
-| Negro | `#12100f` | | Rojo | `#a82a24` |
-| Sombra | `#241f1d` | | Rojo claro | `#d4544a` |
-| Gris oscuro | `#3b3733` | | Oxido | `#8a5220` |
-| Gris | `#5c5751` | | Naranja | `#c8802c` |
-| Gris claro | `#857f77` | | Fuego | `#e8a83c` |
-| Hueso | `#bab3a6` | | Amarillo | `#e6cf6a` |
-| Blanco sucio | `#e6e0d2` | | Violeta oscuro | `#38264a` |
-| Verde muy oscuro | `#1b2b18` | | Violeta | `#5c4470` |
-| Verde oscuro | `#2c4423` | | Naranja brillante | `#fbbb53` |
-| Verde | `#44622f` | | Verde claro 2 | `#70f674` |
-| Verde claro | `#6b8a3e` | | Violeta claro | `#d284f0` |
-| Tierra oscura | `#2e2318` | | Verde 2 | `#a6c1a6` |
-| Tierra | `#4d3826` | | Rojo 2 | `#bf0303` |
-| Madera | `#6f4f2f` | | Azul | `#39388e` |
-| Madera clara | `#9c7346` | | Rojo 3 | `#8e3232` |
-| Arena | `#c2a066` | | Azul oscuro | `#252474` |
-| Agua profunda | `#16273d` | | Verde oscuro 2 | `#33702c` |
-| Agua | `#24405c` | | Gris oscuro 2 | `#666f5f` |
-| Agua clara | `#3a6480` | | Naranja oscuro | `#673b12` |
-| Cielo | `#6f97a8` | | Azul oscuro 2 | `#14134d` |
-| Ladrillo oscuro | `#4a2c25` | | Naranja oscuro 2 | `#4d3c13` |
-| Ladrillo | `#70423a` | | Naranja muy oscuro | `#403009` |
-| Ladrillo claro | `#9c6455` | | Verde muy oscuro 2 | `#053100` |
-| Sangre | `#6e1414` | | Negro 2 | `#000000` |
+| Negro | `#12100f` | | Rojo 2 | `#bf0303` |
+| Sombra | `#241f1d` | | Azul | `#39388e` |
+| Gris oscuro | `#3b3733` | | Rojo 3 | `#8e3232` |
+| Gris | `#5c5751` | | Azul oscuro | `#252474` |
+| Gris claro | `#857f77` | | Verde oscuro 2 | `#33702c` |
+| Hueso | `#bab3a6` | | Gris oscuro 2 | `#666f5f` |
+| Blanco sucio | `#e6e0d2` | | Naranja oscuro | `#673b12` |
+| Verde muy oscuro | `#1b2b18` | | Azul oscuro 2 | `#14134d` |
+| Verde oscuro | `#2c4423` | | Naranja oscuro 2 | `#4d3c13` |
+| Verde | `#44622f` | | Naranja muy oscuro | `#403009` |
+| Verde claro | `#6b8a3e` | | Verde muy oscuro 2 | `#053100` |
+| Tierra oscura | `#2e2318` | | Negro 2 | `#000000` |
+| Tierra | `#4d3826` | | Verde brillante | `#26ff00` |
+| Madera | `#6f4f2f` | | Verde brillante 2 | `#49ff00` |
+| Madera clara | `#9c7346` | | Magenta brillante | `#fb00ff` |
+| Arena | `#c2a066` | | Magenta brillante 2 | `#ff1be2` |
+| Agua profunda | `#16273d` | | Rojo brillante | `#ff2020` |
+| Agua | `#24405c` | | Blanco | `#ffffff` |
+| Agua clara | `#3a6480` | | Rojo claro 2 | `#d24949` |
+| Cielo | `#6f97a8` | | Verde claro 3 | `#b5ceab` |
+| Ladrillo oscuro | `#4a2c25` | | Verde 3 | `#bbc5a5` |
+| Ladrillo | `#70423a` | | Azul 2 | `#1311bd` |
+| Ladrillo claro | `#9c6455` | | Verde 4 | `#acba9c` |
+| Sangre | `#6e1414` | | Gris claro 2 | `#aca9a9` |
+| Rojo | `#a82a24` | | Rojo 4 | `#a30700` |
+| Rojo claro | `#d4544a` | | Verde 5 | `#8d987e` |
+| Oxido | `#8a5220` | | Verde 6 | `#05941d` |
+| Naranja | `#c8802c` | | Azul 3 | `#250394` |
+| Fuego | `#e8a83c` | | Naranja oscuro 3 | `#7e5b09` |
+| Amarillo | `#e6cf6a` | | Rojo oscuro | `#7c0000` |
+| Violeta oscuro | `#38264a` | | Gris oscuro 3 | `#6f7666` |
+| Violeta | `#5c4470` | | Rojo oscuro 2 | `#631714` |
+| Naranja brillante | `#fbbb53` | | Naranja oscuro 4 | `#60470a` |
+| Verde claro 2 | `#70f674` | | Azul oscuro 3 | `#12005e` |
+| Violeta claro | `#d284f0` | | Verde muy oscuro 3 | `#06450a` |
+| Verde 2 | `#a6c1a6` | | Azul muy oscuro | `#0c003e` |
 <!-- PALETA:FIN -->
 
 ---
@@ -256,7 +285,8 @@ lo que más cambia la cara del juego:
 **Personajes** (32×32, 3 direcciones cada uno):
 
 - [ ] `sprites/jugador/` — abajo, arriba, lado
-- [ ] `sprites/zombi/` — abajo, arriba, lado
+- [x] `sprites/zombi/` — **completo: abajo, arriba, lado e izquierda, 12 cuadros
+      cada uno** ✅ (el primer personaje entero del juego)
 - [ ] `sprites/lobo/` — abajo, arriba, lado
 - [ ] `sprites/animal/` — abajo, arriba, lado
 
@@ -272,7 +302,13 @@ Para agregar otra variante con dibujo propio, sumarla a `SPRITE_OVERRIDE` en
 `scripts/systems/horde_spawner.gd`.
 
 - [x] `sprites/zombi_resistente/abajo` — **el zombi pesado, 8 cuadros** ✅
-- [ ] `sprites/zombi_resistente/` — falta `arriba` y `lado`
+- [x] `sprites/zombi_resistente/arriba` — 8 cuadros ✅
+- [ ] `sprites/zombi_resistente/` — falta `lado`
+
+> ⚠ **A mirar jugando:** el `arriba` del zombi pesado se dibujó en otra sesión y
+> comparte **1 color de 16** con su `abajo` (azules `#250394` contra `#39388e`,
+> cuerpo `#bbc5a5` contra `#a6c1a6`). Puede notarse un cambio de color al darse
+> vuelta. Si molesta, se rehace cargando `paleta.gpl` primero.
 
 **Los tiles no llevan transparencia** (son cuadrados llenos). Los **personajes
 sí**: fondo transparente, siempre.

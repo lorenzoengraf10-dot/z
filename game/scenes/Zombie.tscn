@@ -48,4 +48,5 @@ height = 32.0
 [node name="SpriteDirectional" type="Node2D" parent="."]
 script = ExtResource("3")
 sprite_name = "zombi"
+fps = 24.0
 placeholder_paths = [NodePath("../Visual")]

@@ -487,6 +487,26 @@ Después, lo de siempre:
     vida baja **sin estar sangrando**: tiene que curarte 10. Con un vendaje y
     sin sangrado, **R** no te lo tiene que gastar.
 
+**Del pixel art nuevo (el zombi chiquito ya es un dibujo, no un cuadrado):**
+
+66. **Miralo caminar de frente.** No tiene que verse **flotando** sobre el piso
+    ni hundido: los pies apoyan en la celda. (Los dibujos venían con la medida
+    vieja y se bajaron 4 px al integrarlos; si flota, ese corrimiento falló.)
+67. **Dale la vuelta completa**: de frente, de espaldas, a la derecha y a la
+    izquierda. Las cuatro tienen que tener dibujo propio. Ojo con la
+    **izquierda**: tiene su propio PNG, así que **no** es el espejo de la
+    derecha — si se ve espejada, no está cargando el archivo.
+68. La animación es de **12 cuadros**: tiene que verse fluida, no en cámara
+    lenta ni acelerada. Se ajusta sin programar en `Zombie.tscn` → nodo
+    `SpriteDirectional` → campo **Fps** (arranca en 24).
+69. Mirá el **zombi pesado dándose vuelta**: puede que **cambie de color** entre
+    el frente y la espalda (se dibujaron en sesiones distintas con paletas
+    distintas). Está anotado en `ARTE_SPEC.md`; si molesta, se rehace.
+70. Compará las tres variantes, que **comparten el dibujo nuevo**: el **normal**
+    sale con los colores tal cual; el **corredor** (rápido y débil) sale con un
+    tinte naranja por encima, que es a propósito para distinguirlo; y el
+    **resistente** usa su propio dibujo, sin tinte.
+
 ## Cómo editar el mundo (el mapa de tiles)
 
 El terreno se dibuja con un **TileMap** que se arma por código (`scripts/world.gd`) leyendo un mapa de texto: `data/level_prototype.txt`. Se edita con cualquier editor de texto, sin abrir el editor de tiles.

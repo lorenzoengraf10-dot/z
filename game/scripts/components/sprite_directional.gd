@@ -106,8 +106,12 @@ func active_sprite_name() -> String:
 
 ## Elige el cuadro según hacia dónde mira el personaje.
 ##
-## Se dibujan 3 direcciones y la izquierda sale de espejar la derecha, así que
-## el arte es 3 dibujos y no 4.
+## Con 3 dibujos alcanza: la izquierda sale de espejar `lado`. Pero si además
+## existe un `izquierda` dibujado aparte, se usa ese y no el espejo — el zombi
+## chiquito tiene uno, y no es el espejo del derecho (difieren en un 15% de los
+## píxeles), así que espejarlo tiraría ese trabajo a la basura.
+##
+## Quien tenga solo los 3 de siempre no se entera de este agregado.
 func set_facing(direction: Vector2) -> void:
 	if not _has_art or direction == Vector2.ZERO:
 		return
@@ -117,8 +121,11 @@ func set_facing(direction: Vector2) -> void:
 	# Gana el eje que más pesa: mirando en diagonal, manda el horizontal, que es
 	# el que mejor se lee en un top-down.
 	if absf(direction.x) >= absf(direction.y):
-		wanted = "lado"
-		espejado = direction.x < 0.0
+		if direction.x < 0.0 and _sprite.sprite_frames.has_animation("izquierda"):
+			wanted = "izquierda"     # dibujo propio: no se espeja
+		else:
+			wanted = "lado"
+			espejado = direction.x < 0.0
 	elif direction.y < 0.0:
 		wanted = "arriba"
 	else:
@@ -172,7 +179,8 @@ func _load_frames_from(nombre: String) -> SpriteFrames:
 	frames.remove_animation("default")
 
 	var found := false
-	for direction in ["abajo", "arriba", "lado"]:
+	# "izquierda" es opcional: si no está, set_facing() espeja "lado" como siempre.
+	for direction in ["abajo", "arriba", "lado", "izquierda"]:
 		var textures := _load_direction(nombre, direction)
 		if textures.is_empty():
 			continue

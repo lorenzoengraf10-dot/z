@@ -25,6 +25,12 @@ ASSETS = sys.argv[1] if len(sys.argv) > 1 else os.path.join(GAME, "assets")
 TILE_SIZE = 16
 CHAR_SIZE = 32
 DIRECCIONES = ("abajo", "arriba", "lado")
+## "izquierda" es OPCIONAL: sin ella el juego espeja "lado", que es lo normal.
+## Pero si alguien la dibuja (el zombi chiquito tiene una propia), sus cuadros
+## tienen que cumplir lo mismo que el resto — medidas, transparencia y sobre
+## todo la numeracion sin huecos. Va aparte de DIRECCIONES para que no cuente
+## como "falta dibujarla" en el resumen de lo que queda pendiente.
+DIRECCIONES_OPCIONALES = ("izquierda",)
 
 # Lo que el juego espera NO se escribe aca: se lee del codigo, para que las dos
 # listas no puedan separarse nunca. Si alguien agrega un tile o un personaje, el
@@ -226,7 +232,12 @@ total_sprites = len(PERSONAJES) * len(DIRECCIONES)
 
 for personaje in PERSONAJES:
     carpeta = os.path.join(sprites_dir, personaje)
-    for direccion in DIRECCIONES:
+    for direccion in DIRECCIONES + DIRECCIONES_OPCIONALES:
+        # Las opcionales solo se revisan si existen: no se reclaman.
+        opcional = direccion in DIRECCIONES_OPCIONALES
+        if opcional and not os.path.exists(os.path.join(carpeta, f"{direccion}_1.png")) \
+                and not os.path.exists(os.path.join(carpeta, direccion + ".png")):
+            continue
         quieto = os.path.join(carpeta, direccion + ".png")
         cuadros = []
         i = 1
@@ -238,7 +249,10 @@ for personaje in PERSONAJES:
             i += 1
 
         if cuadros:
-            hay_sprites += 1
+            # Las opcionales se revisan pero NO suman al contador: el total de
+            # abajo son 3 direcciones por personaje, y sumarlas daria 6/15.
+            if not opcional:
+                hay_sprites += 1
             for f in cuadros:
                 revisar(f, CHAR_SIZE, necesita_alpha=True)
             # Un hueco en la numeracion corta la animacion sin avisar.
@@ -253,7 +267,8 @@ for personaje in PERSONAJES:
                 warns.append(f"{personaje}/{direccion}: estan el animado y el quieto "
                              f"({direccion}.png); manda el animado")
         elif os.path.exists(quieto):
-            hay_sprites += 1
+            if not opcional:
+                hay_sprites += 1
             revisar(quieto, CHAR_SIZE, necesita_alpha=True)
         else:
             faltan_sprites.append(f"{personaje}/{direccion}")
